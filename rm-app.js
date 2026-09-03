@@ -1064,15 +1064,20 @@ function saveReminderMgr() {
 
 // ─── ONGOING OFFERS ────────────────────────────────────────────────────────────
 const RM_OFFERS_STUDENTS = [
-  { badge:'Jan 2027 STI', title:'Review STI status for Jan 2027 Spring', desc:'Target Intake: Jan 2027 | Status: STI Pending & Active | Last Contact: No call in last 15 days', expires:'2026-09-08' },
-  { badge:'Lead Re-engagement', title:'Last 60 days unconnected leads', desc:'Connect with a lead to evaluate study abroad status | Last Contact: No call in last 20 days', expires:'2026-09-08' },
+  { key:'sti_jan27', badge:'Jan 2027 STI', title:'Review STI status for Jan 2027 Spring', desc:'Target Intake: Jan 2027 | Status: STI Pending & Active | Last Contact: No call in last 15 days', expires:'2026-09-08' },
+  { key:'lead_reengage', badge:'Lead Re-engagement', title:'Last 60 days unconnected leads', desc:'Connect with a lead to evaluate study abroad status | Last Contact: No call in last 20 days', expires:'2026-09-08' },
 ];
 const RM_OFFERS_SSM = [
-  { badge:"Referral Drive Sep'26", title:'Refer a Student Success Manager', desc:'Earn a bonus for every successful RM referral who joins and completes onboarding this month.', expires:'2026-09-30' },
+  { key:'ssm_referral', badge:"Referral Drive Sep'26", title:'Refer a Student Success Manager', desc:'Earn a bonus for every successful RM referral who joins and completes onboarding this month.', expires:'2026-09-30' },
 ];
 
-function offerCardHtml(o) {
-  return `<div class="relative flex flex-col justify-between rounded-xl p-4 flex-shrink-0" style="min-height:170px;width:280px;background:linear-gradient(135deg,#F97316,#C2410C)">
+const OFFER_GRADIENTS = {
+  orange: 'linear-gradient(135deg,#F97316,#C2410C)',
+  blue: 'linear-gradient(135deg,#3B82F6,#1D4ED8)',
+};
+
+function offerCardHtml(o, theme) {
+  return `<div class="relative flex flex-col justify-between rounded-xl p-4 flex-shrink-0" style="min-height:170px;width:280px;background:${OFFER_GRADIENTS[theme]}">
     <div class="pointer-events-none absolute inset-0 overflow-hidden rounded-xl">
       <div class="absolute -right-6 -top-6 h-24 w-24 rounded-full" style="background:rgba(255,255,255,0.1)"></div>
       <div class="absolute -bottom-8 -left-4 h-28 w-28 rounded-full" style="background:rgba(255,255,255,0.05)"></div>
@@ -1084,7 +1089,7 @@ function offerCardHtml(o) {
     </div>
     <div class="relative z-10 mt-2 flex items-center justify-between gap-2">
       <p class="text-xs text-white/80">Expires ${o.expires}</p>
-      <button class="rounded-full px-3 py-1.5 text-xs font-semibold text-white transition-colors cursor-pointer" style="background:rgba(255,255,255,0.2)" onclick="showToast('Opening student list for this offer…','info')">See Students →</button>
+      <button class="rounded-full px-3 py-1.5 text-xs font-semibold text-white transition-colors cursor-pointer" style="background:rgba(255,255,255,0.2)" onclick="openOfferStudents('${o.key}');event.stopPropagation();">See Students →</button>
     </div>
   </div>`;
 }
@@ -1104,7 +1109,7 @@ function buildOngoingOffers(studentOffers, ssmOffers) {
         <span class="text-xs font-bold uppercase tracking-wider" style="color:#EA580C">Offers for Students</span>
       </div>
       <div class="flex gap-3 m-3 overflow-x-auto pb-1">
-        ${studentOffers.length ? studentOffers.map(o => offerCardHtml(o)).join('') : offersEmptyHtml()}
+        ${studentOffers.length ? studentOffers.map(o => offerCardHtml(o, 'orange')).join('') : offersEmptyHtml()}
       </div>
     </div>
     <div class="border rounded-lg overflow-hidden">
@@ -1114,9 +1119,54 @@ function buildOngoingOffers(studentOffers, ssmOffers) {
         <span class="rounded-full flex items-center border px-2 py-0.5 text-[11px] font-semibold" style="border-color:#FFB74D;background:#FFF3E0;color:#E65100">For You</span>
       </div>
       <div class="flex gap-3 m-3 overflow-x-auto pb-1">
-        ${ssmOffers.length ? ssmOffers.map(o => offerCardHtml(o)).join('') : offersEmptyHtml()}
+        ${ssmOffers.length ? ssmOffers.map(o => offerCardHtml(o, 'blue')).join('') : offersEmptyHtml()}
       </div>
     </div>`;
+}
+
+function findOffer(key) {
+  return [...RM_OFFERS_STUDENTS, ...RM_OFFERS_SSM].find(o => o.key === key);
+}
+
+function eligibleStudentsFor(key) {
+  const all = [
+    ...MOCK_LEADS.sti.map(l => ({ ...l, pipeline:'sti' })),
+    ...MOCK_LEADS.revenue.map(l => ({ ...l, pipeline:'revenue' })),
+    ...MOCK_LEADS.loan.map(l => ({ ...l, pipeline:'loan' })),
+  ];
+  if (key === 'sti_jan27') return all.filter(l => l.intake === 'Jan 2027');
+  if (key === 'lead_reengage') return all.filter(l => l.overdue);
+  if (key === 'ssm_referral') return all.filter(l => l.dueToday);
+  return all;
+}
+
+function openOfferStudents(key) {
+  const offer = findOffer(key);
+  if (!offer) return;
+  const students = eligibleStudentsFor(key);
+  const isStudentOffer = RM_OFFERS_STUDENTS.some(o => o.key === key);
+  const bannerBg = isStudentOffer ? '#FFF7ED' : '#EFF6FF';
+  const bannerText = isStudentOffer ? '#C2410C' : '#1D4ED8';
+  const html = `
+    <div class="rounded-xl p-4 mb-4" style="background:${bannerBg}">
+      <div class="text-sm font-bold mb-1" style="color:${bannerText}">🎁 ${offer.title}</div>
+      <div class="text-xs text-text-muted">${offer.desc}</div>
+    </div>
+    <div class="text-[11px] font-bold uppercase tracking-wide text-text-muted mb-3">Eligible Students (${students.length})</div>
+    <div class="space-y-3">
+      ${students.length ? students.map(l => `
+        <div class="student-card">
+          <div class="font-semibold text-sm text-text-main">${l.name}</div>
+          <div class="text-xs text-text-muted mb-2 font-mono">${l.id} · ${courseForLead(l)} · ${l.country}</div>
+          ${l.caDate ? `<div class="text-xs text-text-muted mb-2 flex items-center gap-1"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" stroke-width="2"/><line x1="16" y1="2" x2="16" y2="6" stroke-width="2"/><line x1="8" y1="2" x2="8" y2="6" stroke-width="2"/><line x1="3" y1="10" x2="21" y2="10" stroke-width="2"/></svg>Follow-up: ${formatDMY(l.caDate)}</div>` : ''}
+          <div class="flex gap-2 mt-2">
+            <button class="flex-1 text-xs font-semibold py-2 rounded-lg cursor-pointer transition-colors" style="background:#EEF2FF;color:#4338CA;border:1px solid #C7D2FE" onclick="openLeadDetail('${l.pipeline}','${l.id}')">View Student</button>
+            <button class="flex-1 text-xs font-semibold py-2 rounded-lg cursor-pointer transition-colors" style="background:#EEF2FF;color:#4338CA;border:1px solid #C7D2FE" onclick="openLeadDetail('${l.pipeline}','${l.id}')">View Task</button>
+          </div>
+        </div>`).join('')
+        : `<div class="text-center text-sm text-text-muted py-10">No eligible students right now.</div>`}
+    </div>`;
+  openDrawer('Eligible Students', html);
 }
 
 // ─── TOP EARNERS ───────────────────────────────────────────────────────────────
