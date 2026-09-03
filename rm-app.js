@@ -1062,6 +1062,113 @@ function saveReminderMgr() {
   showToast('Reminder saved!', 'success');
 }
 
+// ─── ONGOING OFFERS ────────────────────────────────────────────────────────────
+const RM_OFFERS_STUDENTS = [
+  { badge:'Jan 2027 STI', title:'Review STI status for Jan 2027 Spring', desc:'Target Intake: Jan 2027 | Status: STI Pending & Active | Last Contact: No call in last 15 days', expires:'2026-09-08' },
+  { badge:'Lead Re-engagement', title:'Last 60 days unconnected leads', desc:'Connect with a lead to evaluate study abroad status | Last Contact: No call in last 20 days', expires:'2026-09-08' },
+];
+const RM_OFFERS_SSM = [
+  { badge:"Referral Drive Sep'26", title:'Refer a Student Success Manager', desc:'Earn a bonus for every successful RM referral who joins and completes onboarding this month.', expires:'2026-09-30' },
+];
+
+function offerCardHtml(o) {
+  return `<div class="relative flex flex-col justify-between rounded-xl p-4 flex-shrink-0" style="min-height:170px;width:280px;background:linear-gradient(135deg,#F97316,#C2410C)">
+    <div class="pointer-events-none absolute inset-0 overflow-hidden rounded-xl">
+      <div class="absolute -right-6 -top-6 h-24 w-24 rounded-full" style="background:rgba(255,255,255,0.1)"></div>
+      <div class="absolute -bottom-8 -left-4 h-28 w-28 rounded-full" style="background:rgba(255,255,255,0.05)"></div>
+    </div>
+    <div class="relative z-10 flex flex-col gap-2 flex-1">
+      <span class="inline-flex w-fit items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold text-white" style="background:rgba(255,255,255,0.2)">${o.badge}</span>
+      <h3 class="text-base font-bold leading-snug text-white">${o.title}</h3>
+      <p class="text-sm leading-relaxed text-white/90">${o.desc}</p>
+    </div>
+    <div class="relative z-10 mt-2 flex items-center justify-between gap-2">
+      <p class="text-xs text-white/80">Expires ${o.expires}</p>
+      <button class="rounded-full px-3 py-1.5 text-xs font-semibold text-white transition-colors cursor-pointer" style="background:rgba(255,255,255,0.2)" onclick="showToast('Opening student list for this offer…','info')">See Students →</button>
+    </div>
+  </div>`;
+}
+
+function offersEmptyHtml() {
+  return `<div class="w-full py-6 text-center text-sm flex flex-col items-center gap-2" style="color:#64748B">
+    <svg class="w-8 h-8" style="color:#64748B" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13"/><path d="M19 12v7a2 2 0 01-2 2H7a2 2 0 01-2-2v-7"/><path d="M7.5 8a2.5 2.5 0 010-5A4.8 8 0 0112 8a4.8 8 0 014.5-5 2.5 2.5 0 010 5"/></svg>
+    No offers available
+  </div>`;
+}
+
+function buildOngoingOffers(studentOffers, ssmOffers) {
+  return `
+    <div class="border rounded-lg overflow-hidden">
+      <div class="flex items-center gap-2 px-3 py-3 border-b" style="background:#FFF7ED;border-color:#FFEDD5">
+        <svg class="w-4 h-4" style="color:#EA580C" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13"/><path d="M19 12v7a2 2 0 01-2 2H7a2 2 0 01-2-2v-7"/><path d="M7.5 8a2.5 2.5 0 010-5A4.8 8 0 0112 8a4.8 8 0 014.5-5 2.5 2.5 0 010 5"/></svg>
+        <span class="text-xs font-bold uppercase tracking-wider" style="color:#EA580C">Offers for Students</span>
+      </div>
+      <div class="flex gap-3 m-3 overflow-x-auto pb-1">
+        ${studentOffers.length ? studentOffers.map(o => offerCardHtml(o)).join('') : offersEmptyHtml()}
+      </div>
+    </div>
+    <div class="border rounded-lg overflow-hidden">
+      <div class="flex items-center gap-2 px-3 py-3 border-b" style="background:#EFF6FF;border-color:#DBEAFE">
+        <svg class="w-4 h-4" style="color:#2563EB" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        <span class="text-xs font-bold uppercase tracking-wider" style="color:#2563EB">Offers for Student Success Managers</span>
+        <span class="rounded-full flex items-center border px-2 py-0.5 text-[11px] font-semibold" style="border-color:#FFB74D;background:#FFF3E0;color:#E65100">For You</span>
+      </div>
+      <div class="flex gap-3 m-3 overflow-x-auto pb-1">
+        ${ssmOffers.length ? ssmOffers.map(o => offerCardHtml(o)).join('') : offersEmptyHtml()}
+      </div>
+    </div>`;
+}
+
+// ─── TOP EARNERS ───────────────────────────────────────────────────────────────
+const TOP_EARNERS_THIS_MONTH = [
+  { name:'Rahul Kumar', pct:100 },
+  { name:'Priya Joshi', pct:82 },
+  { name:'Amit Khurana', pct:74 },
+  { name:'Sneha Rao', pct:61 },
+  { name:'Vikram D.', pct:55 },
+];
+const TOP_EARNERS_ALL_TIME = [
+  { name:'Priya Joshi', pct:100 },
+  { name:'Rahul Kumar', pct:91 },
+  { name:'Tanvir Ali', pct:78 },
+  { name:'Amit Khurana', pct:70 },
+  { name:'Meera Nair', pct:58 },
+];
+const TROPHY_SVG_PATH = '<path d="M19 5h-2V3H7v2H5c-1.1 0-2 .9-2 2v1c0 2.55 1.92 4.63 4.39 4.94.63 1.5 1.98 2.63 3.61 2.96V19H7v2h10v-2h-4v-3.1c1.63-.33 2.98-1.46 3.61-2.96C19.08 12.63 21 10.55 21 8V7c0-1.1-.9-2-2-2zM5 8V7h2v3.82C5.84 10.4 5 9.3 5 8zm14 0c0 1.3-.84 2.4-2 2.82V7h2v1z"/>';
+const TROPHY_COLORS = ['#EAB308', '#C0C0C0', '#CD7F32'];
+
+function initials(name) {
+  return name.split(' ').filter(Boolean).slice(0, 2).map(w => w[0].toUpperCase()).join('');
+}
+
+function topEarnerRowHtml(e, i) {
+  const rankEl = i < 3
+    ? `<div class="w-5 flex-shrink-0 flex items-center justify-center" style="color:${TROPHY_COLORS[i]}"><svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">${TROPHY_SVG_PATH}</svg></div>`
+    : `<div class="w-5 flex-shrink-0 flex items-center justify-center"><span class="text-xs font-medium text-text-muted">${i + 1}</span></div>`;
+  return `<div class="flex items-center gap-2">
+    ${rankEl}
+    <span class="w-7 h-7 rounded-full text-white text-[10px] font-bold flex items-center justify-center flex-shrink-0" style="background:#EA580C">${initials(e.name)}</span>
+    <p class="text-sm font-medium text-text-main truncate flex-1 min-w-0">${e.name}</p>
+    <div class="w-14 flex-1">
+      <div class="h-1.5 rounded-full" style="background:#E2E8F0"><div class="h-1.5 rounded-full" style="background:#EA580C;width:${e.pct}%"></div></div>
+    </div>
+  </div>`;
+}
+
+function topEarnersColumnHtml(title, entries) {
+  return `<div>
+    <p class="text-[10px] font-semibold uppercase tracking-wide mb-3" style="color:#94A3B8">${title}</p>
+    <div class="space-y-4">${entries.length ? entries.map(topEarnerRowHtml).join('') : `<div class="text-xs text-text-muted text-center py-4">No data yet</div>`}</div>
+  </div>`;
+}
+
+function buildTopEarnersSection(thisMonth, allTime) {
+  return `<div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+    ${topEarnersColumnHtml('This Month', thisMonth)}
+    ${topEarnersColumnHtml('All Time', allTime)}
+  </div>`;
+}
+
 // ─── MANAGER INCENTIVES ───────────────────────────────────────────────────────
 function renderMgrIncentives() {
   const totalPayout = MGR_TEAM.reduce((s, r) => s + r.revenue * 3400 + r.sti * 800 + r.loan * 600, 0);
@@ -1073,16 +1180,14 @@ function renderMgrIncentives() {
   document.getElementById('mgrOppAmt').textContent = `₹${oppSize.toLocaleString('en-IN')}`;
   document.getElementById('mgrOppSub').textContent = `${TEAM_IBT.reduce((s, i) => s + i.count, 0)} open tasks across the team`;
 
-  const sorted = [...MGR_TEAM].map(r => ({ ...r, earned: r.revenue * 3400 + r.sti * 800 + r.loan * 600 })).sort((a, b) => b.earned - a.earned);
-  document.getElementById('mgrEarnersLeaderboard').innerHTML = sorted.map((r, i) => `
-    <div class="flex items-center gap-3 bg-surface rounded-xl border border-border px-3 py-2.5">
-      ${rankBadge(i)}
-      <div class="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0" style="background:${r.color}">${r.initials}</div>
-      <span class="flex-1 text-sm font-medium">${r.name}</span>
-      <span class="font-mono text-sm font-bold text-primary">₹${r.earned.toLocaleString('en-IN')}</span>
-    </div>`).join('');
-
-  document.getElementById('mgrPerfScorecardContent').innerHTML = buildTeamPerfSummary();
+  const thisMonth = [...MGR_TEAM].map(r => ({ ...r, earned: r.revenue * 3400 + r.sti * 800 + r.loan * 600 })).sort((a, b) => b.earned - a.earned);
+  const thisMonthMax = thisMonth[0].earned || 1;
+  const allTime = [...MGR_TEAM].map(r => ({ ...r, score: r.revenue * 3400 + r.sti * 800 + r.loan * 600 * 3 + parseInt(r.quality) * 50 })).sort((a, b) => b.score - a.score);
+  const allTimeMax = allTime[0].score || 1;
+  document.getElementById('body-mgrearners').innerHTML = buildTopEarnersSection(
+    thisMonth.map(r => ({ name:r.name, pct:Math.round(r.earned / thisMonthMax * 100) })),
+    allTime.map(r => ({ name:r.name, pct:Math.round(r.score / allTimeMax * 100) }))
+  );
 }
 
 function teamTotalOverdue() { return MGR_TEAM.reduce((s, r) => s + r.overdue, 0); }
@@ -1158,10 +1263,6 @@ function buildMgrDrilldown(rm) {
 }
 
 // ─── INCENTIVES (RM) ──────────────────────────────────────────────────────────
-function toggleBreakdown() {
-  document.getElementById('earnBreakdown').classList.toggle('hidden');
-}
-
 function openOppDetail() {
   document.getElementById('incentivesMainInner').classList.add('hidden');
   document.getElementById('opportunityDetail').classList.remove('hidden');
@@ -2166,14 +2267,14 @@ function renderRmBoostSeverity() {
 }
 
 function boot() {
-  const perfHtml = buildPerfSummary();
-  document.getElementById('perfSummaryContent').innerHTML = perfHtml;
-  document.getElementById('perfScorecardContent').innerHTML = perfHtml;
+  document.getElementById('perfSummaryContent').innerHTML = buildPerfSummary();
 
   renderTraining();
   updateCallStatus('active');
   renderTopPerformers('yesterday');
   renderRmBoostSeverity();
+  document.getElementById('body-offers').innerHTML = buildOngoingOffers(RM_OFFERS_STUDENTS, RM_OFFERS_SSM);
+  document.getElementById('body-earners').innerHTML = buildTopEarnersSection(TOP_EARNERS_THIS_MONTH, TOP_EARNERS_ALL_TIME);
 }
 
 boot();

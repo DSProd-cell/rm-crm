@@ -489,24 +489,15 @@
           </div>
         </section>
 
-        <section class="bg-white rounded-xl border border-border overflow-hidden mb-4">
-          <button onclick="toggleSection('mgrearners')" class="w-full flex items-center justify-between px-5 py-4 hover:bg-surface/60 transition-colors cursor-pointer">
-            <h2 class="font-semibold text-text-main flex items-center gap-2">💰 Top Earners on Your Team</h2>
+        <section class="bg-white rounded-xl border border-border shadow-sm overflow-hidden">
+          <button onclick="toggleSection('mgrearners')" class="w-full flex items-center justify-between gap-4 px-4 py-3.5 hover:bg-surface/60 transition-colors cursor-pointer">
+            <div class="flex items-center gap-3 min-w-0">
+              <div class="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"><svg class="w-5 h-5" style="color:#EA580C" fill="currentColor" viewBox="0 0 24 24"><path d="M19 5h-2V3H7v2H5c-1.1 0-2 .9-2 2v1c0 2.55 1.92 4.63 4.39 4.94.63 1.5 1.98 2.63 3.61 2.96V19H7v2h10v-2h-4v-3.1c1.63-.33 2.98-1.46 3.61-2.96C19.08 12.63 21 10.55 21 8V7c0-1.1-.9-2-2-2zM5 8V7h2v3.82C5.84 10.4 5 9.3 5 8zm14 0c0 1.3-.84 2.4-2 2.82V7h2v1z"/></svg></div>
+              <div class="text-base font-semibold text-text-main">Top Earners on Your Team</div>
+            </div>
             <svg class="w-4 h-4 text-text-muted transition-transform" id="chevron-mgrearners" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9" stroke-width="2"/></svg>
           </button>
-          <div id="body-mgrearners" class="hidden px-5 pb-5">
-            <div class="space-y-2" id="mgrEarnersLeaderboard"></div>
-          </div>
-        </section>
-
-        <section class="bg-white rounded-xl border border-border overflow-hidden">
-          <button onclick="toggleSection('mgrscorecard')" class="w-full flex items-center justify-between px-5 py-4 hover:bg-surface/60 transition-colors cursor-pointer">
-            <h2 class="font-semibold text-text-main flex items-center gap-2">📊 Team Performance Scorecard</h2>
-            <svg class="w-4 h-4 text-text-muted transition-transform" id="chevron-mgrscorecard" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9" stroke-width="2"/></svg>
-          </button>
-          <div id="body-mgrscorecard" class="hidden px-5 pb-5">
-            <div id="mgrPerfScorecardContent"></div>
-          </div>
+          <div id="body-mgrearners" class="hidden px-4 pb-5 pt-1"></div>
         </section>
       </div><!-- /mgrIncentivesMain -->
 
@@ -542,63 +533,74 @@
         </div>
 
         <div id="incentivesMainInner">
-          <div class="grid sm:grid-cols-2 gap-4 mb-6">
-            <div class="bg-white border border-border rounded-xl p-5">
-              <div class="text-[10px] font-bold uppercase tracking-wide text-text-muted mb-1">Earned So Far</div>
-              <div class="font-mono text-3xl font-extrabold text-text-main">₹18,400</div>
-              <div class="text-xs text-text-muted mt-1">September 2026 · Monthly</div>
-              <button class="text-xs font-semibold text-primary flex items-center gap-1 mt-2.5 cursor-pointer" onclick="toggleBreakdown()">
-                View Breakdown
-                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9" stroke-width="2"/></svg>
-              </button>
-              <div id="earnBreakdown" class="hidden mt-2">
-                <table class="w-full text-[11px]">
-                  <thead><tr class="text-[9px] uppercase text-text-muted border-b border-border"><th class="text-left py-1.5">Component · Period</th><th class="text-left py-1.5">Status</th><th class="text-left py-1.5">Earned</th></tr></thead>
-                  <tbody>
-                    <tr class="border-b border-border"><td class="py-1.5">Deposits | 2 deposits (100%)</td><td class="py-1.5"><span class="ai-badge completed">Done</span></td><td class="py-1.5 font-mono">₹4,000</td></tr>
-                    <tr class="border-b border-border"><td class="py-1.5">Lock-ins (C2I)</td><td class="py-1.5"><span class="ai-badge pending">On Track</span></td><td class="py-1.5 font-mono">₹8,000</td></tr>
-                    <tr class="border-b border-border"><td class="py-1.5">F2F Conversion</td><td class="py-1.5"><span class="ai-badge pending">On Track</span></td><td class="py-1.5 font-mono">₹4,400</td></tr>
-                    <tr class="border-b border-border"><td class="py-1.5">Quality Bonus</td><td class="py-1.5"><span class="ai-badge pending" style="background:#FEF2F2;color:#DC2626;border-color:#FCA5A5">Below</span></td><td class="py-1.5 font-mono">₹2,000</td></tr>
-                    <tr><td class="py-1.5 font-bold">Total</td><td></td><td class="py-1.5 font-mono font-bold">₹18,400</td></tr>
-                  </tbody>
-                </table>
+          <div class="flex flex-col md:flex-row gap-3 items-stretch mb-4">
+            <div class="flex-[2] min-w-0">
+              <div class="bg-white rounded-xl border border-border shadow-sm overflow-hidden h-full">
+                <button class="w-full h-full flex items-center justify-between gap-4 px-4 py-4 cursor-pointer hover:bg-surface/60 transition-colors text-left" onclick="toggleSection('earnbreak')">
+                  <div class="text-left min-w-0">
+                    <p class="text-[11px] font-semibold text-text-muted tracking-wider uppercase">Earned So Far</p>
+                    <p class="text-2xl font-bold mt-1" style="color:#16A34A">₹18,400</p>
+                    <p class="text-xs text-text-muted mt-0.5">Tap to see breakdown</p>
+                  </div>
+                  <svg class="w-4 h-4 text-text-muted flex-shrink-0 transition-transform" id="chevron-earnbreak" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9" stroke-width="2"/></svg>
+                </button>
+                <div id="body-earnbreak" class="hidden px-4 pb-4">
+                  <table class="w-full text-[11px]">
+                    <thead><tr class="text-[9px] uppercase text-text-muted border-b border-border"><th class="text-left py-1.5">Component · Period</th><th class="text-left py-1.5">Status</th><th class="text-left py-1.5">Earned</th></tr></thead>
+                    <tbody>
+                      <tr class="border-b border-border"><td class="py-1.5">Deposits | 2 deposits (100%)</td><td class="py-1.5"><span class="ai-badge completed">Done</span></td><td class="py-1.5 font-mono">₹4,000</td></tr>
+                      <tr class="border-b border-border"><td class="py-1.5">Lock-ins (C2I)</td><td class="py-1.5"><span class="ai-badge pending">On Track</span></td><td class="py-1.5 font-mono">₹8,000</td></tr>
+                      <tr class="border-b border-border"><td class="py-1.5">F2F Conversion</td><td class="py-1.5"><span class="ai-badge pending">On Track</span></td><td class="py-1.5 font-mono">₹4,400</td></tr>
+                      <tr class="border-b border-border"><td class="py-1.5">Quality Bonus</td><td class="py-1.5"><span class="ai-badge pending" style="background:#FEF2F2;color:#DC2626;border-color:#FCA5A5">Below</span></td><td class="py-1.5 font-mono">₹2,000</td></tr>
+                      <tr><td class="py-1.5 font-bold">Total</td><td></td><td class="py-1.5 font-mono font-bold">₹18,400</td></tr>
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
-            <div class="rounded-xl p-5 text-white cursor-pointer relative overflow-hidden" style="background:linear-gradient(135deg,#EA580C 0%,#C2410C 100%)" onclick="openOppDetail()">
-              <div class="text-[10px] font-bold uppercase tracking-wide opacity-80 mb-1">Opportunity Size</div>
-              <div class="font-mono text-3xl font-extrabold">₹2,84,000</div>
-              <div class="text-xs opacity-80 mt-1">14 open tasks · Click to view breakdown</div>
+            <div class="flex-1 min-w-0">
+              <div class="rounded-xl px-4 py-4 h-full flex flex-col justify-center relative cursor-pointer" style="background:#EA580C" onclick="openOppDetail()">
+                <svg class="w-4 h-4 absolute top-4 right-3 text-white/80" fill="currentColor" viewBox="0 0 24 24"><path d="M10 6 8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>
+                <div class="text-left min-w-0 pr-6">
+                  <p class="text-[11px] font-semibold text-white/80 tracking-wider uppercase">Opportunity Size</p>
+                  <p class="text-2xl font-bold text-white mt-1">₹2,84,000</p>
+                  <p class="text-xs text-white/80 mt-0.5">14 open tasks · click to view</p>
+                </div>
+              </div>
             </div>
           </div>
 
           <!-- On Going Offers -->
-          <div class="offer-banner mb-4">
-            <div class="text-[10px] font-bold uppercase tracking-wide opacity-90 mb-1.5">🏷️ On Going Offers · 2 active</div>
-            <div class="space-y-1.5 text-sm">
-              <div class="flex justify-between"><span>Referral Drive Sep'26</span><strong>+₹2K</strong></div>
-              <div class="flex justify-between"><span>Lock-in Sprint Bonus</span><strong>Ends Sep 15</strong></div>
-            </div>
-          </div>
+          <section class="bg-white rounded-xl border border-border shadow-sm overflow-hidden mb-4">
+            <button onclick="toggleSection('offers')" class="w-full flex items-center justify-between gap-4 px-4 py-3.5 hover:bg-surface/60 transition-colors cursor-pointer">
+              <div class="flex items-center gap-3 min-w-0">
+                <div class="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"><svg class="w-5 h-5" style="color:#EA580C" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13"/><path d="M19 12v7a2 2 0 01-2 2H7a2 2 0 01-2-2v-7"/><path d="M7.5 8a2.5 2.5 0 010-5A4.8 8 0 0112 8a4.8 8 0 014.5-5 2.5 2.5 0 010 5"/></svg></div>
+                <div class="text-base font-semibold text-text-main">On Going Offers</div>
+              </div>
+              <svg class="w-4 h-4 text-text-muted transition-transform rotate-180" id="chevron-offers" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9" stroke-width="2"/></svg>
+            </button>
+            <div id="body-offers" class="px-4 pb-4 space-y-3"></div>
+          </section>
 
           <!-- Top Earners -->
-          <section class="bg-white rounded-xl border border-border overflow-hidden mb-4">
-            <button onclick="toggleSection('earners')" class="w-full flex items-center justify-between px-5 py-4 hover:bg-surface/60 transition-colors cursor-pointer">
-              <h2 class="font-semibold text-text-main flex items-center gap-2">💰 Top Earners</h2>
+          <section class="bg-white rounded-xl border border-border shadow-sm overflow-hidden mb-4">
+            <button onclick="toggleSection('earners')" class="w-full flex items-center justify-between gap-4 px-4 py-3.5 hover:bg-surface/60 transition-colors cursor-pointer">
+              <div class="flex items-center gap-3 min-w-0">
+                <div class="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"><svg class="w-5 h-5" style="color:#EA580C" fill="currentColor" viewBox="0 0 24 24"><path d="M19 5h-2V3H7v2H5c-1.1 0-2 .9-2 2v1c0 2.55 1.92 4.63 4.39 4.94.63 1.5 1.98 2.63 3.61 2.96V19H7v2h10v-2h-4v-3.1c1.63-.33 2.98-1.46 3.61-2.96C19.08 12.63 21 10.55 21 8V7c0-1.1-.9-2-2-2zM5 8V7h2v3.82C5.84 10.4 5 9.3 5 8zm14 0c0 1.3-.84 2.4-2 2.82V7h2v1z"/></svg></div>
+                <div class="text-base font-semibold text-text-main">Top Earners</div>
+              </div>
               <svg class="w-4 h-4 text-text-muted transition-transform" id="chevron-earners" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9" stroke-width="2"/></svg>
             </button>
-            <div id="body-earners" class="hidden px-5 pb-5">
-              <div class="space-y-2">
-                <div class="flex items-center gap-3 bg-surface rounded-xl border border-border px-3 py-2.5"><span class="rank-badge r1">🥇</span><div class="w-7 h-7 rounded-full bg-accent flex items-center justify-center text-white text-xs font-bold flex-shrink-0">RK</div><span class="flex-1 text-sm font-medium">Rahul Kumar</span><span class="font-mono text-sm font-bold text-primary">₹34,200</span></div>
-                <div class="flex items-center gap-3 bg-surface rounded-xl border border-border px-3 py-2.5"><span class="rank-badge r2">🥈</span><div class="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0" style="background:#6d28d9">PJ</div><span class="flex-1 text-sm font-medium">Priya Joshi</span><span class="font-mono text-sm font-bold text-primary">₹28,500</span></div>
-                <div class="flex items-center gap-3 bg-surface rounded-xl border border-border px-3 py-2.5"><span class="rank-badge r3">🥉</span><div class="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0" style="background:#0369a1">AK</div><span class="flex-1 text-sm font-medium">Amit Khurana</span><span class="font-mono text-sm font-bold text-primary">₹24,800</span></div>
-              </div>
-            </div>
+            <div id="body-earners" class="hidden px-4 pb-5 pt-1"></div>
           </section>
 
           <!-- Monthly Trend -->
-          <section class="bg-white rounded-xl border border-border overflow-hidden mb-4">
-            <button onclick="toggleSection('trend')" class="w-full flex items-center justify-between px-5 py-4 hover:bg-surface/60 transition-colors cursor-pointer">
-              <h2 class="font-semibold text-text-main flex items-center gap-2">📉 Monthly Incentive Earned — FY 2026-27</h2>
+          <section class="bg-white rounded-xl border border-border shadow-sm overflow-hidden">
+            <button onclick="toggleSection('trend')" class="w-full flex items-center justify-between gap-4 px-4 py-3.5 hover:bg-surface/60 transition-colors cursor-pointer">
+              <div class="flex items-center gap-3 min-w-0">
+                <div class="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"><svg class="w-5 h-5" style="color:#EA580C" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg></div>
+                <div class="text-base font-semibold text-text-main">Monthly Incentive Earned — FY 2026-27</div>
+              </div>
               <svg class="w-4 h-4 text-text-muted transition-transform" id="chevron-trend" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9" stroke-width="2"/></svg>
             </button>
             <div id="body-trend" class="hidden px-5 pb-5">
@@ -610,17 +612,6 @@
                 <div><div class="text-[10px] text-text-muted mb-1">Aug</div><div class="h-[70px] bg-primary/75 rounded"></div><div class="text-[10px] mt-1 font-semibold font-mono">₹21K</div></div>
                 <div><div class="text-[10px] text-text-muted mb-1">Sep</div><div class="h-[52px] bg-accent rounded"></div><div class="text-[10px] mt-1 font-bold font-mono text-accent">₹18K↑</div></div>
               </div>
-            </div>
-          </section>
-
-          <!-- Performance Scorecard -->
-          <section class="bg-white rounded-xl border border-border overflow-hidden">
-            <button onclick="toggleSection('scorecard')" class="w-full flex items-center justify-between px-5 py-4 hover:bg-surface/60 transition-colors cursor-pointer">
-              <h2 class="font-semibold text-text-main flex items-center gap-2">📊 Performance Scorecard</h2>
-              <svg class="w-4 h-4 text-text-muted transition-transform" id="chevron-scorecard" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9" stroke-width="2"/></svg>
-            </button>
-            <div id="body-scorecard" class="hidden px-5 pb-5">
-              <div id="perfScorecardContent"></div>
             </div>
           </section>
         </div>
