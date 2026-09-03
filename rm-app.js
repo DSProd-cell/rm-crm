@@ -333,47 +333,121 @@ function visibleTeam() {
 }
 
 // ─── PIPELINE DRAWER ─────────────────────────────────────────────────────────
-const PIPELINE_LABELS = { sti:'Boost STI Pipeline', revenue:'Boost Revenue Pipeline', loan:'Boost Loan Pipeline' };
+const PIPELINE_LABELS = { sti:'Boost STI', revenue:'Boost Revenue', loan:'Boost Loan' };
+
+const PIPELINE_STAGES = {
+  sti: [
+    { key:'app_ready', label:'App Ready', match:'App Ready Pending' },
+    { key:'f2f', label:'F2F Pending', match:'F2F Pending' },
+    { key:'docs', label:'Docs Pending', match:'Docs Pending' },
+  ],
+  revenue: [
+    { key:'c2i', label:'C2I', match:'Lock-in Pending (C2I)' },
+    { key:'prime', label:'Prime', match:'Lock-in Pending (Prime)' },
+  ],
+  loan: [
+    { key:'vc_booking', label:'VC Booking', match:'Loan VC Booking Pending' },
+    { key:'vc_join', label:'VC Join', match:'Loan VC Join Pending' },
+    { key:'pf_login', label:'PF Log-in', match:'PF Log-in Pending' },
+  ],
+};
+
+const CLOSE_GUIDANCE = {
+  'App Ready Pending': 'Confirm all documents are uploaded and submit the application. Task closes once the App Ready date is set. Always update the follow-up date after confirming with the student.',
+  'F2F Pending': 'Schedule and complete the 2nd discussion (F2F) with the student basis their preference — Offline/Online session. Task closes once F2F is marked done.',
+  'Docs Pending': 'Collect the remaining documents (bank statement, transcripts, etc.) from the student. Task closes once all required docs are received.',
+  'Lock-in Pending (C2I)': 'Discuss C2I lock-in benefits and get the student to confirm. Task closes once the lock-in is recorded against this student.',
+  'Lock-in Pending (Prime)': 'Walk the student through Leap Prime and get them to lock in. Task closes once the Prime lock-in is recorded.',
+  'Loan VC Booking Pending': 'Book a Loan VC slot with the student. Task closes once the VC is booked and confirmed.',
+  'Loan VC Join Pending': 'Ensure the student joins their booked Loan VC session. Task closes once VC attendance is marked.',
+  'PF Log-in Pending': 'Help the student complete their PF portal log-in and start the process. Task closes once log-in is confirmed.',
+};
+
+let pipelineFilterState = { type:null, stage:'all', todayOnly:false, search:'' };
 
 function openPipeline(type) {
   state.currentPipeline = type;
-  const leads = MOCK_LEADS[type] || [];
+  pipelineFilterState = { type, stage:'all', todayOnly:false, search:'' };
+  openDrawer(`${PIPELINE_LABELS[type]} Pipeline`, '<div id="pipelineDrawerRoot"></div>');
+  renderPipelineDrawerBody();
+}
 
-  const sorted = [...leads].sort((a,b) => {
+function pipelineFilteredLeads() {
+  const { type, stage, todayOnly, search } = pipelineFilterState;
+  const leads = MOCK_LEADS[type] || [];
+  const stages = PIPELINE_STAGES[type] || [];
+  let filtered = leads;
+  if (todayOnly) filtered = filtered.filter(l => l.dueToday);
+  if (stage !== 'all') {
+    const stageDef = stages.find(s => s.key === stage);
+    if (stageDef) filtered = filtered.filter(l => l.status === stageDef.match);
+  }
+  if (search.trim()) {
+    const q = search.trim().toLowerCase();
+    filtered = filtered.filter(l => l.name.toLowerCase().includes(q) || l.id.toLowerCase().includes(q));
+  }
+  return [...filtered].sort((a,b) => {
     if (a.overdue && !b.overdue) return -1;
     if (!a.overdue && b.overdue) return 1;
     if (a.dueToday && !b.dueToday) return -1;
     if (!a.dueToday && b.dueToday) return 1;
     return 0;
   });
+}
 
-  const rows = sorted.map(l => `
-    <tr class="cursor-pointer hover:bg-surface border-b border-border ${l.overdue ? 'bg-red-50/40' : l.dueToday ? 'bg-amber-50/40' : ''}" onclick="openLeadDetail('${type}','${l.id}')">
-      <td class="px-3 py-2.5"><strong class="text-sm">${l.name}</strong><br/><span class="text-text-muted text-[10px] font-mono">${l.id}</span></td>
-      <td class="px-3 py-2.5 text-xs">${l.intake}</td>
-      <td class="px-3 py-2.5 text-xs">${l.country}</td>
-      <td class="px-3 py-2.5 text-xs">${l.status}</td>
-      <td class="px-3 py-2.5 text-xs font-mono">${l.caDate || '—'}</td>
-      <td class="px-3 py-2.5 text-xs font-mono">${l.lastConnect}</td>
-      <td class="px-3 py-2.5">${l.overdue ? '<span class="ai-badge pending" style="background:#FEF2F2;color:#DC2626;border-color:#FCA5A5">Overdue</span>' : l.dueToday ? '<span class="ai-badge pending">Due Today</span>' : '<span class="ai-badge completed">Scheduled</span>'}</td>
-    </tr>`).join('');
+function buildPipelineCards(filtered, type) {
+  if (!filtered.length) return `<div class="text-center text-sm text-text-muted py-10">No leads match this filter.</div>`;
+  return filtered.map(l => `
+    <div class="student-card mb-3">
+      <div class="font-semibold text-sm text-text-main">${l.name}</div>
+      <div class="text-xs text-text-muted mb-2 font-mono">${l.id} · ${l.intake} · ${l.country}</div>
+      <span class="app-badge downloaded" style="background:#EFF6FF;color:#1D4ED8">${l.status}</span>
+      ${l.overdue ? ' <span class="app-badge not-downloaded">Overdue</span>' : l.dueToday ? ' <span class="ai-badge pending">Due Today</span>' : ''}
+      <div class="text-xs text-text-muted mt-2">Follow-up: ${l.caDate || '—'}</div>
+      <div class="mt-2.5 p-2.5 rounded-lg" style="background:#F8FAFC;border:1px solid #E2E8F0">
+        <div class="text-[10px] font-bold uppercase text-text-muted mb-1.5 tracking-wide">How to close</div>
+        <div class="flex gap-2 items-start">
+          <span class="app-badge downloaded flex-shrink-0" style="background:#EFF6FF;color:#1D4ED8">${l.status}</span>
+          <div class="text-xs text-text-muted leading-relaxed">${CLOSE_GUIDANCE[l.status] || 'Follow up with the student and update the status once resolved.'}</div>
+        </div>
+      </div>
+      <div class="flex gap-2 mt-3">
+        <button class="flex-1 text-xs font-semibold py-2 rounded-lg border border-border hover:bg-surface cursor-pointer transition-colors" onclick="openLeadDetail('${type}','${l.id}')">View Lead</button>
+        <button class="flex-1 text-xs font-semibold py-2 rounded-lg border border-border hover:bg-surface cursor-pointer transition-colors" onclick="openLeadDetail('${type}','${l.id}')">View Task</button>
+      </div>
+    </div>`).join('');
+}
+
+function renderPipelineDrawerBody() {
+  const { type, stage, todayOnly, search } = pipelineFilterState;
+  const leads = MOCK_LEADS[type] || [];
+  const stages = PIPELINE_STAGES[type] || [];
+  const dueTodayCount = leads.filter(l => l.dueToday).length;
+
+  const pillDefs = [{ key:'all', label:'All', count:leads.length }, ...stages.map(s => ({ key:s.key, label:s.label, count: leads.filter(l => l.status === s.match).length }))];
+  const pillsHtml = pillDefs.map(p => `<button class="filter-pill ${stage === p.key ? 'active' : ''}" onclick="setPipelineStage('${p.key}')">${p.label} <strong>${p.count}</strong></button>`).join('');
 
   const html = `
-    <div class="flex items-center justify-between mb-2.5">
-      <div class="text-xs text-text-muted">${leads.length} leads</div>
-      <div class="flex gap-3 text-[11px]">
-        <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-danger inline-block"></span>Overdue</span>
-        <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-accent inline-block"></span>Due Today</span>
-      </div>
+    <div class="flex items-center gap-2 mb-3 flex-wrap">
+      <button class="today-toggle ${todayOnly ? 'active' : ''}" onclick="togglePipelineToday()">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" stroke-width="2"/><line x1="16" y1="2" x2="16" y2="6" stroke-width="2"/><line x1="8" y1="2" x2="8" y2="6" stroke-width="2"/><line x1="3" y1="10" x2="21" y2="10" stroke-width="2"/></svg>
+        Today's Tasks Only
+      </button>
+      <span class="text-xs text-text-muted">${dueTodayCount} due today</span>
     </div>
-    <div class="overflow-x-auto border border-border rounded-lg">
-      <table class="w-full text-xs whitespace-nowrap">
-        <thead><tr class="bg-surface text-[9px] uppercase font-semibold text-text-muted"><th class="px-3 py-2 text-left">Name / ID</th><th class="px-3 py-2 text-left">Intake</th><th class="px-3 py-2 text-left">Country</th><th class="px-3 py-2 text-left">Status</th><th class="px-3 py-2 text-left">CA Date</th><th class="px-3 py-2 text-left">Last Connect</th><th class="px-3 py-2 text-left">Priority</th></tr></thead>
-        <tbody>${rows}</tbody>
-      </table>
-    </div>`;
+    <div class="flex flex-wrap gap-1.5 mb-3">${pillsHtml}</div>
+    <input class="w-full px-3 py-2 border border-border rounded-lg text-sm mb-3 focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Search by name or ID…" value="${escHtml(search)}" oninput="setPipelineSearch(this.value)"/>
+    <div id="pipelineCardsList">${buildPipelineCards(pipelineFilteredLeads(), type)}</div>
+    <div class="text-center text-xs text-text-muted mt-3 pt-3 border-t border-border">All Tasks — ${leads.length} total</div>`;
 
-  openDrawer(PIPELINE_LABELS[type], html);
+  document.getElementById('pipelineDrawerRoot').innerHTML = html;
+}
+
+function setPipelineStage(key) { pipelineFilterState.stage = key; renderPipelineDrawerBody(); }
+function togglePipelineToday() { pipelineFilterState.todayOnly = !pipelineFilterState.todayOnly; renderPipelineDrawerBody(); }
+function setPipelineSearch(v) {
+  pipelineFilterState.search = v;
+  document.getElementById('pipelineCardsList').innerHTML = buildPipelineCards(pipelineFilteredLeads(), pipelineFilterState.type);
 }
 
 function openLeadDetail(pipelineType, leadId) {
@@ -532,6 +606,124 @@ function openAssignedLeads() {
   openDrawer(`All Assigned Leads (${allLeads.length})`, html);
 }
 
+// ─── POTENTIAL ESCALATION DRAWER ("All About User") ──────────────────────────
+const ESCALATION_GROUPS = [
+  { key:'not_happy', icon:'😕', title:'Student Not Happy', count:0, subtitle:'students need attention', ok:true },
+  { key:'wa_summary', icon:'💬', title:'WA Summary', count:8, subtitle:'WhatsApp Group Activity', ok:false },
+  { key:'is_pending', icon:'⏱️', title:'IS Pending and Breached', count:2, subtitle:'students with pending breached tasks', ok:false },
+  { key:'missed_calls', icon:'📵', title:'Missed Calls', count:6, subtitle:'students with missed calls', ok:false },
+];
+
+function openEscalationDrawer() {
+  const html = `
+    <p class="text-sm text-text-muted mb-4">Students who need your immediate attention — review at a case level and take relevant actions.</p>
+    <div class="space-y-2.5" id="escGroupList">${buildEscalationGroups()}</div>`;
+  openDrawer('All About User — Immediate Attention Required', html);
+}
+
+function buildEscalationGroups() {
+  return ESCALATION_GROUPS.map(g => `
+    <div>
+      <div class="esc-group-row ${g.ok ? 'ok' : 'warn'}" onclick="toggleEscalationGroup('${g.key}')">
+        <span class="text-lg flex-shrink-0">${g.icon}</span>
+        <div class="flex-1 min-w-0">
+          <div class="text-sm font-bold" style="color:${g.ok ? '#166534' : '#991B1B'}">${g.title}</div>
+          <div class="text-xs" style="color:${g.ok ? '#15803D' : '#B91C1C'}">${g.count} ${g.subtitle}</div>
+        </div>
+        <svg class="w-4 h-4 transition-transform" id="esc-chev-${g.key}" style="color:${g.ok ? '#166534' : '#991B1B'}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9" stroke-width="2"/></svg>
+      </div>
+      <div class="hidden px-2 py-3" id="esc-body-${g.key}">
+        ${g.count === 0
+          ? `<div class="text-xs text-text-muted text-center py-2">Nothing here right now — you're all caught up ✅</div>`
+          : leadsForEscalation(g.key).map(l => `
+            <div class="flex items-center justify-between py-2 border-b border-border last:border-b-0">
+              <div><div class="text-xs font-semibold">${l.name}</div><div class="text-[10px] text-text-muted font-mono">${l.id}</div></div>
+              <button class="text-[11px] font-semibold text-primary cursor-pointer" onclick="openLeadDetail('${l.pipeline}','${l.id}')">View Lead →</button>
+            </div>`).join('')}
+      </div>
+    </div>`).join('');
+}
+
+function leadsForEscalation(key) {
+  const all = [
+    ...MOCK_LEADS.sti.map(l => ({ ...l, pipeline:'sti' })),
+    ...MOCK_LEADS.revenue.map(l => ({ ...l, pipeline:'revenue' })),
+    ...MOCK_LEADS.loan.map(l => ({ ...l, pipeline:'loan' })),
+  ];
+  if (key === 'wa_summary') return all.filter(l => l.overdue).slice(0, 8);
+  if (key === 'is_pending') return all.filter(l => l.dueToday).slice(0, 2);
+  if (key === 'missed_calls') return all.filter(l => l.overdue || l.dueToday).slice(0, 6);
+  return [];
+}
+
+function toggleEscalationGroup(key) {
+  document.getElementById(`esc-body-${key}`).classList.toggle('hidden');
+  document.getElementById(`esc-chev-${key}`).classList.toggle('rotate-180');
+}
+
+// ─── OWN TASKS DRAWER ──────────────────────────────────────────────────────────
+const OWN_TASKS_MOCK = [
+  { type:'call', label:'Call to User', target:'Ananya Sharma (RM-2041)', due:'2026-09-03 11:00', desc:'Confirm remaining docs for STI.' },
+  { type:'payment', label:'Payment Follow Up', target:'Rahul Jain (RM-2051)', due:'2026-09-03 14:00', desc:'Loan VC slot cancelled — reschedule.' },
+  { type:'message', label:'Send Message', target:'Karan Mehta (RM-2089)', due:'2026-09-03 16:00', desc:'Nudge for F2F confirmation.' },
+  { type:'custom', label:'Custom Task', target:'General', due:'2026-09-04 10:00', desc:'Prepare weekly summary for Team Lead.' },
+  { type:'call', label:'Call to User', target:'Tanvir Ahmed (RM-2045)', due:'2026-09-04 12:00', desc:'Discuss C2I lock-in decision.' },
+];
+const TASK_TYPE_ICON = { call:'📞', message:'💬', payment:'💳', custom:'📝' };
+
+function openOwnTasksDrawer() {
+  const html = `<div class="space-y-2.5">${OWN_TASKS_MOCK.map(t => `
+    <div class="bg-white border border-border rounded-xl p-3.5">
+      <div class="flex items-start justify-between gap-2 mb-1.5">
+        <span class="app-badge downloaded" style="background:#FFF7ED;color:#EA580C">${TASK_TYPE_ICON[t.type]} ${t.label}</span>
+        <span class="text-[10px] text-text-muted font-mono flex-shrink-0">${t.due}</span>
+      </div>
+      <div class="text-sm font-semibold">${t.target}</div>
+      <div class="text-xs text-text-muted mt-1">${t.desc}</div>
+    </div>`).join('')}</div>`;
+  openDrawer('Own Tasks', html);
+}
+
+// ─── MY TICKETS LIST ────────────────────────────────────────────────────────────
+const MY_TICKETS_MOCK = [
+  { id:'TKT-329', category:'Issues in CRM', status:'Resolved', tat:'805.76m', date:'27 Aug 2026', desc:'The STI for a student is submitted today but why is it not reflecting in today\'s output report or even in month\'s achievements?' },
+  { id:'TKT-269', category:'Issues Dashboard and Analytics', status:'Resolved', tat:'3679.59m', date:'21 Aug 2026', desc:'Please clarify whether the data shown is correct — my STI count for the month looks off.' },
+  { id:'TKT-165', category:'Issues in CRM', status:'Resolved', tat:'858.46m', date:'05 Aug 2026', desc:'Next month\'s intake is also included in this month, kindly correct — this is the second time it\'s happening.' },
+  { id:'TKT-142', category:'Incentive / Payout Query', status:'Open', tat:'—', date:'02 Sep 2026', desc:'My lock-in payout for last week doesn\'t match the incentive breakdown shown on the Incentives tab.' },
+  { id:'TKT-109', category:'Issues in CRM', status:'Open', tat:'—', date:'29 Jul 2026', desc:'Lead is still showing at declined stage — kindly move the stage to the correct pipeline.' },
+];
+
+function openTicketList(filter) {
+  const filtered = MY_TICKETS_MOCK.filter(t => filter === 'all' ? true : filter === 'resolved' ? t.status === 'Resolved' : t.status === 'Open');
+  const titleMap = { all:'All Tickets', resolved:'Resolved Tickets', open:'Open Tickets' };
+  const html = filtered.length ? filtered.map(t => `
+    <div class="bg-white border border-border rounded-xl p-4 mb-3" style="border-color:${t.status === 'Resolved' ? '#BBF7D0' : '#FDBA74'}">
+      <div class="flex items-center gap-2 flex-wrap mb-2">
+        <span class="text-[11px] font-bold px-2 py-0.5 rounded-full" style="background:#EEF2FF;color:#4338CA">${t.id}</span>
+        <span class="text-[11px] px-2 py-0.5 rounded-full bg-surface text-text-muted border border-border">${t.category}</span>
+        <span class="ai-badge ${t.status === 'Resolved' ? 'completed' : 'pending'}">${t.status}</span>
+        ${t.tat !== '—' ? `<span class="text-[11px] px-2 py-0.5 rounded-full bg-surface text-text-muted border border-border">TAT: ${t.tat}</span>` : ''}
+        <span class="text-[11px] text-text-muted ml-auto">${t.date}</span>
+      </div>
+      <div class="text-[10px] font-bold uppercase tracking-wide text-text-muted mb-1">Issue Description</div>
+      <div class="text-xs text-text-main leading-relaxed">${t.desc}</div>
+      <button class="text-[11px] font-semibold text-success mt-2 cursor-pointer" onclick="showToast('Opening ticket ${t.id}…','info')">Tap to view details &amp; give feedback →</button>
+    </div>`).join('') : `<div class="text-center text-sm text-text-muted py-10">No tickets in this view.</div>`;
+  openDrawer(titleMap[filter] || 'My Tickets', html);
+}
+
+// ─── REMINDER TYPE SELECTOR ─────────────────────────────────────────────────────
+function selectReminderType(type, btn, suffix) {
+  const container = document.getElementById(`reminderTypeCards${suffix}`);
+  container.querySelectorAll('.reminder-type-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const userIdInput = document.getElementById(`reminderUserId${suffix}`);
+  if (userIdInput) {
+    const placeholders = { call:"e.g. RM-2041, RM-2089…", message:"e.g. RM-2041, RM-2089…", payment:"e.g. RM-2041, RM-2089…", custom:"Optional — leave blank for a general task" };
+    userIdInput.placeholder = placeholders[type] || userIdInput.placeholder;
+  }
+}
+
 // ─── MANAGER TABLE ────────────────────────────────────────────────────────────
 function renderMgrTable() {
   const tbody = document.getElementById('mgrTableBody');
@@ -595,55 +787,26 @@ function renderMgrTopPerformers() {
 }
 
 function buildTeamPerfSummary() {
-  const overallPct = Math.round(TEAM_PERF_METRICS.volume.reduce((s, m) => s + (m.achieved / m.target * 100), 0) / TEAM_PERF_METRICS.volume.length);
-  const status = overallPct >= 80 ? 'Good' : overallPct >= 50 ? 'On Track' : 'Focus';
-  const good = TEAM_PERF_METRICS.volume.filter(m => m.achieved / m.target * 100 >= 80).length;
-  const track = TEAM_PERF_METRICS.volume.filter(m => { const p = m.achieved / m.target * 100; return p >= 50 && p < 80; }).length;
-  const focus = TEAM_PERF_METRICS.volume.length - good - track;
-
-  const volRows = TEAM_PERF_METRICS.volume.map(m => {
-    const pct = Math.round(m.achieved / m.target * 100);
-    return `<tr class="border-b border-border"><td class="py-2">${m.name}</td><td class="py-2 text-right font-bold font-mono">${m.target}</td><td class="py-2 text-right font-mono">${m.achieved}</td><td class="py-2">${statusPill(pct)}</td></tr>`;
-  }).join('');
-
-  const convRows = TEAM_PERF_METRICS.conversion.map(m => {
-    return `<tr class="border-b border-border"><td class="py-2">${m.name}</td><td class="py-2 text-right font-bold font-mono">${m.target}</td><td class="py-2 text-right font-mono">${m.achieved}</td><td class="py-2">${statusPill(m.pct)}</td></tr>`;
-  }).join('');
+  const uid = 'team' + (++perfSummaryUidCounter);
+  const { good, track, focus } = buildScorecardBands(TEAM_PERF_METRICS.volume, m => m.achieved / m.target * 100);
 
   return `
-    <div class="flex gap-2 mb-3 flex-wrap items-center">${statusChip(status)}<span class="text-[10px] px-2.5 py-1 bg-surface border border-border rounded-full font-semibold text-text-muted">Sep 2026 · Team</span></div>
     <div class="grid grid-cols-3 gap-2.5 mb-4 max-w-md">
       <div class="scorecard-col green"><div class="sc-count">${good}</div><div class="sc-label">Good</div></div>
       <div class="scorecard-col amber"><div class="sc-count">${track}</div><div class="sc-label">On Track</div></div>
       <div class="scorecard-col red"><div class="sc-count">${focus}</div><div class="sc-label">Focus</div></div>
     </div>
-    <div class="rounded-lg p-3.5 mb-4 text-white" style="background:linear-gradient(90deg,#0C1A2E,#1D4ED8)">
-      <div class="text-[10px] font-bold uppercase tracking-wide text-white/60 mb-1">Team Business Goals</div>
-      <div class="flex gap-4 flex-wrap text-xs text-white/85">
-        <div>CA → Lock-in 14d: <strong class="text-accent">34%</strong></div>
-        <div>CA → C2I Conversion 14d: <strong class="text-accent">26%</strong></div>
-      </div>
-    </div>
-    <div class="text-[10px] font-bold uppercase tracking-wide text-text-muted mb-1.5">Volume Metrics</div>
-    <div class="overflow-x-auto mb-3">
-      <table class="w-full text-xs"><thead><tr class="text-[10px] uppercase text-text-muted border-b-2 border-border"><th class="text-left py-1.5">Metric</th><th class="text-right py-1.5">Target</th><th class="text-right py-1.5">Achieved</th><th class="text-left py-1.5">Status</th></tr></thead>
-      <tbody>${volRows}</tbody></table>
-    </div>
-    <div class="text-[10px] font-bold uppercase tracking-wide text-text-muted mb-1.5">Conversion Metrics</div>
-    <div class="overflow-x-auto">
-      <table class="w-full text-xs"><thead><tr class="text-[10px] uppercase text-text-muted border-b-2 border-border"><th class="text-left py-1.5">Metric</th><th class="text-right py-1.5">Target</th><th class="text-right py-1.5">Achieved</th><th class="text-left py-1.5">Status</th></tr></thead>
-      <tbody>${convRows}</tbody></table>
-    </div>`;
+    ${buildVolumeMetricsTable(uid, TEAM_PERF_METRICS.volume)}
+    ${buildConversionFunnel(uid, TEAM_PERF_METRICS.conversion)}`;
 }
 
 function saveReminderMgr() {
-  const text = document.getElementById('reminderTextMgr').value.trim();
-  const dt = document.getElementById('reminderDateTimeMgr').value;
-  if (!text) { showToast('Reminder text cannot be empty.', 'error'); return; }
-  if (!dt) { showToast('Please pick a date and time.', 'error'); return; }
-  if (new Date(dt) < new Date()) { showToast('Date must be in the future.', 'error'); return; }
-  document.getElementById('reminderTextMgr').value = '';
+  const userId = document.getElementById('reminderUserIdMgr').value.trim();
+  const activeType = document.querySelector('#reminderTypeCardsMgr .reminder-type-btn.active')?.dataset.type;
+  if (activeType !== 'custom' && !userId) { showToast('User ID is required for this reminder type.', 'error'); return; }
+  document.getElementById('reminderUserIdMgr').value = '';
   document.getElementById('reminderDateTimeMgr').value = '';
+  document.getElementById('reminderTextMgr').value = '';
   showToast('Reminder saved!', 'success');
 }
 
@@ -758,46 +921,89 @@ function closeOppDetail() {
 }
 
 // ─── PERFORMANCE SUMMARY (RM) ─────────────────────────────────────────────────
+function buildScorecardBands(metricsArr, getPct) {
+  const good = metricsArr.filter(m => getPct(m) >= 80).length;
+  const track = metricsArr.filter(m => { const p = getPct(m); return p >= 50 && p < 80; }).length;
+  const focus = metricsArr.length - good - track;
+  return { good, track, focus };
+}
+
+function buildVolumeMetricsTable(uid, metrics) {
+  metrics = metrics || PERF_METRICS.volume;
+  const focusCount = metrics.filter(m => m.achieved / m.target * 100 < 80).length;
+  const rows = metrics.map((m, i) => {
+    const pct = m.achieved / m.target * 100;
+    const dotColor = pct >= 80 ? '#16A34A' : pct >= 50 ? '#EA580C' : '#DC2626';
+    const today = Math.max(0, Math.round(m.achieved * 0.08));
+    return `<tr class="border-b border-border">
+      <td class="py-2 pr-2"><span class="inline-block w-1.5 h-1.5 rounded-full flex-shrink-0" style="background:${dotColor}"></span></td>
+      <td class="py-2 pr-3 whitespace-nowrap">${i + 1}. ${m.name}</td>
+      <td class="py-2 text-right pr-3 font-mono">${m.target}</td>
+      <td class="py-2 text-right pr-3 font-mono font-bold" style="color:${dotColor}">${m.achieved}</td>
+      <td class="py-2 text-right pr-3 font-mono">${today}</td>
+      <td class="py-2">${statusPill(pct)}</td>
+    </tr>`;
+  }).join('');
+  return `
+    <div class="flex items-center gap-2 mb-2 flex-wrap">
+      <svg class="w-4 h-4 text-primary flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10" stroke-width="2"/><line x1="12" y1="20" x2="12" y2="4" stroke-width="2"/><line x1="6" y1="20" x2="6" y2="14" stroke-width="2"/></svg>
+      <span class="text-xs font-bold uppercase tracking-wide">Volume Metrics</span>
+      <span class="text-[10px] px-2 py-0.5 bg-surface border border-border rounded-full text-text-muted font-semibold">${metrics.length} metrics</span>
+      <span class="text-[10px] font-bold text-danger">${focusCount} !</span>
+    </div>
+    <div class="overflow-x-auto mb-1">
+      <table class="w-full text-xs">
+        <thead><tr class="text-[9px] uppercase text-text-muted border-b-2 border-border"><th></th><th class="text-left py-1.5">Metric</th><th class="text-right py-1.5">Target</th><th class="text-right py-1.5">Achieved</th><th class="text-right py-1.5">Today</th><th class="text-left py-1.5">Status</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`;
+}
+
+function buildConversionFunnel(uid, metrics) {
+  metrics = metrics || PERF_METRICS.conversion;
+  const good = metrics.filter(m => m.pct >= 80).length;
+  const bad = metrics.length - good;
+  const rows = metrics.map((m, i) => `
+    <tr class="border-b border-border">
+      <td class="py-2 pr-2"><span class="inline-block w-1.5 h-1.5 rounded-full flex-shrink-0" style="background:${m.pct >= 80 ? '#16A34A' : m.pct >= 50 ? '#EA580C' : '#DC2626'}"></span></td>
+      <td class="py-2 pr-3 whitespace-nowrap">${i + 1}. ${m.name}</td>
+      <td class="py-2 text-right pr-3 font-mono">${m.target}</td>
+      <td class="py-2 text-right pr-3 font-mono font-bold">${m.achieved}</td>
+      <td class="py-2">${statusPill(m.pct)}</td>
+    </tr>`).join('');
+  return `
+    <button class="w-full flex items-center gap-2 py-2.5 border-t border-border cursor-pointer" onclick="document.getElementById('convFunnel${uid}').classList.toggle('hidden');this.querySelector('.cf-chev').classList.toggle('rotate-180')">
+      <svg class="w-4 h-4 text-text-muted flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" stroke-width="2"/></svg>
+      <span class="text-xs font-bold uppercase tracking-wide flex-1 text-left">Conversion Funnel</span>
+      <span class="text-[10px] px-2 py-0.5 bg-surface border border-border rounded-full text-text-muted font-semibold">${metrics.length} metrics</span>
+      <span class="text-[10px] font-bold text-success">${good} ✓</span>
+      <span class="text-[10px] font-bold text-danger">${bad} !</span>
+      <svg class="w-3.5 h-3.5 text-text-muted cf-chev transition-transform flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9" stroke-width="2"/></svg>
+    </button>
+    <div class="hidden pt-1" id="convFunnel${uid}">
+      <div class="overflow-x-auto">
+        <table class="w-full text-xs">
+          <thead><tr class="text-[9px] uppercase text-text-muted border-b-2 border-border"><th></th><th class="text-left py-1.5">Metric</th><th class="text-right py-1.5">Target</th><th class="text-right py-1.5">Achieved</th><th class="text-left py-1.5">Status</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+    </div>`;
+}
+
+let perfSummaryUidCounter = 0;
+
 function buildPerfSummary() {
-  const overallPct = Math.round(PERF_METRICS.volume.reduce((s,m) => s + (m.achieved/m.target*100), 0) / PERF_METRICS.volume.length);
-  const status = overallPct >= 80 ? 'Good' : overallPct >= 50 ? 'On Track' : 'Focus';
-  const good = PERF_METRICS.volume.filter(m => m.achieved / m.target * 100 >= 80).length;
-  const track = PERF_METRICS.volume.filter(m => { const p = m.achieved / m.target * 100; return p >= 50 && p < 80; }).length;
-  const focus = PERF_METRICS.volume.length - good - track;
-
-  const volRows = PERF_METRICS.volume.map(m => {
-    const pct = Math.round(m.achieved / m.target * 100);
-    return `<tr class="border-b border-border"><td class="py-2">${m.name}</td><td class="py-2 text-right font-bold font-mono">${m.target}</td><td class="py-2 text-right font-mono">${m.achieved}</td><td class="py-2">${statusPill(pct)}</td></tr>`;
-  }).join('');
-
-  const convRows = PERF_METRICS.conversion.map(m => {
-    return `<tr class="border-b border-border"><td class="py-2">${m.name}</td><td class="py-2 text-right font-bold font-mono">${m.target}</td><td class="py-2 text-right font-mono">${m.achieved}</td><td class="py-2">${statusPill(m.pct)}</td></tr>`;
-  }).join('');
+  const uid = ++perfSummaryUidCounter;
+  const { good, track, focus } = buildScorecardBands(PERF_METRICS.volume, m => m.achieved / m.target * 100);
 
   return `
-    <div class="flex gap-2 mb-3 flex-wrap items-center">${statusChip(status)}<span class="text-[10px] px-2.5 py-1 bg-surface border border-border rounded-full font-semibold text-text-muted">Sep 2026</span></div>
     <div class="grid grid-cols-3 gap-2.5 mb-4 max-w-md">
       <div class="scorecard-col green"><div class="sc-count">${good}</div><div class="sc-label">Good</div></div>
       <div class="scorecard-col amber"><div class="sc-count">${track}</div><div class="sc-label">On Track</div></div>
       <div class="scorecard-col red"><div class="sc-count">${focus}</div><div class="sc-label">Focus</div></div>
     </div>
-    <div class="rounded-lg p-3.5 mb-4 text-white" style="background:linear-gradient(90deg,#0C1A2E,#1D4ED8)">
-      <div class="text-[10px] font-bold uppercase tracking-wide text-white/60 mb-1">Important Business Goals</div>
-      <div class="flex gap-4 flex-wrap text-xs text-white/85">
-        <div>CA → Lock-in 14d: <strong class="text-accent">37%</strong></div>
-        <div>CA → C2I Conversion 14d: <strong class="text-accent">29%</strong></div>
-      </div>
-    </div>
-    <div class="text-[10px] font-bold uppercase tracking-wide text-text-muted mb-1.5">Volume Metrics</div>
-    <div class="overflow-x-auto mb-3">
-      <table class="w-full text-xs"><thead><tr class="text-[10px] uppercase text-text-muted border-b-2 border-border"><th class="text-left py-1.5">Metric</th><th class="text-right py-1.5">Target</th><th class="text-right py-1.5">Achieved</th><th class="text-left py-1.5">Status</th></tr></thead>
-      <tbody>${volRows}</tbody></table>
-    </div>
-    <div class="text-[10px] font-bold uppercase tracking-wide text-text-muted mb-1.5">Conversion Metrics</div>
-    <div class="overflow-x-auto">
-      <table class="w-full text-xs"><thead><tr class="text-[10px] uppercase text-text-muted border-b-2 border-border"><th class="text-left py-1.5">Metric</th><th class="text-right py-1.5">Target</th><th class="text-right py-1.5">Achieved</th><th class="text-left py-1.5">Status</th></tr></thead>
-      <tbody>${convRows}</tbody></table>
-    </div>`;
+    ${buildVolumeMetricsTable(uid)}
+    ${buildConversionFunnel(uid)}`;
 }
 
 // ─── TRAINING MODULES ─────────────────────────────────────────────────────────
@@ -841,24 +1047,21 @@ function closeTicketModal() {
 }
 function submitTicket() {
   const cat = document.getElementById('ticketCategory').value;
-  const sub = document.getElementById('ticketSubject').value.trim();
   const desc = document.getElementById('ticketDesc').value.trim();
-  if (!cat) { showToast('Please select a category.', 'error'); return; }
-  if (!sub) { showToast('Subject cannot be empty.', 'error'); return; }
-  if (!desc) { showToast('Description cannot be empty.', 'error'); return; }
+  if (!cat) { showToast('Please select a ticket type.', 'error'); return; }
+  if (!desc) { showToast('Please describe your issue.', 'error'); return; }
   closeTicketModal();
   showToast('Ticket raised! Your TL and Admin have been notified.', 'success');
 }
 
 // ─── REMINDER (RM) ─────────────────────────────────────────────────────────────
 function saveReminder() {
-  const text = document.getElementById('reminderText').value.trim();
-  const dt = document.getElementById('reminderDateTime').value;
-  if (!text) { showToast('Reminder text cannot be empty.', 'error'); return; }
-  if (!dt) { showToast('Please pick a date and time.', 'error'); return; }
-  if (new Date(dt) < new Date()) { showToast('Date must be in the future.', 'error'); return; }
-  document.getElementById('reminderText').value = '';
+  const userId = document.getElementById('reminderUserId').value.trim();
+  const activeType = document.querySelector('#reminderTypeCards .reminder-type-btn.active')?.dataset.type;
+  if (activeType !== 'custom' && !userId) { showToast('User ID is required for this reminder type.', 'error'); return; }
+  document.getElementById('reminderUserId').value = '';
   document.getElementById('reminderDateTime').value = '';
+  document.getElementById('reminderText').value = '';
   showToast('Reminder saved!', 'success');
 }
 
@@ -866,6 +1069,50 @@ function saveReminder() {
 function setPerfWindow(window, btn) {
   document.querySelectorAll('#perfToggle button').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
+  renderTopPerformers(window);
+}
+
+// ─── TOP PERFORMERS (multi-metric leaderboard) ────────────────────────────────
+const ORG_LEADERBOARD_BASE = {
+  sti: [{ name:'Rahul Kumar', color:'#f97316', val:12 }, { name:'Priya Joshi', color:'#6d28d9', val:10 }, { name:'Amit Khurana', color:'#0369a1', val:8 }],
+  ca_sti: [{ name:'Sneha Rao', color:'#0369a1', val:41 }, { name:'Meera Nair', color:'#16a34a', val:38 }, { name:'Tanvir Ali', color:'#dc2626', val:35 }],
+  loan: [{ name:'Arjun Patel', color:'#f97316', val:9 }, { name:'Rahul Kumar', color:'#f97316', val:7 }, { name:'Vikram D.', color:'#7c3aed', val:6 }],
+  lockins: [{ name:'Priya Joshi', color:'#6d28d9', val:44 }, { name:'Sneha Rao', color:'#0369a1', val:40 }, { name:'Amit Khurana', color:'#0369a1', val:37 }],
+  revenue: [{ name:'Rahul Kumar', color:'#f97316', val:120000 }, { name:'Priya Joshi', color:'#6d28d9', val:100000 }, { name:'Meera Nair', color:'#16a34a', val:86000 }],
+  f2f: [{ name:'Amit Khurana', color:'#0369a1', val:62 }, { name:'Sneha Rao', color:'#0369a1', val:55 }, { name:'Tanvir Ali', color:'#dc2626', val:48 }],
+};
+const TOP_PERFORMER_SECTIONS = [
+  { key:'sti', label:'STIs Submitted', suffix:'' },
+  { key:'ca_sti', label:'CA→STI (30D, MIN CA 20)', suffix:'%' },
+  { key:'loan', label:'Loan Bookings', suffix:'' },
+  { key:'lockins', label:'Lock-ins (MIN CA 20)', suffix:'%' },
+  { key:'revenue', label:'Revenue', suffix:'₹' },
+  { key:'f2f', label:'F2F % (MIN CA 20)', suffix:'%' },
+];
+const WINDOW_MULTIPLIER = { yesterday:1, month:4.2, '3months':11.5 };
+
+function formatLeaderVal(v, suffix) {
+  if (suffix === '₹') return '₹' + (v >= 100000 ? (v/100000).toFixed(1) + 'L' : (v/1000).toFixed(1) + 'K');
+  if (suffix === '%') return Math.min(99, Math.round(v)) + '%';
+  return Math.round(v);
+}
+
+function renderLeaderboardInto(elId, window) {
+  const mult = WINDOW_MULTIPLIER[window || 'yesterday'] || 1;
+  document.getElementById(elId).innerHTML = TOP_PERFORMER_SECTIONS.map(sec => `
+    <div class="border border-border rounded-xl p-3.5 mb-3">
+      <div class="text-[10px] font-bold uppercase tracking-wide text-text-muted mb-2">${sec.label}</div>
+      ${ORG_LEADERBOARD_BASE[sec.key].map((p, i) => `
+        <div class="flex items-center gap-3 py-1.5">
+          <div class="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0" style="background:${i === 0 ? '#F97316' : i === 1 ? '#94A3B8' : '#B45309'}">🏆</div>
+          <span class="flex-1 text-sm font-medium truncate">${p.name}</span>
+          <span class="text-sm font-bold font-mono">${formatLeaderVal(p.val * mult, sec.suffix)}</span>
+        </div>`).join('')}
+    </div>`).join('');
+}
+
+function renderTopPerformers(window) {
+  if (document.getElementById('leaderboard')) renderLeaderboardInto('leaderboard', window);
 }
 
 // ─── PROFILE ──────────────────────────────────────────────────────────────────
@@ -1612,6 +1859,7 @@ function boot() {
 
   renderTraining();
   updateCallStatus('active');
+  renderTopPerformers('yesterday');
 
   document.getElementById('body-ibt').classList.remove('hidden');
 }

@@ -1112,3 +1112,60 @@ body {
   .ai-complete-btn   { transition: none; }
   .call-btn          { transition: none; }
 }
+
+/* ── Reminder type selector ── */
+.reminder-type-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 8px;
+  border: 1.5px solid #E2E8F0;
+  border-radius: 10px;
+  background: #FFFFFF;
+  color: #64748B;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+  font-family: 'Poppins', sans-serif;
+}
+.reminder-type-btn svg { width: 18px; height: 18px; }
+.reminder-type-btn:hover { border-color: #FDBA74; }
+.reminder-type-btn.active {
+  border-color: #EA580C;
+  color: #EA580C;
+  background: #FFF7ED;
+}
+
+/* ── Pipeline drawer: today-only toggle ── */
+.today-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 9999px;
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid #FDBA74;
+  background: #FFF7ED;
+  color: #EA580C;
+  transition: background 0.12s;
+}
+.today-toggle.active { background: #EA580C; color: #FFFFFF; }
+
+/* ── Escalation group row ── */
+.esc-group-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1px solid;
+  cursor: pointer;
+  transition: box-shadow 0.15s;
+}
+.esc-group-row:hover { box-shadow: 0 2px 10px rgba(0,0,0,0.06); }
+.esc-group-row.ok { background: #F0FDF4; border-color: #BBF7D0; }
+.esc-group-row.warn { background: #FEF2F2; border-color: #FCA5A5; }
