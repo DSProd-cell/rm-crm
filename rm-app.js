@@ -3,31 +3,31 @@
 // ─── MOCK DATA ───────────────────────────────────────────────────────────────
 const MOCK_LEADS = {
   sti: [
-    { id:'RM-2041', name:'Ananya Sharma', intake:'Jan 2027', country:'Canada', status:'CF - Doc Not Collected', caDate:'2026-08-15', f2fDate:'2026-09-01', lockinDate:'2026-08-20', appReadyDate:null, stiDate:null, lastConnect:'2026-09-01 10:30', clName:'Priya CL', overdue:true, notes:['Docs partially submitted — missing bank statement','Called on Sep 1, will share remaining docs by Sep 5'] },
-    { id:'RM-2089', name:'Karan Mehta', intake:'Sep 2026', country:'Germany', status:'Doc Collected - CF Not Done', caDate:'2026-08-20', f2fDate:null, lockinDate:'2026-08-25', appReadyDate:null, stiDate:null, lastConnect:'2026-09-02 14:00', clName:'Amit CL', overdue:false, dueToday:true, notes:['Agreed to join F2F on Sep 3'] },
-    { id:'RM-2103', name:'Deepa Nair', intake:'Jan 2027', country:'UK', status:'Walkin', caDate:'2026-08-10', f2fDate:'2026-08-28', lockinDate:'2026-08-15', appReadyDate:null, stiDate:null, lastConnect:'2026-08-30 16:15', clName:'Rahul CL', overdue:true, notes:['Awaiting academic transcripts','Follow-up scheduled for Sep 4'] },
-    { id:'RM-2117', name:'Vikram Singh', intake:'Apr 2027', country:'Canada', status:'Video Discussion', caDate:'2026-09-01', f2fDate:'2026-09-01', lockinDate:'2026-09-02', appReadyDate:null, stiDate:null, lastConnect:'2026-09-03 09:00', clName:'Priya CL', overdue:false, notes:['Enthusiastic, just needs app form filled'] },
-    { id:'RM-2134', name:'Simran Kaur', intake:'Jan 2027', country:'Germany', status:'CF - Doc Not Collected', caDate:'2026-08-22', f2fDate:'2026-08-29', lockinDate:'2026-08-30', appReadyDate:null, stiDate:null, lastConnect:'2026-09-02 11:00', clName:'Amit CL', overdue:false, dueToday:true, notes:['Waiting for SOP draft review'] },
-    { id:'RM-2158', name:'Rohan Gupta', intake:'Sep 2026', country:'Australia', status:'Doc Collected - CF Not Done', caDate:'2026-09-01', f2fDate:null, lockinDate:'2026-09-01', appReadyDate:null, stiDate:null, lastConnect:'2026-09-03 08:30', clName:'Rahul CL', overdue:false, notes:['Will schedule F2F this week'] },
-    { id:'RM-2171', name:'Aisha Khan', intake:'Apr 2027', country:'Canada', status:'Walkin', caDate:'2026-08-18', f2fDate:'2026-08-25', lockinDate:'2026-08-28', appReadyDate:null, stiDate:null, lastConnect:'2026-08-31 15:00', clName:'Priya CL', overdue:true, notes:['Needs IELTS score before app ready'] },
+    { id:'RM-2041', name:'Ananya Sharma', intake:'Jan 2027', country:'Canada', status:'F2F Done - Doc Not Collected', caDate:'2026-08-15', f2fDate:'2026-09-01', lockinDate:'2026-08-20', appReadyDate:null, stiDate:null, lastConnect:'2026-09-01 10:30', clName:'Priya CL', overdue:true, notes:['Docs partially submitted — missing bank statement','Called on Sep 1, will share remaining docs by Sep 5'] },
+    { id:'RM-2089', name:'Karan Mehta', intake:'Sep 2026', country:'Germany', status:'F2F Done - CF Not Done', caDate:'2026-08-20', f2fDate:null, lockinDate:'2026-08-25', appReadyDate:null, stiDate:null, lastConnect:'2026-09-02 14:00', clName:'Amit CL', overdue:false, dueToday:true, notes:['Agreed to join F2F on Sep 3'] },
+    { id:'RM-2103', name:'Deepa Nair', intake:'Jan 2027', country:'UK', status:'F2F Not Done', caDate:'2026-08-10', f2fDate:'2026-08-28', lockinDate:'2026-08-15', appReadyDate:null, stiDate:null, lastConnect:'2026-08-30 16:15', clName:'Rahul CL', overdue:true, notes:['Awaiting academic transcripts','Follow-up scheduled for Sep 4'] },
+    { id:'RM-2117', name:'Vikram Singh', intake:'Apr 2027', country:'Canada', status:'F2F Not Done', caDate:'2026-09-01', f2fDate:'2026-09-01', lockinDate:'2026-09-02', appReadyDate:null, stiDate:null, lastConnect:'2026-09-03 09:00', clName:'Priya CL', overdue:false, notes:['Enthusiastic, just needs app form filled'] },
+    { id:'RM-2134', name:'Simran Kaur', intake:'Jan 2027', country:'Germany', status:'F2F Done - Doc Not Collected', caDate:'2026-08-22', f2fDate:'2026-08-29', lockinDate:'2026-08-30', appReadyDate:null, stiDate:null, lastConnect:'2026-09-02 11:00', clName:'Amit CL', overdue:false, dueToday:true, notes:['Waiting for SOP draft review'] },
+    { id:'RM-2158', name:'Rohan Gupta', intake:'Sep 2026', country:'Australia', status:'F2F Done - CF Not Done', caDate:'2026-09-01', f2fDate:null, lockinDate:'2026-09-01', appReadyDate:null, stiDate:null, lastConnect:'2026-09-03 08:30', clName:'Rahul CL', overdue:false, notes:['Will schedule F2F this week'] },
+    { id:'RM-2171', name:'Aisha Khan', intake:'Apr 2027', country:'Canada', status:'F2F Not Done', caDate:'2026-08-18', f2fDate:'2026-08-25', lockinDate:'2026-08-28', appReadyDate:null, stiDate:null, lastConnect:'2026-08-31 15:00', clName:'Priya CL', overdue:true, notes:['Needs IELTS score before app ready'] },
   ],
   revenue: [
-    { id:'RM-2045', name:'Tanvir Ahmed', intake:'Sep 2026', country:'Germany', status:'Prime Not Done', caDate:'2026-08-10', f2fDate:'2026-08-20', lockinDate:null, appReadyDate:null, stiDate:null, lastConnect:'2026-09-01 13:00', clName:'Priya CL', overdue:true, notes:['F2F done, deciding on lock-in','Scholarship query raised to counsellor'] },
+    { id:'RM-2045', name:'Tanvir Ahmed', intake:'Sep 2026', country:'Germany', status:'Prime', caDate:'2026-08-10', f2fDate:'2026-08-20', lockinDate:null, appReadyDate:null, stiDate:null, lastConnect:'2026-09-01 13:00', clName:'Priya CL', overdue:true, notes:['F2F done, deciding on lock-in','Scholarship query raised to counsellor'] },
     { id:'RM-2062', name:'Meera Pillai', intake:'Jan 2027', country:'UK', status:'IELTS', caDate:'2026-08-25', f2fDate:'2026-09-01', lockinDate:null, appReadyDate:null, stiDate:null, lastConnect:'2026-09-02 10:00', clName:'Amit CL', overdue:false, dueToday:true, notes:['Interested, needs parent meeting'] },
-    { id:'RM-2076', name:'Saurav Das', intake:'Apr 2027', country:'Canada', status:'Prime Not Done', caDate:'2026-09-01', f2fDate:'2026-09-02', lockinDate:null, appReadyDate:null, stiDate:null, lastConnect:'2026-09-03 10:45', clName:'Rahul CL', overdue:false, notes:['Just did F2F today, very positive'] },
+    { id:'RM-2076', name:'Saurav Das', intake:'Apr 2027', country:'Canada', status:'Prime', caDate:'2026-09-01', f2fDate:'2026-09-02', lockinDate:null, appReadyDate:null, stiDate:null, lastConnect:'2026-09-03 10:45', clName:'Rahul CL', overdue:false, notes:['Just did F2F today, very positive'] },
     { id:'RM-2099', name:'Fatima Shaikh', intake:'Sep 2026', country:'Australia', status:'PTE', caDate:'2026-08-15', f2fDate:'2026-08-28', lockinDate:null, appReadyDate:null, stiDate:null, lastConnect:'2026-08-30 14:30', clName:'Priya CL', overdue:true, notes:['Comparing with another provider'] },
     { id:'RM-2201', name:'Yash Kulkarni', intake:'Jan 2027', country:'Canada', status:'DET', caDate:'2026-08-27', f2fDate:'2026-09-01', lockinDate:null, appReadyDate:null, stiDate:null, lastConnect:'2026-09-02 12:15', clName:'Amit CL', overdue:false, dueToday:true, notes:['DET slot booked for next week'] },
     { id:'RM-2214', name:'Ishita Rao', intake:'Sep 2026', country:'UK', status:'DMAT', caDate:'2026-08-19', f2fDate:'2026-08-30', lockinDate:null, appReadyDate:null, stiDate:null, lastConnect:'2026-09-01 15:20', clName:'Rahul CL', overdue:true, notes:['Awaiting DMAT confirmation from student'] },
   ],
   loan: [
     { id:'RM-2051', name:'Rahul Jain', intake:'Sep 2026', country:'Germany', status:'Loan VC Not Booked', caDate:'2026-08-05', f2fDate:'2026-08-12', lockinDate:'2026-08-15', appReadyDate:'2026-08-20', stiDate:null, lastConnect:'2026-08-28 11:00', clName:'Amit CL', overdue:true, notes:['Loan VC slot booked but cancelled','Reschedule pending'] },
-    { id:'RM-2068', name:'Lakshmi Venkat', intake:'Jan 2027', country:'UK', status:'Not Attended', caDate:'2026-08-18', f2fDate:'2026-08-22', lockinDate:'2026-08-25', appReadyDate:'2026-08-29', stiDate:null, lastConnect:'2026-09-01 09:30', clName:'Rahul CL', overdue:false, dueToday:true, notes:['PF portal access issue, ticket raised'] },
+    { id:'RM-2068', name:'Lakshmi Venkat', intake:'Jan 2027', country:'UK', status:'Loan VC Not Attended', caDate:'2026-08-18', f2fDate:'2026-08-22', lockinDate:'2026-08-25', appReadyDate:'2026-08-29', stiDate:null, lastConnect:'2026-09-01 09:30', clName:'Rahul CL', overdue:false, dueToday:true, notes:['PF portal access issue, ticket raised'] },
     { id:'RM-2082', name:'Arjun Reddy', intake:'Apr 2027', country:'Canada', status:'Loan VC Not Booked', caDate:'2026-09-01', f2fDate:'2026-09-01', lockinDate:'2026-09-02', appReadyDate:'2026-09-02', stiDate:null, lastConnect:'2026-09-03 07:00', clName:'Priya CL', overdue:false, notes:['Loan VC booked for Sep 5'] },
-    { id:'RM-2110', name:'Pooja Mishra', intake:'Sep 2026', country:'Germany', status:'Not Attended', caDate:'2026-08-12', f2fDate:'2026-08-19', lockinDate:'2026-08-22', appReadyDate:'2026-08-27', stiDate:null, lastConnect:'2026-08-29 16:00', clName:'Amit CL', overdue:true, notes:['Hesitant about loan amount'] },
+    { id:'RM-2110', name:'Pooja Mishra', intake:'Sep 2026', country:'Germany', status:'Loan VC Not Attended', caDate:'2026-08-12', f2fDate:'2026-08-19', lockinDate:'2026-08-22', appReadyDate:'2026-08-27', stiDate:null, lastConnect:'2026-08-29 16:00', clName:'Amit CL', overdue:true, notes:['Hesitant about loan amount'] },
     { id:'RM-2125', name:'Dev Patel', intake:'Jan 2027', country:'UK', status:'Loan VC Not Booked', caDate:'2026-08-20', f2fDate:'2026-08-26', lockinDate:'2026-08-28', appReadyDate:'2026-09-01', stiDate:null, lastConnect:'2026-09-02 14:00', clName:'Rahul CL', overdue:false, notes:['Collecting docs for PF portal'] },
-    { id:'RM-2142', name:'Sneha Joshi', intake:'Apr 2027', country:'Australia', status:'Not Attended', caDate:'2026-09-02', f2fDate:'2026-09-02', lockinDate:'2026-09-02', appReadyDate:'2026-09-02', stiDate:null, lastConnect:'2026-09-03 08:00', clName:'Priya CL', overdue:false, notes:['New lock-in, scheduling VC'] },
+    { id:'RM-2142', name:'Sneha Joshi', intake:'Apr 2027', country:'Australia', status:'Loan VC Not Attended', caDate:'2026-09-02', f2fDate:'2026-09-02', lockinDate:'2026-09-02', appReadyDate:'2026-09-02', stiDate:null, lastConnect:'2026-09-03 08:00', clName:'Priya CL', overdue:false, notes:['New lock-in, scheduling VC'] },
     { id:'RM-2160', name:'Manish Verma', intake:'Sep 2026', country:'Canada', status:'Loan VC Not Booked', caDate:'2026-08-08', f2fDate:'2026-08-14', lockinDate:'2026-08-18', appReadyDate:'2026-08-24', stiDate:null, lastConnect:'2026-08-25 10:00', clName:'Amit CL', overdue:true, notes:['Multiple follow-ups done, still delaying'] },
-    { id:'RM-2178', name:'Priti Sharma', intake:'Jan 2027', country:'Germany', status:'Not Attended', caDate:'2026-09-01', f2fDate:'2026-09-01', lockinDate:'2026-09-01', appReadyDate:'2026-09-02', stiDate:null, lastConnect:'2026-09-03 09:30', clName:'Rahul CL', overdue:false, notes:['Confirmed interest, booking VC today'] },
+    { id:'RM-2178', name:'Priti Sharma', intake:'Jan 2027', country:'Germany', status:'Loan VC Not Attended', caDate:'2026-09-01', f2fDate:'2026-09-01', lockinDate:'2026-09-01', appReadyDate:'2026-09-02', stiDate:null, lastConnect:'2026-09-03 09:30', clName:'Rahul CL', overdue:false, notes:['Confirmed interest, booking VC today'] },
     { id:'RM-2195', name:'Ravi Teja', intake:'Apr 2027', country:'UK', status:'Loan VC Not Booked', caDate:'2026-08-28', f2fDate:'2026-09-01', lockinDate:'2026-09-02', appReadyDate:'2026-09-03', stiDate:null, lastConnect:'2026-09-03 08:45', clName:'Priya CL', overdue:false, notes:['PF process explained, collecting docs'] },
   ]
 };
@@ -41,11 +41,30 @@ const MGR_TEAM = [
 ];
 
 const TEAM_ESCALATIONS = [
-  { label:'Customer Support', count:22, cls:'text-danger' },
-  { label:'Low ISL Feedback', count:11, cls:'text-accent' },
-  { label:'Msgs Not Replied', count:27, cls:'text-danger' },
-  { label:'IS Pending', count:8, cls:'text-accent' },
+  { label:'Customer Support', count:22 },
+  { label:'Low ISL Feedback', count:11 },
+  { label:'Messages Not Replied', count:27 },
+  { label:'IS Pending and Breached', count:8 },
 ];
+
+const RM_ESCALATIONS = [
+  { label:'Customer Support', count:6 },
+  { label:'Low ISL Feedback', count:3 },
+  { label:'Messages Not Replied', count:8 },
+  { label:'IS Pending and Breached', count:2 },
+];
+
+function escRowHtml(label, count) {
+  const on = count > 0;
+  const bg = on ? '#FEF2F2' : '#ECFDF5';
+  const border = on ? '#FECACA' : '#A7F3D0';
+  const text = on ? '#B91C1C' : '#047857';
+  const badgeBg = on ? '#FEE2E2' : '#D1FAE5';
+  return `<div class="flex items-center justify-between px-[10px] py-2 rounded-lg" style="background:${bg};border:1px solid ${border}">
+    <span class="text-[10px] font-semibold" style="color:${text}">${label}</span>
+    <span class="text-[10px] font-bold px-2 py-0.5 rounded-full" style="background:${badgeBg};color:${text}">${count}</span>
+  </div>`;
+}
 
 const TEAM_IBT = [
   { label:'F2F Scheduled', count:19, cls:'text-accent' },
@@ -333,47 +352,21 @@ function visibleTeam() {
 // ─── PIPELINE DRAWER ─────────────────────────────────────────────────────────
 const PIPELINE_LABELS = { sti:'Boost STI', revenue:'Boost Revenue', loan:'Boost Loan' };
 
-const PIPELINE_TREE = {
-  sti: [
-    { path:['F2F Done','App Ready Not Done'], leaves:[
-      { label:'CF - Doc Not Collected' },
-      { label:'Doc Collected - CF Not Done' },
-    ]},
-    { path:['F2F Not Done'], leaves:[
-      { label:'Walkin' },
-      { label:'Video Discussion' },
-    ]},
-  ],
-  revenue: [
-    { path:['F2F Done'], leaves:[
-      { label:'Prime Not Done' },
-    ]},
-    { path:['F2F Done','C2I Not Done'], leaves:[
-      { label:'IELTS' },
-      { label:'PTE' },
-      { label:'DET' },
-      { label:'DMAT' },
-    ]},
-  ],
-  loan: [
-    { path:['STI Done'], leaves:[
-      { label:'Loan VC Not Booked' },
-    ]},
-    { path:['Video Call Booked'], leaves:[
-      { label:'Not Attended' },
-    ]},
-  ],
+const PIPELINE_LEAVES = {
+  sti: ['F2F Done - Doc Not Collected', 'F2F Done - CF Not Done', 'F2F Not Done'],
+  revenue: ['Prime', 'IELTS', 'PTE', 'DET', 'DMAT'],
+  loan: ['Loan VC Not Booked', 'Loan VC Not Attended'],
 };
 function slugify(s) { return s.toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_|_$/g,''); }
 function pipelineLeaves(type) {
-  return (PIPELINE_TREE[type] || []).flatMap(sec => sec.leaves.map(lf => ({ slug:slugify(lf.label), label:lf.label })));
+  return (PIPELINE_LEAVES[type] || []).map(label => ({ slug:slugify(label), label }));
 }
 
 // ─── SEVERITY COLOR SYSTEM (red/amber/green, driven by count) ────────────────
 function severityColors(level) {
-  if (level === 'green') return { g1:'#F0FDF4', g2:'#DCFCE7', border:'#BBF7D0', label:'#166534', count:'#15803D', sub:'#14532D', cta:'#16A34A', ctaBg:'rgba(22,163,74,0.1)' };
-  if (level === 'amber') return { g1:'#FFF7ED', g2:'#FFEDD5', border:'#FDBA74', label:'#9A3412', count:'#C2410C', sub:'#7C2D12', cta:'#EA580C', ctaBg:'rgba(234,88,12,0.1)' };
-  return { g1:'#FEF2F2', g2:'#FEE2E2', border:'#FCA5A5', label:'#991B1B', count:'#DC2626', sub:'#7F1D1D', cta:'#DC2626', ctaBg:'rgba(220,38,38,0.1)' };
+  if (level === 'green') return { g1:'#ECFDF5', g2:'#D1FAE5', border:'#C8E6C9', shadow:'#66BB6A55', label:'#2E7D32', count:'#2E7D32', sub:'#2E7D32', cta:'#2E7D32', ctaBg:'#D1FAE5' };
+  if (level === 'amber') return { g1:'#FFF8E1', g2:'#FFECB3', border:'#FFCC80', shadow:'#FFB74D55', label:'#E65100', count:'#E65100', sub:'#E65100', cta:'#E65100', ctaBg:'#FFECB3' };
+  return { g1:'#FEF2F2', g2:'#FEE2E2', border:'#FFCDD2', shadow:'#FCA5A555', label:'#C62828', count:'#C62828', sub:'#DC2626', cta:'#C62828', ctaBg:'#FEE2E2' };
 }
 function boostSeverity(count) {
   if (count === 0) return severityColors('green');
@@ -393,8 +386,9 @@ function qualitySeverity(pct) {
 function applySeverityToCard(cardId, sev) {
   const card = document.getElementById(cardId);
   if (!card) return;
-  card.style.background = `linear-gradient(135deg, ${sev.g1} 0%, ${sev.g2} 100%)`;
+  card.style.background = `linear-gradient(90deg, ${sev.g1} 0%, ${sev.g2} 100%)`;
   card.style.borderColor = sev.border;
+  card.style.boxShadow = `0 2px 8px ${sev.shadow}`;
   card.style.setProperty('--boost-accent', sev.cta);
 }
 function applyBoostCardSeverity(cardId, count) {
@@ -425,17 +419,16 @@ function pillHtml(key, label, count, isActive, colorIdx) {
 }
 
 const CLOSE_GUIDANCE = {
-  'CF - Doc Not Collected': 'F2F and app ready are done but the confirmation fee (CF) document is still pending. Collect the CF document from the student. Task closes once it is received and logged.',
-  'Doc Collected - CF Not Done': 'Document is in — now get the student to complete the CF (confirmation fee) payment. Task closes once CF is confirmed.',
-  'Walkin': 'F2F is not yet done for this student. Get them to walk in for their 2nd discussion. Task closes once the walk-in F2F is completed and logged.',
-  'Video Discussion': 'F2F is not yet done for this student. Schedule and complete a video-call F2F discussion basis their preference. Task closes once F2F is marked done.',
-  'Prime Not Done': 'F2F is done — walk the student through Leap Prime and get them to lock in. Task closes once the Prime lock-in is recorded.',
-  'IELTS': 'F2F is done and the student is on the C2I track — get them to book/complete their IELTS so the C2I lock-in can proceed. Task closes once the test is booked and confirmed.',
-  'PTE': 'F2F is done and the student is on the C2I track — get them to book/complete their PTE so the C2I lock-in can proceed. Task closes once the test is booked and confirmed.',
-  'DET': 'F2F is done and the student is on the C2I track — get them to book/complete their DET so the C2I lock-in can proceed. Task closes once the test is booked and confirmed.',
-  'DMAT': 'F2F is done and the student is on the C2I track — get them to book/complete their DMAT so the C2I lock-in can proceed. Task closes once the test is booked and confirmed.',
+  'F2F Done - Doc Not Collected': 'F2F is done but the required documents haven\'t been collected yet. Collect the pending documents from the student. Task closes once docs are received and logged.',
+  'F2F Done - CF Not Done': 'F2F and docs are done — get College Finalised (CF) confirmed with the student. Task closes once CF is marked done.',
+  'F2F Not Done': 'Schedule and complete the F2F (2nd discussion) with the student — walk-in or video call, basis their preference. Task closes once F2F is marked done.',
+  'Prime': 'F2F is done — walk the student through Leap Prime and get them to lock in. Task closes once Prime is done (or the student moves to STI stage / drops).',
+  'IELTS': 'Student is on the C2I track — get them to book/complete their IELTS. Task closes once C2I is done (or the student moves to STI stage / drops).',
+  'PTE': 'Student is on the C2I track — get them to book/complete their PTE. Task closes once C2I is done (or the student moves to STI stage / drops).',
+  'DET': 'Student is on the C2I track — get them to book/complete their DET. Task closes once C2I is done (or the student moves to STI stage / drops).',
+  'DMAT': 'Student is on the C2I track — get them to book/complete their DMAT. Task closes once C2I is done (or the student moves to STI stage / drops).',
   'Loan VC Not Booked': 'STI is done for this student — book a Loan VC slot with them. Task closes once the VC is booked and confirmed.',
-  'Not Attended': 'Loan VC was booked but the student did not attend. Follow up to reschedule and confirm attendance. Task closes once VC attendance is marked.',
+  'Loan VC Not Attended': 'Loan VC was booked but the student did not attend. Follow up to reschedule and confirm attendance. Task closes once VC attendance is marked.',
 };
 
 let pipelineFilterState = { type:null, stage:'all', todayOnly:false, search:'' };
@@ -495,23 +488,11 @@ function buildPipelineCards(filtered, type) {
 function renderPipelineDrawerBody() {
   const { type, stage, todayOnly, search } = pipelineFilterState;
   const leads = MOCK_LEADS[type] || [];
-  const sections = PIPELINE_TREE[type] || [];
+  const leaves = pipelineLeaves(type);
   const dueTodayCount = leads.filter(l => l.dueToday).length;
 
-  let colorIdx = 0;
-  const groupsHtml = sections.map(sec => {
-    const leafPills = sec.leaves.map(lf => {
-      const slug = slugify(lf.label);
-      const count = leads.filter(l => l.status === lf.label).length;
-      const html = pillHtml(slug, lf.label, count, stage === slug, colorIdx);
-      colorIdx++;
-      return html;
-    }).join('');
-    return `<div class="mb-2.5">
-      <div class="text-[10px] font-semibold uppercase tracking-wide text-text-muted mb-1.5">${escHtml(sec.path.join(' → '))}</div>
-      <div class="flex flex-wrap gap-1.5">${leafPills}</div>
-    </div>`;
-  }).join('');
+  const pillsHtml = pillHtml('all', 'All', leads.length, stage === 'all', 0)
+    + leaves.map((lf, i) => pillHtml(lf.slug, lf.label, leads.filter(l => l.status === lf.label).length, stage === lf.slug, i)).join('');
 
   const html = `
     <div class="flex items-center gap-2 mb-3 flex-wrap">
@@ -521,8 +502,7 @@ function renderPipelineDrawerBody() {
       </button>
       <span class="text-xs text-text-muted">${dueTodayCount} due today</span>
     </div>
-    <div class="mb-1">${pillHtml('all', 'All', leads.length, stage === 'all', 0)}</div>
-    <div class="mb-3">${groupsHtml}</div>
+    <div class="flex flex-wrap gap-1.5 mb-3">${pillsHtml}</div>
     <input class="w-full px-3 py-2 border border-border rounded-lg text-sm mb-3 focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Search by name or ID…" value="${escHtml(search)}" oninput="setPipelineSearch(this.value)"/>
     <div id="pipelineCardsList">${buildPipelineCards(pipelineFilteredLeads(), type)}</div>
     <div class="text-center text-xs text-text-muted mt-3 pt-3 border-t border-border">All Tasks — ${leads.length} total</div>`;
@@ -937,8 +917,7 @@ function renderMgrDashboard() {
     <div class="flex items-center gap-2"><span class="text-[10px] text-text-muted w-6">2nd</span><div class="flex-1 h-1.5 bg-border rounded-full overflow-hidden"><div class="h-full bg-success rounded-full" style="width:${avgQuality + 9}%"></div></div><span class="text-[10px] font-semibold font-mono w-8 text-right">${avgQuality + 9}%</span></div>`;
   document.getElementById('mgrBestTag').innerHTML = `Best: <strong class="text-success">${best.name}</strong> · ${best.quality}`;
 
-  document.getElementById('mgrEscalationList').innerHTML = TEAM_ESCALATIONS.map(e =>
-    `<div class="flex justify-between py-1 border-b border-border text-xs"><span>${e.label}</span><span class="font-bold font-mono ${e.cls}">${e.count}</span></div>`).join('');
+  document.getElementById('mgrEscalationList').innerHTML = TEAM_ESCALATIONS.map(e => escRowHtml(e.label, e.count)).join('');
 
   renderMgrTable();
   renderMgrTopPerformers();
@@ -960,8 +939,8 @@ function buildTeamPerfSummary() {
   const uid = 'team' + (++perfSummaryUidCounter);
   const { good, track, focus } = buildScorecardBands(TEAM_PERF_METRICS.volume, m => m.achieved / m.target * 100);
   const goals = [
-    { label:'CA > STI (14d)', pct:34, target:45 },
     { label:'CA > Lockin (14d)', pct:26, target:40 },
+    { label:'CA > F2F (14d)', pct:34, target:45 },
   ];
 
   return `
@@ -1285,8 +1264,8 @@ function buildPerfSummary() {
   const uid = ++perfSummaryUidCounter;
   const { good, track, focus } = buildScorecardBands(PERF_METRICS.volume, m => m.achieved / m.target * 100);
   const goals = [
-    { label:'CA > STI (14d)', pct:37, target:45 },
     { label:'CA > Lockin (14d)', pct:29, target:40 },
+    { label:'CA > F2F (14d)', pct:37, target:45 },
   ];
 
   return `
@@ -2085,8 +2064,9 @@ function renderRmBoostSeverity() {
   applyBoostCardSeverity('boostCardRevenue', 6);
   applyBoostCardSeverity('boostCardLoan', 9);
   applySeverityToCard('boostCardQuality', qualitySeverity(Math.round((59 + 85) / 2)));
-  applySeverityToCard('boostCardEscalations', boostSeverityWide(6 + 3 + 8 + 2));
+  applySeverityToCard('boostCardEscalations', boostSeverityWide(RM_ESCALATIONS.reduce((s, e) => s + e.count, 0)));
   applySeverityToCard('boostCardOwnTasks', boostSeverity(5));
+  document.getElementById('rmEscalationList').innerHTML = RM_ESCALATIONS.map(e => escRowHtml(e.label, e.count)).join('');
 }
 
 function boot() {

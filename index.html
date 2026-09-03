@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>RM CRM — Sales Intelligence</title>
+<title>RM CRM</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script>
   tailwind.config = {
@@ -179,13 +179,13 @@
             <div class="boost-card" id="boostCardMgrRevenue" onclick="document.getElementById('mgrTableWrap').scrollIntoView({behavior:'smooth'})">
               <div class="boost-label">💰 Boost Revenue</div>
               <div class="boost-count" id="mgrRevenueCount">0</div>
-              <div class="boost-sub">Lock-ins pending — C2I · Prime</div>
+              <div class="boost-sub">Prime + C2I test pending</div>
               <span class="boost-cta">View Team Table →</span>
             </div>
             <div class="boost-card" id="boostCardMgrLoan" onclick="document.getElementById('mgrTableWrap').scrollIntoView({behavior:'smooth'})">
               <div class="boost-label">💳 Boost Loan</div>
               <div class="boost-count" id="mgrLoanCount">0</div>
-              <div class="boost-sub">Loan VC + PF Log-in pending</div>
+              <div class="boost-sub">VC not booked / not attended</div>
               <span class="boost-cta">View Team Table →</span>
             </div>
           </div>
@@ -197,17 +197,20 @@
             <span class="text-[10px] px-2 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full font-semibold">Volume + Quality</span>
           </div>
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5 mb-6">
-            <div class="bg-card border border-border rounded-xl p-4" id="boostCardMgrQuality">
+            <div class="bg-card border border-border rounded-xl p-4 glow-card" id="boostCardMgrQuality">
               <div class="text-[11px] font-bold uppercase tracking-wide text-text-muted mb-2">Team Quality Score</div>
               <div id="mgrQualityBars" class="space-y-1.5"></div>
               <div class="text-[11px] text-text-muted mt-2" id="mgrBestTag"></div>
             </div>
-            <div class="bg-card border border-border rounded-xl p-4" id="boostCardMgrEscalations">
-              <div class="text-[11px] font-bold uppercase tracking-wide text-text-muted mb-2">Potential Escalations</div>
+            <div class="bg-card border border-border rounded-xl p-4 glow-card" id="boostCardMgrEscalations">
+              <div class="flex items-center gap-1.5 mb-2">
+                <p class="text-xs font-bold tracking-wider uppercase text-[#64748B]">⭐ Potential Escalation</p>
+                <span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-red-100 text-red-600 uppercase">IMP</span>
+              </div>
               <div id="mgrEscalationList" class="space-y-1"></div>
-              <a href="#" class="text-[11px] font-semibold text-primary mt-1 inline-block" onclick="openEscalationDrawer();return false;">View all groups →</a>
+              <a href="#" class="mt-3 text-[12px] font-medium inline-block" style="color:#C62828" onclick="openEscalationDrawer();return false;">View all groups →</a>
             </div>
-            <div class="bg-card border border-border rounded-xl p-4" id="boostCardMgrOwnTasks">
+            <div class="bg-card border border-border rounded-xl p-4 glow-card" id="boostCardMgrOwnTasks">
               <div class="text-[11px] font-bold uppercase tracking-wide text-text-muted mb-2">My Own Tasks</div>
               <div class="font-mono text-2xl font-extrabold text-accent">3</div>
               <div class="text-[11px] text-text-muted mb-2">3 pending reminders</div>
@@ -332,19 +335,19 @@
           <div class="boost-card" id="boostCardSti" onclick="openPipeline('sti')">
             <div class="boost-label">🎯 Boost STI</div>
             <div class="boost-count" id="stiCount">7</div>
-            <div class="boost-sub">Docs + App Ready + F2F pending</div>
+            <div class="boost-sub">F2F + Doc/CF pending</div>
             <span class="boost-cta">View Pipeline →</span>
           </div>
           <div class="boost-card" id="boostCardRevenue" onclick="openPipeline('revenue')">
             <div class="boost-label">💰 Boost Revenue</div>
             <div class="boost-count" id="revenueCount">6</div>
-            <div class="boost-sub">Lock-ins pending — C2I · Prime</div>
+            <div class="boost-sub">Prime + C2I test pending</div>
             <span class="boost-cta">View Pipeline →</span>
           </div>
           <div class="boost-card" id="boostCardLoan" onclick="openPipeline('loan')">
             <div class="boost-label">💳 Boost Loan</div>
             <div class="boost-count" id="loanCount">9</div>
-            <div class="boost-sub">Loan VC + PF Log-in pending</div>
+            <div class="boost-sub">VC not booked / not attended</div>
             <span class="boost-cta">View Pipeline →</span>
           </div>
         </div>
@@ -355,7 +358,7 @@
           <span class="text-[10px] px-2 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full font-semibold">Volume + Quality</span>
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5 mb-6">
-          <div class="bg-card border border-border rounded-xl p-4" id="boostCardQuality">
+          <div class="bg-card border border-border rounded-xl p-4 glow-card" id="boostCardQuality">
             <div class="text-[11px] font-bold uppercase tracking-wide text-text-muted mb-2">Quality Score</div>
             <div class="space-y-1.5">
               <div class="flex items-center gap-2"><span class="text-[10px] text-text-muted w-6">1st</span><div class="flex-1 h-1.5 bg-border rounded-full overflow-hidden"><div class="h-full bg-primary rounded-full" style="width:59%"></div></div><span class="text-[10px] font-semibold font-mono w-8 text-right">59%</span></div>
@@ -363,17 +366,15 @@
             </div>
             <div class="text-[11px] text-text-muted mt-2">Best: <strong class="text-success">Rahul K.</strong> · 94%</div>
           </div>
-          <div class="bg-card border border-border rounded-xl p-4" id="boostCardEscalations">
-            <div class="text-[11px] font-bold uppercase tracking-wide text-text-muted mb-2">Potential Escalations</div>
-            <div class="space-y-1 text-xs">
-              <div class="flex justify-between py-1 border-b border-border"><span>Customer Support</span><span class="font-bold text-danger font-mono">6</span></div>
-              <div class="flex justify-between py-1 border-b border-border"><span>Low ISL Feedback</span><span class="font-bold text-accent font-mono">3</span></div>
-              <div class="flex justify-between py-1 border-b border-border"><span>Msgs Not Replied</span><span class="font-bold text-danger font-mono">8</span></div>
-              <div class="flex justify-between py-1"><span>IS Pending</span><span class="font-bold text-accent font-mono">2</span></div>
+          <div class="bg-card border border-border rounded-xl p-4 glow-card" id="boostCardEscalations">
+            <div class="flex items-center gap-1.5 mb-2">
+              <p class="text-xs font-bold tracking-wider uppercase text-[#64748B]">⭐ Potential Escalation</p>
+              <span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-red-100 text-red-600 uppercase">IMP</span>
             </div>
-            <a href="#" class="text-[11px] font-semibold text-primary mt-1 inline-block" onclick="openEscalationDrawer();return false;">View all groups →</a>
+            <div id="rmEscalationList" class="space-y-1"></div>
+            <a href="#" class="mt-3 text-[12px] font-medium inline-block" style="color:#C62828" onclick="openEscalationDrawer();return false;">View all groups →</a>
           </div>
-          <div class="bg-card border border-border rounded-xl p-4" id="boostCardOwnTasks">
+          <div class="bg-card border border-border rounded-xl p-4 glow-card" id="boostCardOwnTasks">
             <div class="text-[11px] font-bold uppercase tracking-wide text-text-muted mb-2">Own Tasks</div>
             <div class="font-mono text-2xl font-extrabold text-accent" id="ownTasksCount">5</div>
             <div class="text-[11px] text-text-muted mb-2">5 pending reminders</div>
