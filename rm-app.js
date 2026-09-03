@@ -582,12 +582,69 @@ function revealPhone(btn) {
   const num = `+91 ${Math.floor(70000 + Math.random() * 29999)}${Math.floor(10000 + Math.random() * 89999)}`;
   btn.outerHTML = `<div class="text-sm font-mono font-semibold">${num}</div>`;
 }
-function fetchNotesInline(btn, pipelineType, leadId) {
+const NOTE_TITLE_POOL = ['Voice mail', 'RNR', 'Call me later', 'Needs time', 'Follow-up Scheduled', 'Docs Discussion'];
+function noteTitleFor(text) { return NOTE_TITLE_POOL[hashStr(text) % NOTE_TITLE_POOL.length]; }
+function noteDateFor(i) {
+  const d = new Date('2026-09-03');
+  d.setDate(d.getDate() - i * 3);
+  return d.toLocaleDateString('en-US', { month:'short', day:'2-digit' });
+}
+function noteAuthorFor(lead, i) { return i % 2 === 0 ? 'You' : lead.clName; }
+
+function notesListHtml(lead) {
+  const added = lead._addedNotes || [];
+  const existing = lead.notes.map((n, i) => ({ title: noteTitleFor(n), date: noteDateFor(i), author: noteAuthorFor(lead, i) }));
+  const all = [...added, ...existing];
+  if (!all.length) return `<div class="text-xs text-text-muted py-2">No notes yet.</div>`;
+  return all.map((note, i) => `
+    <div class="py-2.5 ${i < all.length - 1 ? 'border-b border-border' : ''}">
+      <div class="text-sm font-semibold text-text-main">${note.title}</div>
+      <div class="text-xs text-text-muted mt-1">${note.date} &nbsp;·&nbsp; ${note.author}</div>
+    </div>`).join('');
+}
+
+function renderNotesSection(pipelineType, leadId) {
   const lead = (MOCK_LEADS[pipelineType] || []).find(l => l.id === leadId);
   if (!lead) return;
   const container = document.getElementById(`notesInline-${leadId}`);
-  container.innerHTML = lead.notes.map((n, i) => `<div class="note-item mt-2"><div class="note-text">${n}</div><div class="note-time">${i === 0 ? '2 days ago' : '1 week ago'}</div></div>`).join('');
-  btn.remove();
+  container.innerHTML = `
+    <div>${notesListHtml(lead)}</div>
+    <button class="text-xs font-semibold text-primary cursor-pointer mt-2" onclick="showAddNoteForm('${pipelineType}','${leadId}')">+ Add New Note</button>
+    <div id="addNoteFormWrap-${leadId}"></div>`;
+}
+
+function fetchNotesInline(pipelineType, leadId) {
+  renderNotesSection(pipelineType, leadId);
+}
+
+function showAddNoteForm(pipelineType, leadId) {
+  const wrap = document.getElementById(`addNoteFormWrap-${leadId}`);
+  if (!wrap) return;
+  wrap.innerHTML = `
+    <div class="mt-3 pt-3 border-t border-border">
+      <div class="mb-2.5">${dispositionSelectHtml(`noteDisposition-${leadId}`)}</div>
+      <div class="mb-2.5">
+        <label class="block text-xs font-semibold text-text-muted mb-1">Note *</label>
+        <textarea class="w-full px-3 py-2 border border-border rounded-lg text-sm" id="noteInput-${leadId}" placeholder="Enter your note (max 500 chars)" maxlength="500"></textarea>
+      </div>
+      <div class="flex gap-2">
+        <button class="px-3.5 py-1.5 bg-accent text-white text-xs font-semibold rounded-lg cursor-pointer" onclick="submitNote('${pipelineType}','${leadId}')">Save Note</button>
+        <button class="px-3.5 py-1.5 border border-border text-xs font-semibold rounded-lg cursor-pointer" onclick="document.getElementById('addNoteFormWrap-${leadId}').innerHTML=''">Cancel</button>
+      </div>
+    </div>`;
+}
+
+function submitNote(pipelineType, leadId) {
+  const lead = (MOCK_LEADS[pipelineType] || []).find(l => l.id === leadId);
+  if (!lead) return;
+  const noteInput = document.getElementById(`noteInput-${leadId}`);
+  const dispositionSel = document.getElementById(`noteDisposition-${leadId}`);
+  if (!noteInput || !noteInput.value.trim()) { showToast('Note cannot be empty.', 'error'); return; }
+  if (!dispositionSel.value) { showToast('Please select a disposition.', 'error'); return; }
+  if (!lead._addedNotes) lead._addedNotes = [];
+  lead._addedNotes.unshift({ title: dispositionSel.value, date: 'Today', author: 'You' });
+  renderNotesSection(pipelineType, leadId);
+  showToast('Note saved successfully.', 'success');
 }
 
 function openLeadDetail(pipelineType, leadId) {
@@ -637,8 +694,7 @@ function openLeadDetail(pipelineType, leadId) {
 
       <div class="mb-5">
         <div class="text-[10px] font-bold uppercase text-text-muted mb-1.5">Notes</div>
-        <button class="px-3 py-1.5 border border-border rounded-lg text-xs font-semibold text-primary cursor-pointer hover:bg-surface transition-colors" onclick="fetchNotesInline(this,'${pipelineType}','${lead.id}')">Fetch Notes</button>
-        <div id="notesInline-${lead.id}"></div>
+        <div id="notesInline-${lead.id}"><button class="px-3 py-1.5 border border-border rounded-lg text-xs font-semibold text-primary cursor-pointer hover:bg-surface transition-colors" onclick="fetchNotesInline('${pipelineType}','${lead.id}')">Fetch Notes</button></div>
       </div>
 
       <div class="mb-5">
@@ -669,13 +725,9 @@ function openLeadDetail(pipelineType, leadId) {
       </div>
     </div>
 
-    <div class="flex flex-col gap-2 mt-5">
-      <button class="flex items-center gap-2 px-3.5 py-2.5 rounded-lg text-sm font-semibold cursor-pointer border border-border hover:bg-surface transition-colors" onclick="showNoteForm('${lead.id}')">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-        Log a Note
-      </button>
-      <button class="flex items-center gap-2 px-3.5 py-2.5 rounded-lg text-sm font-semibold cursor-pointer border border-border hover:bg-surface transition-colors" onclick="showQueryForm('${lead.id}','${escHtml(lead.name)}')">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+    <div class="mt-5">
+      <button class="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-semibold cursor-pointer border border-border text-primary hover:bg-surface transition-colors" onclick="showQueryForm('${lead.id}','${escHtml(lead.name)}')">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
         Raise Query for Counsellor
       </button>
     </div>`;
@@ -687,30 +739,6 @@ function openLeadDetail(pipelineType, leadId) {
 
 function closeLeadDetailPage() {
   document.getElementById('leadDetailPage').classList.add('hidden');
-}
-
-function showNoteForm(leadId) {
-  const body = document.getElementById('leadDetailContent');
-  body.insertAdjacentHTML('beforeend', `
-    <div id="noteFormWrap" class="mt-3.5 pt-3.5 border-t border-border">
-      <div class="mb-2.5">
-        <label class="block text-xs font-semibold text-text-muted mb-1">Note *</label>
-        <textarea class="w-full px-3 py-2 border border-border rounded-lg text-sm" id="noteInput" placeholder="Enter your note (max 500 chars)" maxlength="500"></textarea>
-      </div>
-      <div class="mb-2.5">${dispositionSelectHtml('noteDisposition')}</div>
-      <div class="flex gap-2">
-        <button class="px-3.5 py-1.5 bg-accent text-white text-xs font-semibold rounded-lg cursor-pointer" onclick="submitNote('${leadId}')">Save Note</button>
-        <button class="px-3.5 py-1.5 border border-border text-xs font-semibold rounded-lg cursor-pointer" onclick="document.getElementById('noteFormWrap').remove()">Cancel</button>
-      </div>
-    </div>`);
-  document.getElementById('noteInput').focus();
-}
-
-function submitNote(leadId) {
-  const input = document.getElementById('noteInput');
-  if (!input || !input.value.trim()) { showToast('Note cannot be empty.', 'error'); return; }
-  document.getElementById('noteFormWrap').remove();
-  showToast('Note saved successfully.', 'success');
 }
 
 function showFollowupForm(leadId) {
