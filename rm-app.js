@@ -622,7 +622,6 @@ function showAddNoteForm(pipelineType, leadId) {
   if (!wrap) return;
   wrap.innerHTML = `
     <div class="mt-3 pt-3 border-t border-border">
-      <div class="mb-2.5">${dispositionSelectHtml(`noteDisposition-${leadId}`)}</div>
       <div class="mb-2.5">
         <label class="block text-xs font-semibold text-text-muted mb-1">Note *</label>
         <textarea class="w-full px-3 py-2 border border-border rounded-lg text-sm" id="noteInput-${leadId}" placeholder="Enter your note (max 500 chars)" maxlength="500"></textarea>
@@ -638,11 +637,9 @@ function submitNote(pipelineType, leadId) {
   const lead = (MOCK_LEADS[pipelineType] || []).find(l => l.id === leadId);
   if (!lead) return;
   const noteInput = document.getElementById(`noteInput-${leadId}`);
-  const dispositionSel = document.getElementById(`noteDisposition-${leadId}`);
   if (!noteInput || !noteInput.value.trim()) { showToast('Note cannot be empty.', 'error'); return; }
-  if (!dispositionSel.value) { showToast('Please select a disposition.', 'error'); return; }
   if (!lead._addedNotes) lead._addedNotes = [];
-  lead._addedNotes.unshift({ title: dispositionSel.value, date: 'Today', author: 'You' });
+  lead._addedNotes.unshift({ title: noteTitleFor(noteInput.value), date: 'Today', author: 'You' });
   renderNotesSection(pipelineType, leadId);
   showToast('Note saved successfully.', 'success');
 }
@@ -725,12 +722,17 @@ function openLeadDetail(pipelineType, leadId) {
       </div>
     </div>
 
-    <div class="mt-5">
+    <div class="mt-5 flex flex-wrap items-start gap-2">
+      <button class="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-semibold cursor-pointer border border-border text-primary hover:bg-surface transition-colors" onclick="showDispositionForm('${lead.id}')">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 11l3 3L22 4"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+        Disposition
+      </button>
       <button class="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-semibold cursor-pointer border border-border text-primary hover:bg-surface transition-colors" onclick="showQueryForm('${lead.id}','${escHtml(lead.name)}')">
         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
         Raise Query for Counsellor
       </button>
-    </div>`;
+    </div>
+    <div id="dispositionFormWrap-${lead.id}" class="mt-3"></div>`;
 
   document.getElementById('leadDetailContent').innerHTML = html;
   document.getElementById('leadDetailPage').classList.remove('hidden');
@@ -763,6 +765,26 @@ function submitFollowup(leadId) {
   if (!isFutureDateTime(input.value)) { showToast('Follow-up must be a future date and time.', 'error'); return; }
   document.getElementById('followupFormWrap').remove();
   showToast('Follow-up date set.', 'success');
+}
+
+function showDispositionForm(leadId) {
+  const wrap = document.getElementById(`dispositionFormWrap-${leadId}`);
+  if (!wrap) return;
+  wrap.innerHTML = `
+    <div class="p-3 bg-surface rounded-lg border border-border">
+      <div class="mb-2.5">${dispositionSelectHtml(`dispositionSelect-${leadId}`)}</div>
+      <div class="flex gap-2">
+        <button class="px-3.5 py-1.5 bg-accent text-white text-xs font-semibold rounded-lg cursor-pointer" onclick="submitDisposition('${leadId}')">Save Disposition</button>
+        <button class="px-3.5 py-1.5 border border-border text-xs font-semibold rounded-lg cursor-pointer" onclick="document.getElementById('dispositionFormWrap-${leadId}').innerHTML=''">Cancel</button>
+      </div>
+    </div>`;
+}
+
+function submitDisposition(leadId) {
+  const sel = document.getElementById(`dispositionSelect-${leadId}`);
+  if (!sel || !sel.value) { showToast('Please select a disposition.', 'error'); return; }
+  document.getElementById(`dispositionFormWrap-${leadId}`).innerHTML = '';
+  showToast(`Disposition "${sel.value}" saved.`, 'success');
 }
 
 function showQueryForm(leadId, leadName) {
