@@ -3,1293 +3,975 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>RM CRM — Relationship Manager</title>
+<title>RM CRM — Sales Intelligence</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          primary:         '#1D4ED8',
+          'primary-light': '#3B82F6',
+          accent:          '#EA580C',
+          'accent-dark':   '#C2410C',
+          warn:            '#EA580C',
+          danger:          '#DC2626',
+          success:         '#16A34A',
+          sidebar:         '#0C1A2E',
+          'sidebar-hover': '#162236',
+          surface:         '#F1F5F9',
+          card:            '#FFFFFF',
+          'text-main':     '#0F172A',
+          'text-muted':    '#64748B',
+          border:          '#E2E8F0',
+          gold:            '#F97316',
+          silver:          '#94A3B8',
+          bronze:          '#B45309',
+          navy:            '#0C1A2E',
+        },
+        fontFamily: {
+          heading: ['Righteous', 'sans-serif'],
+          body:    ['Poppins', 'sans-serif'],
+          mono:    ['Fira Code', 'monospace'],
+        },
+      }
+    }
+  }
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet"/>
-<style>
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-:root {
-  --primary: #1e1b4b;
-  --primary-mid: #312e81;
-  --primary-light: #4338ca;
-  --accent: #f97316;
-  --accent-light: #fed7aa;
-  --success: #16a34a;
-  --success-bg: #dcfce7;
-  --warning: #d97706;
-  --warning-bg: #fef3c7;
-  --danger: #dc2626;
-  --danger-bg: #fee2e2;
-  --info: #0369a1;
-  --info-bg: #e0f2fe;
-  --bg: #f1f5f9;
-  --card: #ffffff;
-  --border: #e2e8f0;
-  --text: #0f172a;
-  --text-muted: #64748b;
-  --text-light: #94a3b8;
-  --header-h: 56px;
-  --tab-h: 44px;
-  --banner-h: 36px;
-  --radius: 10px;
-  --radius-sm: 6px;
-  --shadow: 0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.06);
-  --shadow-md: 0 4px 12px rgba(0,0,0,.10);
-  --shadow-lg: 0 10px 30px rgba(0,0,0,.14);
-}
-html, body { height: 100%; font-family: 'Inter', sans-serif; font-size: 14px; color: var(--text); background: var(--bg); }
-a { color: inherit; text-decoration: none; }
-button { font-family: inherit; cursor: pointer; border: none; outline: none; background: none; }
-select { font-family: inherit; cursor: pointer; outline: none; }
-input, textarea { font-family: inherit; outline: none; }
-.hidden { display: none !important; }
-.mono { font-family: 'Fira Code', monospace; }
-
-/* ─── HEADER ─── */
-#header {
-  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
-  height: var(--header-h);
-  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-mid) 60%, #4f46e5 100%);
-  display: flex; align-items: center; gap: 12px; padding: 0 16px;
-  box-shadow: 0 2px 8px rgba(0,0,0,.25);
-}
-.logo-wrap { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
-.logo-icon { width: 30px; height: 30px; background: var(--accent); border-radius: 8px; display: flex; align-items: center; justify-content: center; }
-.logo-icon svg { width: 18px; height: 18px; color: #fff; }
-.logo-text { font-size: 15px; font-weight: 700; color: #fff; letter-spacing: -.3px; }
-.logo-sub { font-size: 10px; font-weight: 500; color: rgba(255,255,255,.55); letter-spacing: 1.5px; text-transform: uppercase; }
-
-.search-wrap { flex: 1; max-width: 280px; position: relative; }
-.search-wrap svg { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); width: 14px; height: 14px; color: rgba(255,255,255,.45); pointer-events: none; }
-#globalSearch { width: 100%; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.15); border-radius: 8px; padding: 7px 10px 7px 30px; color: #fff; font-size: 13px; }
-#globalSearch::placeholder { color: rgba(255,255,255,.4); }
-
-.hdr-btn { display: flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 600; transition: all .2s; cursor: pointer; }
-.hdr-btn-outline { border: 1px solid rgba(255,255,255,.25); color: rgba(255,255,255,.85); }
-.hdr-btn-outline:hover { background: rgba(255,255,255,.12); }
-.hdr-btn svg { width: 14px; height: 14px; }
-
-.call-merge-wrap { display: flex; align-items: center; gap: 6px; padding: 5px 10px; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.15); border-radius: 8px; }
-.call-merge-wrap span.label { font-size: 10px; color: rgba(255,255,255,.5); }
-.status-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--success); flex-shrink: 0; }
-.status-dot.busy { background: var(--warning); }
-.status-dot.away { background: var(--text-muted); }
-#callMergeSelect { background: none; border: none; color: rgba(255,255,255,.85); font-size: 11px; font-weight: 500; padding: 0 12px 0 0; appearance: none; -webkit-appearance: none; cursor: pointer; }
-
-.hdr-spacer { flex: 1; }
-
-.icon-btn { position: relative; width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.12); cursor: pointer; transition: background .2s; flex-shrink: 0; }
-.icon-btn:hover { background: rgba(255,255,255,.16); }
-.icon-btn svg { width: 18px; height: 18px; color: rgba(255,255,255,.85); }
-.badge { position: absolute; top: -4px; right: -4px; min-width: 17px; height: 17px; background: var(--danger); border-radius: 9px; font-size: 10px; font-weight: 700; color: #fff; display: flex; align-items: center; justify-content: center; padding: 0 4px; border: 2px solid var(--primary); }
-
-.avatar-btn { width: 34px; height: 34px; border-radius: 50%; background: var(--accent); border: 2px solid rgba(255,255,255,.3); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: #fff; cursor: pointer; flex-shrink: 0; }
-
-/* Role selector pill */
-.role-selector { display: flex; align-items: center; gap: 6px; padding: 4px 10px; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2); border-radius: 8px; }
-.role-selector label { font-size: 10px; color: rgba(255,255,255,.5); }
-#rolePicker { background: none; border: none; color: rgba(255,255,255,.9); font-size: 12px; font-weight: 500; cursor: pointer; padding: 0 14px 0 0; appearance: none; -webkit-appearance: none; }
-
-/* ─── PROMO BANNER ─── */
-#promoBanner {
-  position: fixed; top: var(--header-h); left: 0; right: 0; z-index: 99;
-  height: var(--banner-h);
-  background: linear-gradient(90deg, #7c3aed 0%, #6d28d9 50%, #4f46e5 100%);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 12px; font-weight: 500; color: rgba(255,255,255,.9); gap: 6px;
-  letter-spacing: .1px;
-}
-#promoBanner svg { width: 14px; height: 14px; flex-shrink: 0; }
-
-/* ─── TAB BAR ─── */
-#tabBar {
-  position: fixed; top: calc(var(--header-h) + var(--banner-h)); left: 0; right: 0; z-index: 98;
-  height: var(--tab-h);
-  background: var(--primary);
-  display: flex; align-items: stretch;
-  border-bottom: 1px solid rgba(255,255,255,.08);
-}
-.tab-item { flex: 1; display: flex; align-items: center; justify-content: center; gap: 7px; font-size: 12px; font-weight: 600; color: rgba(255,255,255,.5); cursor: pointer; transition: all .2s; position: relative; letter-spacing: .2px; text-transform: uppercase; }
-.tab-item svg { width: 15px; height: 15px; }
-.tab-item.active { color: #fff; }
-.tab-item.active::after { content: ''; position: absolute; bottom: 0; left: 10%; right: 10%; height: 2px; background: var(--accent); border-radius: 2px 2px 0 0; }
-
-/* ─── MAIN CONTENT ─── */
-#main {
-  margin-top: calc(var(--header-h) + var(--banner-h) + var(--tab-h));
-  padding: 16px;
-  min-height: calc(100vh - var(--header-h) - var(--banner-h) - var(--tab-h));
-}
-
-/* ─── SECTION HEADER ─── */
-.section-label { font-size: 10px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
-.section-label .pill { padding: 2px 7px; border-radius: 10px; font-size: 9px; letter-spacing: .5px; }
-.pill-orange { background: #fff3e0; color: var(--accent); }
-.pill-red { background: var(--danger-bg); color: var(--danger); }
-
-/* ─── METRIC CARDS ─── */
-.cards-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 12px; }
-.metric-card { background: var(--card); border-radius: var(--radius); padding: 14px; box-shadow: var(--shadow); border: 1px solid var(--border); cursor: pointer; transition: all .2s; position: relative; overflow: hidden; }
-.metric-card:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
-.metric-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--card-accent, var(--primary-light)); }
-.metric-card.accent-orange::before { background: var(--accent); }
-.metric-card.accent-green::before { background: var(--success); }
-.metric-card.accent-blue::before { background: var(--info); }
-.metric-card.accent-purple::before { background: #8b5cf6; }
-
-.card-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 10px; }
-.card-title { font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: .5px; }
-.card-icon { width: 30px; height: 30px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-.card-icon svg { width: 16px; height: 16px; }
-.icon-orange { background: #fff3e0; color: var(--accent); }
-.icon-green { background: var(--success-bg); color: var(--success); }
-.icon-blue { background: var(--info-bg); color: var(--info); }
-.icon-purple { background: #ede9fe; color: #7c3aed; }
-.icon-red { background: var(--danger-bg); color: var(--danger); }
-
-.card-count { font-size: 28px; font-weight: 700; color: var(--text); line-height: 1; margin-bottom: 4px; font-variant-numeric: tabular-nums; }
-.card-count.green { color: var(--success); }
-.card-count.orange { color: var(--accent); }
-.card-count.red { color: var(--danger); }
-.card-sub { font-size: 11px; color: var(--text-muted); }
-.card-sub strong { color: var(--text); font-weight: 600; }
-.card-cta { display: flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 600; color: var(--primary-light); margin-top: 10px; }
-.card-cta svg { width: 12px; height: 12px; }
-
-/* Input card specific */
-.quality-bars { margin-top: 8px; }
-.quality-row { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
-.quality-label { font-size: 10px; color: var(--text-muted); width: 22px; flex-shrink: 0; }
-.quality-bar-wrap { flex: 1; height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
-.quality-bar { height: 100%; border-radius: 3px; background: var(--primary-light); transition: width .4s; }
-.quality-bar.good { background: var(--success); }
-.quality-val { font-size: 10px; font-weight: 600; color: var(--text); width: 30px; text-align: right; font-variant-numeric: tabular-nums; }
-.best-tag { font-size: 10px; color: var(--text-muted); margin-top: 4px; }
-.best-tag strong { color: var(--success); }
-
-.escalation-list { margin-top: 6px; }
-.esc-item { display: flex; align-items: center; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid var(--border); font-size: 11px; }
-.esc-item:last-child { border-bottom: none; }
-.esc-count { font-weight: 700; font-variant-numeric: tabular-nums; }
-.esc-count.r { color: var(--danger); }
-.esc-count.o { color: var(--accent); }
-.esc-count.g { color: var(--success); }
-
-/* ─── SECTION CARD (collapsible) ─── */
-.section-card { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); border: 1px solid var(--border); margin-bottom: 12px; overflow: hidden; }
-.section-card-header { display: flex; align-items: center; gap: 10px; padding: 13px 16px; cursor: pointer; user-select: none; transition: background .15s; }
-.section-card-header:hover { background: #fafafa; }
-.sch-icon { width: 28px; height: 28px; border-radius: 7px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-.sch-icon svg { width: 14px; height: 14px; }
-.sch-title { flex: 1; font-size: 13px; font-weight: 600; color: var(--text); }
-.sch-badge { padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; }
-.badge-green { background: var(--success-bg); color: var(--success); }
-.badge-orange { background: var(--warning-bg); color: var(--warning); }
-.badge-red { background: var(--danger-bg); color: var(--danger); }
-.chevron { width: 18px; height: 18px; color: var(--text-light); transition: transform .2s; flex-shrink: 0; }
-.chevron.open { transform: rotate(180deg); }
-.section-card-body { padding: 0 16px 16px; display: none; }
-.section-card-body.open { display: block; }
-
-/* ─── IBT section ─── */
-.ibt-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
-.ibt-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; background: var(--bg); border-radius: var(--radius-sm); border: 1px solid var(--border); gap: 8px; }
-.ibt-label { font-size: 12px; color: var(--text); font-weight: 500; }
-.ibt-count { font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums; }
-
-/* ─── TOP PERFORMERS ─── */
-.perf-toggle { display: flex; gap: 0; margin-bottom: 12px; }
-.perf-toggle button { flex: 1; padding: 6px; font-size: 11px; font-weight: 600; background: var(--border); color: var(--text-muted); transition: all .15s; }
-.perf-toggle button:first-child { border-radius: 6px 0 0 6px; }
-.perf-toggle button:last-child { border-radius: 0 6px 6px 0; }
-.perf-toggle button.active { background: var(--primary); color: #fff; }
-.leaderboard { display: grid; gap: 8px; }
-.lb-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: var(--bg); border-radius: var(--radius-sm); border: 1px solid var(--border); }
-.lb-rank { width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; flex-shrink: 0; }
-.lb-rank.r1 { background: #fef3c7; color: #b45309; }
-.lb-rank.r2 { background: #f1f5f9; color: var(--text-muted); }
-.lb-rank.r3 { background: #fef3c7; color: var(--warning); }
-.lb-avatar { width: 30px; height: 30px; border-radius: 50%; background: var(--primary-mid); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; flex-shrink: 0; }
-.lb-name { flex: 1; font-size: 12px; font-weight: 600; }
-.lb-val { font-size: 13px; font-weight: 700; color: var(--primary-light); font-variant-numeric: tabular-nums; }
-
-/* ─── PERFORMANCE SUMMARY ─── */
-.summary-chips { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
-.summary-chip { padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 600; }
-.chip-good { background: var(--success-bg); color: var(--success); }
-.chip-track { background: var(--warning-bg); color: var(--warning); }
-.chip-focus { background: var(--danger-bg); color: var(--danger); }
-.ibg-banner { background: linear-gradient(90deg, #1e1b4b 0%, #312e81 100%); border-radius: var(--radius-sm); padding: 10px 14px; margin-bottom: 12px; color: #fff; }
-.ibg-label { font-size: 10px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: rgba(255,255,255,.6); margin-bottom: 4px; }
-.ibg-items { display: flex; gap: 16px; flex-wrap: wrap; }
-.ibg-item { font-size: 11px; color: rgba(255,255,255,.8); }
-.ibg-item strong { color: var(--accent); }
-
-.metrics-table { width: 100%; border-collapse: collapse; font-size: 12px; }
-.metrics-table th { padding: 7px 8px; text-align: left; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; color: var(--text-muted); border-bottom: 2px solid var(--border); }
-.metrics-table td { padding: 8px; border-bottom: 1px solid var(--border); }
-.metrics-table tr:last-child td { border-bottom: none; }
-.metrics-table tr:hover td { background: #fafafa; }
-.status-pill { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 600; }
-.sp-good { background: var(--success-bg); color: var(--success); }
-.sp-track { background: var(--warning-bg); color: var(--warning); }
-.sp-focus { background: var(--danger-bg); color: var(--danger); }
-
-/* ─── REMINDER FORM ─── */
-.reminder-form { display: grid; gap: 10px; }
-.form-field { display: flex; flex-direction: column; gap: 4px; }
-.form-label { font-size: 11px; font-weight: 600; color: var(--text-muted); }
-.form-input { padding: 8px 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 13px; color: var(--text); background: var(--bg); transition: border-color .15s; }
-.form-input:focus { border-color: var(--primary-light); background: #fff; }
-textarea.form-input { resize: vertical; min-height: 70px; }
-.btn-primary { background: var(--primary); color: #fff; padding: 9px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; transition: background .2s; }
-.btn-primary:hover { background: var(--primary-mid); }
-.btn-sm { padding: 6px 12px; font-size: 12px; }
-
-/* ─── INCENTIVES TAB ─── */
-.earn-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
-.earn-card { background: var(--card); border-radius: var(--radius); padding: 16px; box-shadow: var(--shadow); border: 1px solid var(--border); position: relative; overflow: hidden; }
-.earn-card.orange { border-color: var(--accent); background: linear-gradient(135deg, #fff8f5 0%, #fff 100%); }
-.earn-card.orange::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--accent); }
-.earn-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .8px; color: var(--text-muted); margin-bottom: 6px; }
-.earn-amount { font-size: 26px; font-weight: 700; color: var(--text); line-height: 1; margin-bottom: 4px; font-variant-numeric: tabular-nums; }
-.earn-amount.orange { color: var(--accent); }
-.earn-sub { font-size: 11px; color: var(--text-muted); }
-.earn-expand-btn { margin-top: 10px; font-size: 11px; font-weight: 600; color: var(--primary-light); display: flex; align-items: center; gap: 4px; cursor: pointer; background: none; border: none; }
-.earn-expand-btn svg { width: 12px; height: 12px; }
-.breakdown-table { width: 100%; margin-top: 10px; font-size: 11px; border-collapse: collapse; }
-.breakdown-table th { font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; color: var(--text-muted); padding: 4px 6px; text-align: left; border-bottom: 1px solid var(--border); }
-.breakdown-table td { padding: 6px; border-bottom: 1px solid var(--border); }
-.breakdown-table tr:last-child td { font-weight: 600; background: #fafafa; }
-
-/* ─── L&D TAB ─── */
-.ticket-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 16px; }
-.ticket-card { background: var(--card); border-radius: var(--radius); padding: 14px; box-shadow: var(--shadow); border: 1px solid var(--border); cursor: pointer; transition: all .2s; position: relative; overflow: hidden; }
-.ticket-card:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
-.ticket-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; }
-.tc-blue::before { background: var(--info); }
-.tc-green::before { background: var(--success); }
-.tc-red::before { background: var(--danger); }
-.tc-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; color: var(--text-muted); margin-bottom: 6px; }
-.tc-count { font-size: 28px; font-weight: 700; font-variant-numeric: tabular-nums; }
-.tc-blue .tc-count { color: var(--info); }
-.tc-green .tc-count { color: var(--success); }
-.tc-red .tc-count { color: var(--danger); }
-.tc-sub { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
-
-.imp-links { display: flex; flex-direction: column; gap: 6px; }
-.imp-link { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: var(--bg); border-radius: var(--radius-sm); border: 1px solid var(--border); cursor: pointer; transition: all .15s; }
-.imp-link:hover { background: #ede9fe; border-color: var(--primary-light); }
-.imp-link svg { width: 14px; height: 14px; color: var(--primary-light); flex-shrink: 0; }
-.imp-link-label { flex: 1; font-size: 12px; font-weight: 500; color: var(--text); }
-.imp-link-arr { width: 14px; height: 14px; color: var(--text-light); }
-
-.training-cats { display: flex; flex-direction: column; gap: 8px; }
-.training-cat { background: var(--bg); border-radius: var(--radius-sm); border: 1px solid var(--border); overflow: hidden; }
-.training-cat-header { display: flex; align-items: center; gap: 8px; padding: 10px 12px; cursor: pointer; }
-.training-cat-header:hover { background: #ede9fe; }
-.tch-icon { width: 24px; height: 24px; border-radius: 6px; background: var(--primary-mid); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-.tch-icon svg { width: 13px; height: 13px; color: #fff; }
-.tch-title { flex: 1; font-size: 12px; font-weight: 600; color: var(--text); }
-.tch-count { font-size: 10px; color: var(--text-muted); }
-.training-cat-body { display: none; padding: 8px 12px; background: #fff; }
-.training-cat-body.open { display: block; }
-.lesson-item { display: flex; align-items: center; gap: 8px; padding: 7px 0; border-bottom: 1px solid var(--border); cursor: pointer; }
-.lesson-item:last-child { border-bottom: none; }
-.lesson-check { width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--border); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-.lesson-check.done { background: var(--success); border-color: var(--success); }
-.lesson-check.done svg { width: 9px; height: 9px; color: #fff; }
-.lesson-name { flex: 1; font-size: 12px; color: var(--text); }
-.lesson-dur { font-size: 10px; color: var(--text-muted); }
-
-/* ─── MANAGER TABLE ─── */
-.mgr-table-wrap { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); border: 1px solid var(--border); overflow: hidden; }
-.mgr-table { width: 100%; border-collapse: collapse; font-size: 12px; }
-.mgr-table th { padding: 10px 12px; text-align: left; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; color: var(--text-muted); border-bottom: 2px solid var(--border); background: #f8fafc; white-space: nowrap; }
-.mgr-table td { padding: 10px 12px; border-bottom: 1px solid var(--border); cursor: pointer; }
-.mgr-table tr:last-child td { border-bottom: none; }
-.mgr-table tr:hover td { background: #f8f5ff; }
-.rm-name-cell { display: flex; align-items: center; gap: 8px; }
-.rm-avatar { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; color: #fff; flex-shrink: 0; }
-
-/* ─── SIDE DRAWER ─── */
-.overlay { position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 200; opacity: 0; pointer-events: none; transition: opacity .25s; }
-.overlay.open { opacity: 1; pointer-events: auto; }
-
-.drawer { position: fixed; top: 0; right: -100%; width: 420px; max-width: 100vw; height: 100vh; background: var(--card); z-index: 201; box-shadow: var(--shadow-lg); transition: right .3s cubic-bezier(.4,0,.2,1); overflow-y: auto; display: flex; flex-direction: column; }
-.drawer.open { right: 0; }
-.drawer-header { position: sticky; top: 0; background: var(--primary); padding: 14px 16px; display: flex; align-items: center; gap: 10px; flex-shrink: 0; z-index: 2; }
-.drawer-title { flex: 1; font-size: 14px; font-weight: 700; color: #fff; }
-.drawer-back { display: flex; align-items: center; gap: 5px; color: rgba(255,255,255,.7); font-size: 12px; cursor: pointer; }
-.drawer-back svg { width: 16px; height: 16px; }
-.drawer-close { width: 28px; height: 28px; border-radius: 6px; background: rgba(255,255,255,.1); display: flex; align-items: center; justify-content: center; cursor: pointer; }
-.drawer-close svg { width: 16px; height: 16px; color: rgba(255,255,255,.8); }
-.drawer-body { flex: 1; padding: 16px; }
-
-/* Lead detail in drawer */
-.lead-info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
-.lead-info-item { display: flex; flex-direction: column; gap: 2px; }
-.li-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; color: var(--text-muted); }
-.li-val { font-size: 13px; font-weight: 500; color: var(--text); }
-.lead-status-tag { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 600; }
-.notes-section { margin-top: 12px; }
-.notes-section h4 { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; color: var(--text-muted); margin-bottom: 8px; }
-.note-item { padding: 8px 10px; background: var(--bg); border-radius: var(--radius-sm); border-left: 3px solid var(--primary-light); margin-bottom: 6px; }
-.note-text { font-size: 12px; color: var(--text); margin-bottom: 3px; }
-.note-time { font-size: 10px; color: var(--text-muted); }
-.lead-actions { display: flex; flex-direction: column; gap: 8px; margin-top: 14px; }
-.action-btn { display: flex; align-items: center; gap: 8px; padding: 10px 14px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 600; cursor: pointer; transition: all .15s; border: 1px solid var(--border); background: var(--bg); color: var(--text); }
-.action-btn:hover { background: #ede9fe; border-color: var(--primary-light); color: var(--primary); }
-.action-btn svg { width: 15px; height: 15px; }
-.action-btn.primary { background: var(--primary); color: #fff; border-color: var(--primary); }
-.action-btn.primary:hover { background: var(--primary-mid); }
-
-/* Pipeline lead table */
-.lead-table-wrap { overflow-x: auto; }
-.lead-table { width: 100%; border-collapse: collapse; font-size: 11px; white-space: nowrap; }
-.lead-table th { padding: 8px 10px; text-align: left; font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; color: var(--text-muted); border-bottom: 2px solid var(--border); background: #f8fafc; position: sticky; top: 0; }
-.lead-table td { padding: 8px 10px; border-bottom: 1px solid var(--border); cursor: pointer; }
-.lead-table tr:hover td { background: #f8f5ff; }
-.overdue-row td { background: #fff9f9; }
-.overdue-row td:first-child { border-left: 2px solid var(--danger); }
-.today-row td { background: #fffbf0; }
-.today-row td:first-child { border-left: 2px solid var(--warning); }
-
-/* ─── NOTIFICATION PANEL ─── */
-.notif-panel { position: fixed; top: var(--header-h); right: 12px; width: 320px; background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow-lg); border: 1px solid var(--border); z-index: 150; display: none; }
-.notif-panel.open { display: block; }
-.notif-panel-header { padding: 12px 14px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
-.notif-panel-header h3 { font-size: 13px; font-weight: 700; color: var(--text); }
-.notif-subcard { }
-.notif-subcard-header { display: flex; align-items: center; gap: 8px; padding: 10px 14px; cursor: pointer; border-bottom: 1px solid var(--border); }
-.notif-subcard-header:hover { background: #fafafa; }
-.nsh-title { flex: 1; font-size: 12px; font-weight: 600; color: var(--text); }
-.nsh-badge { padding: 1px 7px; border-radius: 10px; font-size: 10px; font-weight: 700; }
-.notif-subcard-body { display: none; }
-.notif-subcard-body.open { display: block; }
-.notif-item { padding: 8px 14px; border-bottom: 1px solid var(--border); }
-.notif-item:last-child { border-bottom: none; }
-.notif-item .ni-title { font-size: 12px; font-weight: 500; color: var(--text); }
-.notif-item .ni-sub { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
-.notif-empty { padding: 14px; text-align: center; font-size: 12px; color: var(--text-muted); }
-
-/* ─── PROFILE DROPDOWN ─── */
-.profile-dropdown { position: fixed; top: calc(var(--header-h) + 4px); right: 12px; width: 200px; background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow-lg); border: 1px solid var(--border); z-index: 150; display: none; }
-.profile-dropdown.open { display: block; }
-.pd-header { padding: 12px 14px; border-bottom: 1px solid var(--border); }
-.pd-name { font-size: 13px; font-weight: 700; color: var(--text); }
-.pd-role { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .5px; }
-.pd-item { display: flex; align-items: center; gap: 10px; padding: 10px 14px; cursor: pointer; font-size: 13px; color: var(--text); transition: background .15s; }
-.pd-item:hover { background: var(--bg); }
-.pd-item svg { width: 15px; height: 15px; color: var(--text-muted); }
-.pd-item.danger { color: var(--danger); }
-.pd-item.danger svg { color: var(--danger); }
-
-/* ─── TICKET FORM MODAL ─── */
-.modal { position: fixed; inset: 0; z-index: 300; display: none; align-items: center; justify-content: center; padding: 16px; }
-.modal.open { display: flex; }
-.modal-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,.5); }
-.modal-card { position: relative; background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow-lg); width: 100%; max-width: 440px; z-index: 1; }
-.modal-header { padding: 16px 18px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
-.modal-header h3 { font-size: 15px; font-weight: 700; color: var(--text); }
-.modal-body { padding: 18px; }
-.modal-footer { padding: 14px 18px; border-top: 1px solid var(--border); display: flex; gap: 8px; justify-content: flex-end; }
-.btn-secondary { padding: 8px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; background: var(--bg); color: var(--text); border: 1px solid var(--border); cursor: pointer; }
-
-/* ─── TOAST ─── */
-#toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--primary); color: #fff; padding: 10px 18px; border-radius: 8px; font-size: 13px; font-weight: 500; opacity: 0; transition: opacity .3s; z-index: 400; pointer-events: none; box-shadow: var(--shadow-md); }
-#toast.show { opacity: 1; }
-
-/* ─── OPPORTUNITY DETAIL SCREEN ─── */
-.opp-cards { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
-.opp-card { display: flex; align-items: center; gap: 12px; padding: 12px 14px; background: var(--bg); border-radius: var(--radius-sm); border: 1px solid var(--border); cursor: pointer; transition: all .15s; }
-.opp-card:hover { border-color: var(--primary-light); background: #ede9fe; }
-.opp-card-info { flex: 1; }
-.opp-card-name { font-size: 12px; font-weight: 600; color: var(--text); }
-.opp-card-meta { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
-.opp-card-val { font-size: 14px; font-weight: 700; color: var(--accent); font-variant-numeric: tabular-nums; }
-.opp-card-arr { width: 16px; height: 16px; color: var(--text-light); }
-
-/* ─── BACK BTN ─── */
-.back-btn { display: flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 600; color: var(--primary-light); cursor: pointer; margin-bottom: 12px; }
-.back-btn svg { width: 14px; height: 14px; }
-
-/* ─── UTILS ─── */
-.flex { display: flex; }
-.flex-1 { flex: 1; }
-.items-center { align-items: center; }
-.justify-between { justify-content: space-between; }
-.gap-2 { gap: 8px; }
-.gap-1 { gap: 4px; }
-.mb-1 { margin-bottom: 8px; }
-.mb-2 { margin-bottom: 16px; }
-.mt-1 { margin-top: 8px; }
-.mt-2 { margin-top: 16px; }
-.text-muted { color: var(--text-muted); }
-.text-sm { font-size: 12px; }
-.font-bold { font-weight: 700; }
-.text-right { text-align: right; }
-.divider { height: 1px; background: var(--border); margin: 12px 0; }
-.refresh-btn { display: flex; align-items: center; gap: 4px; font-size: 11px; color: var(--text-muted); cursor: pointer; }
-.refresh-btn svg { width: 12px; height: 12px; }
-.raise-ticket-btn { display: flex; align-items: center; gap: 6px; padding: 8px 14px; background: var(--accent); color: #fff; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; transition: background .2s; }
-.raise-ticket-btn:hover { background: #ea6c00; }
-.raise-ticket-btn svg { width: 14px; height: 14px; }
-.top-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
-.section-title { font-size: 13px; font-weight: 700; color: var(--text); }
-.view-all { font-size: 11px; color: var(--primary-light); font-weight: 600; cursor: pointer; }
-</style>
+<link href="https://fonts.googleapis.com/css2?family=Righteous&family=Poppins:wght@300;400;500;600;700&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="styles.css"/>
 </head>
-<body>
+<body class="font-body bg-surface text-text-main min-h-screen">
 
-<!-- HEADER -->
-<div id="header">
-  <div class="logo-wrap">
-    <div class="logo-icon">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-    </div>
-    <div>
-      <div class="logo-text">RM CRM</div>
-      <div class="logo-sub">Relationship Manager</div>
-    </div>
-  </div>
+<div id="appShell" class="flex flex-col min-h-screen">
 
-  <div class="search-wrap">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-    <input id="globalSearch" type="text" placeholder="Search by ID, Phone, email.."/>
-  </div>
-
-  <button class="hdr-btn hdr-btn-outline" onclick="openAssignedLeads()">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
-    View assigned leads
-  </button>
-
-  <div class="call-merge-wrap">
-    <span class="label">For call merge</span>
-    <div class="status-dot" id="callDot"></div>
-    <select id="callMergeSelect" onchange="updateCallStatus(this.value)">
-      <option value="active">Active</option>
-      <option value="busy">Busy</option>
-      <option value="away">Away</option>
-    </select>
-  </div>
-
-  <div class="hdr-spacer"></div>
-
-  <div class="role-selector">
-    <label>Role:</label>
-    <select id="rolePicker" onchange="switchRole(this.value)">
-      <option value="rm">RM</option>
-      <option value="team_lead">Team Lead</option>
-      <option value="manager_rm">Manager RM</option>
-      <option value="senior_manager">Senior Manager</option>
-      <option value="admin">Admin</option>
-    </select>
-  </div>
-
-  <div class="icon-btn" onclick="toggleNotifPanel()" title="Notifications">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-    <div class="badge" id="notifBadge">3</div>
-  </div>
-
-  <div class="avatar-btn" onclick="toggleProfileDropdown()" title="Profile">AP</div>
-</div>
-
-<!-- PROMO BANNER -->
-<div id="promoBanner">
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
-  Focus on Correct Lead — Before Logging Off, Clear All the Tasks!
-</div>
-
-<!-- TAB BAR -->
-<div id="tabBar">
-  <div class="tab-item active" onclick="switchTab('tasks')" id="tab-tasks">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
-    Tasks & Performance
-  </div>
-  <div class="tab-item" onclick="switchTab('incentives')" id="tab-incentives">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-    Incentives & Earnings
-  </div>
-  <div class="tab-item" onclick="switchTab('ld')" id="tab-ld">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
-    Learning & Development
-  </div>
-</div>
-
-<!-- MAIN -->
-<div id="main">
-
-  <!-- ===== TASKS TAB ===== -->
-  <div id="panel-tasks">
-
-    <!-- Manager Roll-up -->
-    <div id="mgrRollup" class="hidden">
-      <div class="top-bar mb-2">
-        <div class="section-title">Team Overview — RM Performance</div>
-        <div class="flex items-center gap-2">
-          <button class="btn-secondary btn-sm" onclick="">Export</button>
-          <button class="refresh-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-.13-2.36"/></svg> Refresh</button>
-        </div>
+  <!-- ═══ FIXED HEADER ═══ -->
+  <header class="fixed top-0 left-0 right-0 z-40 h-14 bg-sidebar flex items-center px-5 gap-3 shadow-lg">
+    <div class="flex items-center gap-2 flex-shrink-0">
+      <div class="w-7 h-7 rounded-lg bg-accent flex items-center justify-center">
+        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
       </div>
-      <div class="mgr-table-wrap mb-2">
-        <table class="mgr-table" id="mgrTable">
-          <thead>
-            <tr>
-              <th>RM Name</th>
-              <th>Boost STI</th>
-              <th>Boost Revenue</th>
-              <th>Boost Loan</th>
-              <th>Quality</th>
-              <th>Overdue</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody id="mgrTableBody"></tbody>
-        </table>
+      <span class="font-heading text-white text-lg leading-none">RM CRM</span>
+    </div>
+
+    <div class="flex-1 max-w-xs relative">
+      <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0"/></svg>
+      <input id="globalSearch" type="text" placeholder="Search by ID, Phone, email.."
+        class="w-full pl-8 pr-3 py-1.5 text-xs bg-white/10 border border-white/15 text-white placeholder-white/40 rounded-lg focus:outline-none focus:ring-1 focus:ring-white/30 focus:bg-white/15 transition-colors"/>
+    </div>
+
+    <button onclick="openAssignedLeads()" class="flex items-center gap-1.5 text-xs px-3 py-1.5 border border-white/20 text-white rounded-lg hover:bg-white/10 transition-colors whitespace-nowrap cursor-pointer flex-shrink-0">
+      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 11l3 3L22 4"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+      View assigned leads
+    </button>
+
+    <div class="flex-1"></div>
+
+    <div id="callMergeWrap" class="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-white/10 border border-white/15 rounded-lg mr-1">
+      <span class="text-[10px] text-white/50 font-medium whitespace-nowrap">For call merge</span>
+      <div class="flex items-center gap-1.5">
+        <span id="callDot" class="w-2 h-2 rounded-full bg-success flex-shrink-0"></span>
+        <select id="callMergeSelect" onchange="updateCallStatus(this.value)" class="text-xs text-white bg-transparent border-none outline-none cursor-pointer font-semibold appearance-none">
+          <option value="active" class="text-text-main">Active</option>
+          <option value="busy" class="text-text-main">Busy</option>
+          <option value="away" class="text-text-main">Away</option>
+        </select>
       </div>
-      <div id="mgrDrilldown" class="hidden">
-        <button class="back-btn" onclick="closeMgrDrilldown()">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
-          Back to Team View
+    </div>
+
+    <div class="flex items-center gap-1.5 px-3 py-1.5 bg-white/10 border border-white/15 rounded-lg mr-1">
+      <span class="text-[10px] text-white/50 whitespace-nowrap">Role</span>
+      <select id="rolePicker" onchange="switchRole(this.value)" class="text-xs text-white bg-transparent border-none outline-none cursor-pointer font-semibold appearance-none">
+        <option value="rm" class="text-text-main">Student Success Manager</option>
+        <option value="team_lead" class="text-text-main">Team Lead</option>
+        <option value="senior_manager" class="text-text-main">Senior Manager</option>
+        <option value="admin" class="text-text-main">Admin</option>
+      </select>
+    </div>
+
+    <div class="relative w-9 h-9 rounded-full flex items-center justify-center text-white hover:bg-white/10 cursor-pointer transition-colors flex-shrink-0" onclick="toggleNotifPanel()" title="Notifications">
+      <svg class="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+      <span id="notifBadge" class="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-1 bg-danger text-white text-[9px] font-bold rounded-full flex items-center justify-center border-2 border-sidebar">3</span>
+    </div>
+
+    <div class="w-8 h-8 rounded-full bg-accent flex items-center justify-center text-white text-[11px] font-bold cursor-pointer flex-shrink-0 border-2 border-white/20" onclick="toggleProfileDropdown()" title="Profile">AP</div>
+  </header>
+
+  <!-- ═══ TAB BAR ═══ -->
+  <nav class="fixed top-14 left-0 right-0 z-30 bg-white border-b border-border shadow-sm flex" id="tabBar">
+    <button class="htab active" id="tab-tasks" onclick="switchTab('tasks')">
+      <svg class="w-3.5 h-3.5 inline -mt-0.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 11l3 3L22 4"/><rect x="3" y="3" width="18" height="18" rx="2" stroke-width="2"/></svg>
+      Tasks &amp; Performance
+    </button>
+    <button class="htab" id="tab-incentives" onclick="switchTab('incentives')">
+      <svg class="w-3.5 h-3.5 inline -mt-0.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23" stroke-width="2"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+      Incentives &amp; Earnings
+    </button>
+    <button class="htab" id="tab-ld" onclick="switchTab('ld')">
+      <svg class="w-3.5 h-3.5 inline -mt-0.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M22 10v6M2 10l10-5 10 5-10 5z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+      Learning &amp; Development
+    </button>
+  </nav>
+
+  <!-- ═══ MAIN ═══ -->
+  <main id="main" class="pt-[100px] px-5 pb-24 max-w-[1200px] mx-auto w-full">
+
+    <div class="rounded-xl bg-gradient-to-r from-accent to-accent-dark text-white text-xs font-medium px-4 py-2 mb-4 flex items-center gap-2">
+      <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-width="2"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3"/></svg>
+      Focus on Correct Lead — Before Logging Off, Clear All the Tasks!
+    </div>
+
+    <!-- Hierarchy filter row (Team Lead / Senior Manager only) -->
+    <div id="hierarchyFilterRow" class="hidden items-center gap-2 flex-wrap px-4 py-3 bg-white border border-border rounded-xl mb-4">
+      <div id="rmFilterWrap" class="relative">
+        <button onclick="toggleHierDropdown('rm',event)" class="flex items-center gap-1.5 text-xs px-3 py-1.5 bg-white border border-border text-text-main rounded-lg hover:bg-surface transition-colors whitespace-nowrap cursor-pointer">
+          <svg class="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4" stroke-width="2"/></svg>
+          <span id="rmFilterLabel">RM: All</span>
+          <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9" stroke-width="2"/></svg>
         </button>
-        <div id="mgrDrilldownContent"></div>
+        <div id="rmFilterDropdown" class="hidden absolute top-full left-0 mt-1 w-52 bg-white rounded-xl border border-border shadow-xl z-[60] overflow-hidden">
+          <div id="rmFilterList" class="max-h-44 overflow-y-auto p-2 space-y-1"></div>
+          <div class="px-3 py-2 border-t border-border flex gap-2 bg-surface/50">
+            <button onclick="applyHierFilter('rm')" class="flex-1 text-xs bg-accent text-white rounded-lg py-1.5 font-semibold cursor-pointer hover:bg-accent-dark">Apply</button>
+            <button onclick="clearHierFilter('rm')" class="text-xs text-text-muted hover:text-danger px-2 cursor-pointer">Clear</button>
+          </div>
+        </div>
       </div>
+      <span id="hierViewAllLabel" class="text-[10px] text-text-muted italic">Viewing All</span>
     </div>
 
-    <!-- RM Dashboard -->
-    <div id="rmDashboard">
-      <!-- Boost Output -->
-      <div class="section-label">
-        <span>Boost Output</span>
-        <span class="pill pill-orange" id="boostOutputLabel">Action Required</span>
-      </div>
-      <div class="cards-grid" id="boostOutputCards">
-        <!-- Boost STI -->
-        <div class="metric-card accent-orange" onclick="openPipeline('sti')">
-          <div class="card-header">
-            <div class="card-title">Boost STI</div>
-            <div class="card-icon icon-orange">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-            </div>
-          </div>
-          <div class="card-count orange" id="stiCount">7</div>
-          <div class="card-sub">Docs + App Ready + F2F pending</div>
-          <div class="card-cta">View Pipeline <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></div>
-        </div>
-        <!-- Boost Revenue -->
-        <div class="metric-card accent-green" onclick="openPipeline('revenue')">
-          <div class="card-header">
-            <div class="card-title">Boost Revenue</div>
-            <div class="card-icon icon-green">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-            </div>
-          </div>
-          <div class="card-count orange" id="revenueCount">4</div>
-          <div class="card-sub">Lock-ins pending — C2I · Prime</div>
-          <div class="card-cta">View Pipeline <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></div>
-        </div>
-        <!-- Boost Loan -->
-        <div class="metric-card accent-blue" onclick="openPipeline('loan')">
-          <div class="card-header">
-            <div class="card-title">Boost Loan</div>
-            <div class="card-icon icon-blue">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
-            </div>
-          </div>
-          <div class="card-count red" id="loanCount">9</div>
-          <div class="card-sub">Loan VC + PF Log-in pending</div>
-          <div class="card-cta">View Pipeline <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></div>
-        </div>
-      </div>
+    <!-- ═══════════ TASKS & PERFORMANCE ═══════════ -->
+    <div id="panel-tasks" class="tab-panel">
 
-      <!-- Boost Input -->
-      <div class="section-label mt-2">
-        <span>Boost Input</span>
-        <span class="pill pill-orange">Volume + Quality</span>
-      </div>
-      <div class="cards-grid">
-        <!-- Quality -->
-        <div class="metric-card accent-purple">
-          <div class="card-header">
-            <div class="card-title">Quality Score</div>
-            <div class="card-icon icon-purple">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-            </div>
+      <!-- ── Manager Roll-up (Team Lead / Senior Manager) ── -->
+      <div id="mgrRollup" class="hidden">
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <h1 class="text-lg font-bold text-text-main" id="mgrTitle">Team Dashboard</h1>
+            <p class="text-xs text-text-muted" id="mgrSubtitle">5 RMs reporting to you</p>
           </div>
-          <div class="quality-bars">
-            <div class="quality-row"><span class="quality-label">1st</span><div class="quality-bar-wrap"><div class="quality-bar" style="width:59%"></div></div><span class="quality-val">59%</span></div>
-            <div class="quality-row"><span class="quality-label">2nd</span><div class="quality-bar-wrap"><div class="quality-bar good" style="width:85%"></div></div><span class="quality-val">85%</span></div>
+          <div class="flex items-center gap-2">
+            <button class="text-xs font-semibold px-3 py-1.5 border border-border rounded-lg hover:bg-surface transition-colors cursor-pointer" onclick="showToast('Export started — file will download shortly.','info')">Export</button>
+            <button class="flex items-center gap-1 text-xs text-text-muted hover:text-text-main cursor-pointer" onclick="showToast('Team data refreshed.','success')">
+              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10" stroke-width="2"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.49 15a9 9 0 11-.13-2.36"/></svg>
+              Refresh
+            </button>
           </div>
-          <div class="best-tag">Best: <strong>Rahul K.</strong> · 94%</div>
         </div>
-        <!-- Potential Escalations -->
-        <div class="metric-card accent-orange">
-          <div class="card-header">
-            <div class="card-title">Potential Escalations</div>
-            <div class="card-icon icon-red">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-            </div>
-          </div>
-          <div class="escalation-list">
-            <div class="esc-item"><span>Customer Support</span><span class="esc-count r">6</span></div>
-            <div class="esc-item"><span>Low ISL Feedback</span><span class="esc-count o">3</span></div>
-            <div class="esc-item"><span>Msgs Not Replied</span><span class="esc-count r">8</span></div>
-            <div class="esc-item"><span>IS Pending</span><span class="esc-count o">2</span></div>
-          </div>
-          <div class="mt-1"><a href="#" class="view-all" onclick="showToast('Opening all escalation groups...');return false;">View all groups →</a></div>
-        </div>
-        <!-- Own Tasks -->
-        <div class="metric-card accent-purple">
-          <div class="card-header">
-            <div class="card-title">Own Tasks</div>
-            <div class="card-icon icon-purple">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-            </div>
-          </div>
-          <div class="card-count orange" id="ownTasksCount">5</div>
-          <div class="card-sub">5 pending reminders</div>
-          <div class="card-cta">View all <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></div>
-        </div>
-      </div>
 
-      <!-- Important Business Tasks -->
-      <div class="section-card mb-1">
-        <div class="section-card-header" onclick="toggleSection('ibt')">
-          <div class="sch-icon icon-orange"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--accent)"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
-          <div class="sch-title">Important Business Tasks</div>
-          <span class="sch-badge badge-orange">12 pending</span>
-          <svg class="chevron open" id="chevron-ibt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
-        </div>
-        <div class="section-card-body open" id="body-ibt">
-          <div class="ibt-grid">
-            <div class="ibt-item"><span class="ibt-label">F2F Scheduled</span><span class="ibt-count orange">4</span></div>
-            <div class="ibt-item"><span class="ibt-label">App Ready Follow-up</span><span class="ibt-count orange">3</span></div>
-            <div class="ibt-item"><span class="ibt-label">Lock-in Confirmation</span><span class="ibt-count red">5</span></div>
-            <div class="ibt-item"><span class="ibt-label">Loan VC Booking</span><span class="ibt-count orange">2</span></div>
-            <div class="ibt-item"><span class="ibt-label">STI Docs Collection</span><span class="ibt-count green">0</span></div>
-            <div class="ibt-item"><span class="ibt-label">Query Resolutions</span><span class="ibt-count orange">3</span></div>
+        <div id="mgrOverviewWrap">
+          <!-- Team Boost Output -->
+          <div class="flex items-center gap-2 mb-3">
+            <div class="w-1 h-5 rounded-full bg-gradient-to-b from-accent to-primary"></div>
+            <h2 class="text-sm font-bold text-text-main uppercase tracking-wide">🚀 Team Boost Output</h2>
+            <span class="text-[10px] px-2 py-0.5 bg-accent/10 text-accent rounded-full font-semibold">Action Required</span>
           </div>
-        </div>
-      </div>
-
-      <!-- Top Performers -->
-      <div class="section-card">
-        <div class="section-card-header" onclick="toggleSection('topperf')">
-          <div class="sch-icon icon-orange"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--accent)"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></div>
-          <div class="sch-title">Top Performers</div>
-          <svg class="chevron" id="chevron-topperf" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
-        </div>
-        <div class="section-card-body" id="body-topperf">
-          <div class="perf-toggle" id="perfToggle">
-            <button class="active" onclick="setPerfWindow('yesterday',this)">Yesterday</button>
-            <button onclick="setPerfWindow('month',this)">This Month</button>
-            <button onclick="setPerfWindow('3months',this)">Last 3 Months</button>
-          </div>
-          <div class="section-label">By Lock-in Count</div>
-          <div class="leaderboard" id="leaderboard">
-            <div class="lb-item"><div class="lb-rank r1">1</div><div class="lb-avatar">RK</div><div class="lb-name">Rahul Kumar</div><div class="lb-val">12</div></div>
-            <div class="lb-item"><div class="lb-rank r2">2</div><div class="lb-avatar" style="background:#6d28d9">PJ</div><div class="lb-name">Priya Joshi</div><div class="lb-val">10</div></div>
-            <div class="lb-item"><div class="lb-rank r3">3</div><div class="lb-avatar" style="background:#0369a1">AK</div><div class="lb-name">Amit Khurana</div><div class="lb-val">8</div></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Performance Summary -->
-      <div class="section-card">
-        <div class="section-card-header" onclick="toggleSection('perfsummary')">
-          <div class="sch-icon icon-blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--info)"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div>
-          <div class="sch-title">Performance Summary</div>
-          <svg class="chevron" id="chevron-perfsummary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
-        </div>
-        <div class="section-card-body" id="body-perfsummary">
-          <div id="perfSummaryContent"></div>
-        </div>
-      </div>
-
-      <!-- Add a Reminder -->
-      <div class="section-card">
-        <div class="section-card-header" onclick="toggleSection('reminder')">
-          <div class="sch-icon icon-purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:#7c3aed"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
-          <div class="sch-title">Add a Reminder for Yourself</div>
-          <svg class="chevron" id="chevron-reminder" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
-        </div>
-        <div class="section-card-body" id="body-reminder">
-          <div class="reminder-form">
-            <div class="form-field">
-              <label class="form-label">Reminder Text *</label>
-              <textarea class="form-input" placeholder="What do you want to remember?" maxlength="200" id="reminderText"></textarea>
+          <div class="grid grid-cols-2 lg:grid-cols-3 gap-3.5 mb-6" id="mgrOutputCards">
+            <div class="boost-card sti" onclick="document.getElementById('mgrTableWrap').scrollIntoView({behavior:'smooth'})">
+              <div class="boost-label">🎯 Boost STI</div>
+              <div class="boost-count" id="mgrStiCount">0</div>
+              <div class="boost-sub" id="mgrStiSub">Across your team</div>
+              <span class="boost-cta">View Team Table →</span>
             </div>
-            <div class="form-field">
-              <label class="form-label">Date & Time *</label>
-              <input class="form-input" type="datetime-local" id="reminderDateTime"/>
+            <div class="boost-card lockin" onclick="document.getElementById('mgrTableWrap').scrollIntoView({behavior:'smooth'})">
+              <div class="boost-label">💰 Boost Revenue</div>
+              <div class="boost-count" id="mgrRevenueCount">0</div>
+              <div class="boost-sub">Lock-ins pending — C2I · Prime</div>
+              <span class="boost-cta">View Team Table →</span>
             </div>
-            <div class="form-field">
-              <label class="form-label">Linked Lead (optional)</label>
-              <select class="form-input" id="reminderLead">
+            <div class="boost-card deposit" onclick="document.getElementById('mgrTableWrap').scrollIntoView({behavior:'smooth'})">
+              <div class="boost-label">💳 Boost Loan</div>
+              <div class="boost-count" id="mgrLoanCount">0</div>
+              <div class="boost-sub">Loan VC + PF Log-in pending</div>
+              <span class="boost-cta">View Team Table →</span>
+            </div>
+          </div>
+
+          <!-- Team Boost Input -->
+          <div class="flex items-center gap-2 mb-3">
+            <div class="w-1 h-5 rounded-full bg-gradient-to-b from-emerald-500 to-teal-600"></div>
+            <h2 class="text-sm font-bold text-text-main uppercase tracking-wide">📊 Team Boost Input</h2>
+            <span class="text-[10px] px-2 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full font-semibold">Volume + Quality</span>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5 mb-6">
+            <div class="bg-card border border-border rounded-xl p-4">
+              <div class="text-[11px] font-bold uppercase tracking-wide text-text-muted mb-2">Team Quality Score</div>
+              <div id="mgrQualityBars" class="space-y-1.5"></div>
+              <div class="text-[11px] text-text-muted mt-2" id="mgrBestTag"></div>
+            </div>
+            <div class="bg-card border border-border rounded-xl p-4">
+              <div class="text-[11px] font-bold uppercase tracking-wide text-text-muted mb-2">Potential Escalations</div>
+              <div id="mgrEscalationList" class="space-y-1"></div>
+              <a href="#" class="text-[11px] font-semibold text-primary mt-1 inline-block" onclick="showToast('Opening all escalation groups...','info');return false;">View all groups →</a>
+            </div>
+            <div class="bg-card border border-border rounded-xl p-4">
+              <div class="text-[11px] font-bold uppercase tracking-wide text-text-muted mb-2">My Own Tasks</div>
+              <div class="font-mono text-2xl font-extrabold text-accent">3</div>
+              <div class="text-[11px] text-text-muted mb-2">3 pending reminders</div>
+              <span class="text-[11px] font-bold text-primary cursor-pointer" onclick="document.getElementById('body-mgrreminder').scrollIntoView({behavior:'smooth'})">View all →</span>
+            </div>
+          </div>
+
+          <!-- Important Business Tasks (Team) -->
+          <section class="bg-white rounded-xl border border-border overflow-hidden mb-4">
+            <button onclick="toggleSection('mgribt')" class="w-full flex items-center justify-between px-5 py-4 hover:bg-surface/60 transition-colors cursor-pointer">
+              <h2 class="font-semibold text-text-main flex items-center gap-2">📋 Important Business Tasks — Team</h2>
+              <div class="flex items-center gap-2">
+                <span class="text-[10px] px-2 py-0.5 bg-accent/10 text-accent rounded-full font-semibold" id="mgrIbtBadge">0 pending</span>
+                <svg class="w-4 h-4 text-text-muted transition-transform" id="chevron-mgribt" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9" stroke-width="2"/></svg>
+              </div>
+            </button>
+            <div id="body-mgribt" class="px-5 pb-5 grid grid-cols-1 sm:grid-cols-2 gap-2"></div>
+          </section>
+
+          <!-- Team Overview table -->
+          <section class="bg-white rounded-xl border border-border overflow-hidden mb-4" id="mgrTableWrap">
+            <div class="flex items-center justify-between px-5 py-4 border-b border-border">
+              <h2 class="font-semibold text-text-main flex items-center gap-2">
+                <svg class="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4" stroke-width="2"/></svg>
+                Team Overview — RM Performance
+              </h2>
+              <span class="text-xs text-text-muted">Tap a row to drill down</span>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-sm" id="mgrTable">
+                <thead>
+                  <tr class="bg-surface text-[10px] font-semibold uppercase tracking-wide text-text-muted">
+                    <th class="px-4 py-2.5 text-left">RM Name</th>
+                    <th class="px-4 py-2.5 text-left">Boost STI</th>
+                    <th class="px-4 py-2.5 text-left">Boost Revenue</th>
+                    <th class="px-4 py-2.5 text-left">Boost Loan</th>
+                    <th class="px-4 py-2.5 text-left">Quality</th>
+                    <th class="px-4 py-2.5 text-left">Overdue</th>
+                    <th class="px-4 py-2.5 text-left">Status</th>
+                  </tr>
+                </thead>
+                <tbody id="mgrTableBody"></tbody>
+              </table>
+            </div>
+          </section>
+
+          <!-- Top Performers -->
+          <section class="bg-white rounded-xl border border-border overflow-hidden mb-4">
+            <button onclick="toggleSection('mgrtopperf')" class="w-full flex items-center justify-between px-5 py-4 hover:bg-surface/60 transition-colors cursor-pointer">
+              <h2 class="font-semibold text-text-main flex items-center gap-2">🏆 Top Performers on Your Team</h2>
+              <svg class="w-4 h-4 text-text-muted transition-transform" id="chevron-mgrtopperf" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9" stroke-width="2"/></svg>
+            </button>
+            <div id="body-mgrtopperf" class="hidden px-5 pb-5">
+              <div class="text-[10px] font-bold uppercase tracking-wide text-text-muted mb-2">By Lock-in Count</div>
+              <div class="space-y-2" id="mgrLeaderboard"></div>
+            </div>
+          </section>
+
+          <!-- Team Performance Summary -->
+          <section class="bg-white rounded-xl border border-border overflow-hidden mb-4">
+            <button onclick="toggleSection('mgrperfsummary')" class="w-full flex items-center justify-between px-5 py-4 hover:bg-surface/60 transition-colors cursor-pointer">
+              <h2 class="font-semibold text-text-main flex items-center gap-2">📈 Team Performance Summary</h2>
+              <svg class="w-4 h-4 text-text-muted transition-transform" id="chevron-mgrperfsummary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9" stroke-width="2"/></svg>
+            </button>
+            <div id="body-mgrperfsummary" class="hidden px-5 pb-5">
+              <div id="mgrPerfSummaryContent"></div>
+            </div>
+          </section>
+
+          <!-- My Own Tasks -->
+          <section class="bg-white rounded-xl border border-border overflow-hidden">
+            <button onclick="toggleSection('mgrreminder')" class="w-full flex items-center justify-between px-5 py-4 hover:bg-surface/60 transition-colors cursor-pointer">
+              <h2 class="font-semibold text-text-main flex items-center gap-2">🗒️ Add a Reminder for Yourself</h2>
+              <svg class="w-4 h-4 text-text-muted transition-transform" id="chevron-mgrreminder" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9" stroke-width="2"/></svg>
+            </button>
+            <div id="body-mgrreminder" class="hidden px-5 pb-5 space-y-3">
+              <div>
+                <label class="block text-xs font-semibold text-text-muted mb-1">Reminder Text *</label>
+                <textarea class="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary" placeholder="What do you want to remember?" maxlength="200" id="reminderTextMgr"></textarea>
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-text-muted mb-1">Date &amp; Time *</label>
+                <input class="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary" type="datetime-local" id="reminderDateTimeMgr"/>
+              </div>
+              <button class="px-4 py-2 bg-accent hover:bg-accent-dark text-white text-sm font-semibold rounded-lg cursor-pointer transition-colors" onclick="saveReminderMgr()">Save Reminder</button>
+            </div>
+          </section>
+        </div><!-- /mgrOverviewWrap -->
+
+        <div id="mgrDrilldown" class="hidden">
+          <button class="flex items-center gap-1 text-sm font-semibold text-primary mb-4 cursor-pointer" onclick="closeMgrDrilldown()">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6" stroke-width="2"/></svg>
+            Back to Team View
+          </button>
+          <div id="mgrDrilldownContent"></div>
+        </div>
+      </div><!-- /mgrRollup -->
+
+      <!-- ── RM Dashboard ── -->
+      <div id="rmDashboard">
+        <div class="flex items-center gap-2 mb-3">
+          <div class="w-1 h-5 rounded-full bg-gradient-to-b from-accent to-primary"></div>
+          <h2 class="text-sm font-bold text-text-main uppercase tracking-wide">🚀 Boost Output</h2>
+          <span class="text-[10px] px-2 py-0.5 bg-accent/10 text-accent rounded-full font-semibold" id="boostOutputLabel">Action Required</span>
+        </div>
+        <div class="grid grid-cols-2 lg:grid-cols-3 gap-3.5 mb-6">
+          <div class="boost-card sti" onclick="openPipeline('sti')">
+            <div class="boost-label">🎯 Boost STI</div>
+            <div class="boost-count" id="stiCount">7</div>
+            <div class="boost-sub">Docs + App Ready + F2F pending</div>
+            <span class="boost-cta">View Pipeline →</span>
+          </div>
+          <div class="boost-card lockin" onclick="openPipeline('revenue')">
+            <div class="boost-label">💰 Boost Revenue</div>
+            <div class="boost-count" id="revenueCount">4</div>
+            <div class="boost-sub">Lock-ins pending — C2I · Prime</div>
+            <span class="boost-cta">View Pipeline →</span>
+          </div>
+          <div class="boost-card deposit" onclick="openPipeline('loan')">
+            <div class="boost-label">💳 Boost Loan</div>
+            <div class="boost-count" id="loanCount">9</div>
+            <div class="boost-sub">Loan VC + PF Log-in pending</div>
+            <span class="boost-cta">View Pipeline →</span>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2 mb-3">
+          <div class="w-1 h-5 rounded-full bg-gradient-to-b from-emerald-500 to-teal-600"></div>
+          <h2 class="text-sm font-bold text-text-main uppercase tracking-wide">📊 Boost Input</h2>
+          <span class="text-[10px] px-2 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full font-semibold">Volume + Quality</span>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5 mb-6">
+          <div class="bg-card border border-border rounded-xl p-4">
+            <div class="text-[11px] font-bold uppercase tracking-wide text-text-muted mb-2">Quality Score</div>
+            <div class="space-y-1.5">
+              <div class="flex items-center gap-2"><span class="text-[10px] text-text-muted w-6">1st</span><div class="flex-1 h-1.5 bg-border rounded-full overflow-hidden"><div class="h-full bg-primary rounded-full" style="width:59%"></div></div><span class="text-[10px] font-semibold font-mono w-8 text-right">59%</span></div>
+              <div class="flex items-center gap-2"><span class="text-[10px] text-text-muted w-6">2nd</span><div class="flex-1 h-1.5 bg-border rounded-full overflow-hidden"><div class="h-full bg-success rounded-full" style="width:85%"></div></div><span class="text-[10px] font-semibold font-mono w-8 text-right">85%</span></div>
+            </div>
+            <div class="text-[11px] text-text-muted mt-2">Best: <strong class="text-success">Rahul K.</strong> · 94%</div>
+          </div>
+          <div class="bg-card border border-border rounded-xl p-4">
+            <div class="text-[11px] font-bold uppercase tracking-wide text-text-muted mb-2">Potential Escalations</div>
+            <div class="space-y-1 text-xs">
+              <div class="flex justify-between py-1 border-b border-border"><span>Customer Support</span><span class="font-bold text-danger font-mono">6</span></div>
+              <div class="flex justify-between py-1 border-b border-border"><span>Low ISL Feedback</span><span class="font-bold text-accent font-mono">3</span></div>
+              <div class="flex justify-between py-1 border-b border-border"><span>Msgs Not Replied</span><span class="font-bold text-danger font-mono">8</span></div>
+              <div class="flex justify-between py-1"><span>IS Pending</span><span class="font-bold text-accent font-mono">2</span></div>
+            </div>
+            <a href="#" class="text-[11px] font-semibold text-primary mt-1 inline-block" onclick="showToast('Opening all escalation groups...','info');return false;">View all groups →</a>
+          </div>
+          <div class="bg-card border border-border rounded-xl p-4">
+            <div class="text-[11px] font-bold uppercase tracking-wide text-text-muted mb-2">Own Tasks</div>
+            <div class="font-mono text-2xl font-extrabold text-accent" id="ownTasksCount">5</div>
+            <div class="text-[11px] text-text-muted mb-2">5 pending reminders</div>
+            <span class="text-[11px] font-bold text-primary cursor-pointer">View all →</span>
+          </div>
+        </div>
+
+        <!-- Important Business Tasks -->
+        <section class="bg-white rounded-xl border border-border overflow-hidden mb-4">
+          <button onclick="toggleSection('ibt')" class="w-full flex items-center justify-between px-5 py-4 hover:bg-surface/60 transition-colors cursor-pointer">
+            <h2 class="font-semibold text-text-main flex items-center gap-2">📋 Important Business Tasks</h2>
+            <div class="flex items-center gap-2">
+              <span class="text-[10px] px-2 py-0.5 bg-accent/10 text-accent rounded-full font-semibold">12 pending</span>
+              <svg class="w-4 h-4 text-text-muted transition-transform rotate-180" id="chevron-ibt" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9" stroke-width="2"/></svg>
+            </div>
+          </button>
+          <div id="body-ibt" class="px-5 pb-5 grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <div class="flex items-center justify-between px-3 py-2.5 bg-surface rounded-lg border border-border"><span class="text-xs font-medium">F2F Scheduled</span><span class="font-mono font-bold text-accent">4</span></div>
+            <div class="flex items-center justify-between px-3 py-2.5 bg-surface rounded-lg border border-border"><span class="text-xs font-medium">App Ready Follow-up</span><span class="font-mono font-bold text-accent">3</span></div>
+            <div class="flex items-center justify-between px-3 py-2.5 bg-surface rounded-lg border border-border"><span class="text-xs font-medium">Lock-in Confirmation</span><span class="font-mono font-bold text-danger">5</span></div>
+            <div class="flex items-center justify-between px-3 py-2.5 bg-surface rounded-lg border border-border"><span class="text-xs font-medium">Loan VC Booking</span><span class="font-mono font-bold text-accent">2</span></div>
+            <div class="flex items-center justify-between px-3 py-2.5 bg-surface rounded-lg border border-border"><span class="text-xs font-medium">STI Docs Collection</span><span class="font-mono font-bold text-success">0</span></div>
+            <div class="flex items-center justify-between px-3 py-2.5 bg-surface rounded-lg border border-border"><span class="text-xs font-medium">Query Resolutions</span><span class="font-mono font-bold text-accent">3</span></div>
+          </div>
+        </section>
+
+        <!-- Top Performers -->
+        <section class="bg-white rounded-xl border border-border overflow-hidden mb-4">
+          <button onclick="toggleSection('topperf')" class="w-full flex items-center justify-between px-5 py-4 hover:bg-surface/60 transition-colors cursor-pointer">
+            <h2 class="font-semibold text-text-main flex items-center gap-2">🏆 Top Performers</h2>
+            <svg class="w-4 h-4 text-text-muted transition-transform" id="chevron-topperf" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9" stroke-width="2"/></svg>
+          </button>
+          <div id="body-topperf" class="hidden px-5 pb-5">
+            <div class="flex gap-0 mb-3 rounded-lg overflow-hidden border border-border w-fit" id="perfToggle">
+              <button class="period-btn text-xs px-3 py-1.5 active" onclick="setPerfWindow('yesterday',this)">Yesterday</button>
+              <button class="period-btn text-xs px-3 py-1.5" onclick="setPerfWindow('month',this)">This Month</button>
+              <button class="period-btn text-xs px-3 py-1.5" onclick="setPerfWindow('3months',this)">Last 3 Months</button>
+            </div>
+            <div class="text-[10px] font-bold uppercase tracking-wide text-text-muted mb-2">By Lock-in Count</div>
+            <div class="space-y-2" id="leaderboard">
+              <div class="flex items-center gap-3 bg-surface rounded-xl border border-border px-3 py-2.5"><span class="rank-badge r1">🥇</span><div class="w-7 h-7 rounded-full bg-accent flex items-center justify-center text-white text-xs font-bold flex-shrink-0">RK</div><span class="flex-1 text-sm font-medium">Rahul Kumar</span><span class="font-mono text-sm font-bold text-primary">12</span></div>
+              <div class="flex items-center gap-3 bg-surface rounded-xl border border-border px-3 py-2.5"><span class="rank-badge r2">🥈</span><div class="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0" style="background:#6d28d9">PJ</div><span class="flex-1 text-sm font-medium">Priya Joshi</span><span class="font-mono text-sm font-bold text-primary">10</span></div>
+              <div class="flex items-center gap-3 bg-surface rounded-xl border border-border px-3 py-2.5"><span class="rank-badge r3">🥉</span><div class="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0" style="background:#0369a1">AK</div><span class="flex-1 text-sm font-medium">Amit Khurana</span><span class="font-mono text-sm font-bold text-primary">8</span></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Performance Summary -->
+        <section class="bg-white rounded-xl border border-border overflow-hidden mb-4">
+          <button onclick="toggleSection('perfsummary')" class="w-full flex items-center justify-between px-5 py-4 hover:bg-surface/60 transition-colors cursor-pointer">
+            <h2 class="font-semibold text-text-main flex items-center gap-2">📈 Performance Summary</h2>
+            <svg class="w-4 h-4 text-text-muted transition-transform" id="chevron-perfsummary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9" stroke-width="2"/></svg>
+          </button>
+          <div id="body-perfsummary" class="hidden px-5 pb-5">
+            <div id="perfSummaryContent"></div>
+          </div>
+        </section>
+
+        <!-- Add a Reminder -->
+        <section class="bg-white rounded-xl border border-border overflow-hidden">
+          <button onclick="toggleSection('reminder')" class="w-full flex items-center justify-between px-5 py-4 hover:bg-surface/60 transition-colors cursor-pointer">
+            <h2 class="font-semibold text-text-main flex items-center gap-2">🗒️ Add a Reminder for Yourself</h2>
+            <svg class="w-4 h-4 text-text-muted transition-transform" id="chevron-reminder" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9" stroke-width="2"/></svg>
+          </button>
+          <div id="body-reminder" class="hidden px-5 pb-5 space-y-3">
+            <div>
+              <label class="block text-xs font-semibold text-text-muted mb-1">Reminder Text *</label>
+              <textarea class="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary" placeholder="What do you want to remember?" maxlength="200" id="reminderText"></textarea>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-text-muted mb-1">Date &amp; Time *</label>
+              <input class="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary" type="datetime-local" id="reminderDateTime"/>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-text-muted mb-1">Linked Lead (optional)</label>
+              <select class="w-full px-3 py-2 border border-border rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary" id="reminderLead">
                 <option value="">— General reminder —</option>
                 <option value="l1">Ananya Sharma (RM-2041)</option>
                 <option value="l2">Karan Mehta (RM-2089)</option>
                 <option value="l3">Deepa Nair (RM-2103)</option>
               </select>
             </div>
-            <button class="btn-primary btn-sm" onclick="saveReminder()">Save Reminder</button>
+            <button class="px-4 py-2 bg-accent hover:bg-accent-dark text-white text-sm font-semibold rounded-lg cursor-pointer transition-colors" onclick="saveReminder()">Save Reminder</button>
           </div>
-        </div>
-      </div>
-    </div><!-- /rmDashboard -->
-  </div><!-- /panel-tasks -->
+        </section>
+      </div><!-- /rmDashboard -->
+    </div><!-- /panel-tasks -->
 
-  <!-- ===== INCENTIVES TAB ===== -->
-  <div id="panel-incentives" class="hidden">
-    <div id="opportunityDetail" class="hidden">
-      <button class="back-btn" onclick="closeOppDetail()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
-        Back to Incentives & Earnings
-      </button>
-      <div class="section-title mb-1">Total Pipeline Opportunity</div>
-      <div class="earn-card orange" style="margin-bottom:12px;">
-        <div class="earn-label">Total Pipeline Value</div>
-        <div class="earn-amount orange">₹2,84,000</div>
-        <div class="earn-sub">14 tasks across all stages</div>
-      </div>
-      <div class="opp-cards">
-        <div class="opp-card" onclick="openPipeline('sti')">
-          <div class="opp-card-info">
-            <div class="opp-card-name">Boost STI</div>
-            <div class="opp-card-meta">7 tasks</div>
-          </div>
-          <div class="opp-card-val">₹1,12,000</div>
-          <svg class="opp-card-arr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
-        </div>
-        <div class="opp-card" onclick="openPipeline('revenue')">
-          <div class="opp-card-info">
-            <div class="opp-card-name">Boost Revenue</div>
-            <div class="opp-card-meta">4 tasks</div>
-          </div>
-          <div class="opp-card-val">₹96,000</div>
-          <svg class="opp-card-arr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
-        </div>
-        <div class="opp-card" onclick="openPipeline('loan')">
-          <div class="opp-card-info">
-            <div class="opp-card-name">Boost Loan</div>
-            <div class="opp-card-meta">3 tasks</div>
-          </div>
-          <div class="opp-card-val">₹76,000</div>
-          <svg class="opp-card-arr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
-        </div>
-      </div>
-    </div>
+    <!-- ═══════════ INCENTIVES & EARNINGS ═══════════ -->
+    <div id="panel-incentives" class="tab-panel hidden">
 
-    <div id="incentivesMain">
-      <div class="earn-cards">
-        <div class="earn-card">
-          <div class="earn-label">Earned So Far</div>
-          <div class="earn-amount">₹18,400</div>
-          <div class="earn-sub">September 2026 · Monthly</div>
-          <button class="earn-expand-btn" onclick="toggleBreakdown()">
-            View Breakdown
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+      <div id="mgrIncentivesMain" class="hidden">
+        <div class="grid sm:grid-cols-2 gap-4 mb-6">
+          <div class="bg-white border border-border rounded-xl p-5">
+            <div class="text-[10px] font-bold uppercase tracking-wide text-text-muted mb-1">Team Payout Earned So Far</div>
+            <div class="font-mono text-3xl font-extrabold text-text-main" id="mgrEarnedAmt">₹0</div>
+            <div class="text-xs text-text-muted mt-1" id="mgrEarnedSub">September 2026 · Across your team + your override</div>
+          </div>
+          <div class="rounded-xl p-5 text-white relative overflow-hidden" style="background:linear-gradient(135deg,#EA580C 0%,#C2410C 100%)">
+            <div class="text-[10px] font-bold uppercase tracking-wide opacity-80 mb-1">Team Opportunity Size</div>
+            <div class="font-mono text-3xl font-extrabold" id="mgrOppAmt">₹0</div>
+            <div class="text-xs opacity-80 mt-1" id="mgrOppSub">Open tasks across the team</div>
+          </div>
+        </div>
+
+        <section class="bg-white rounded-xl border border-border overflow-hidden mb-4">
+          <button onclick="toggleSection('mgroverride')" class="w-full flex items-center justify-between px-5 py-4 hover:bg-surface/60 transition-colors cursor-pointer">
+            <h2 class="font-semibold text-text-main flex items-center gap-2">🎁 Your Override &amp; Incentive Breakdown</h2>
+            <svg class="w-4 h-4 text-text-muted transition-transform" id="chevron-mgroverride" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9" stroke-width="2"/></svg>
           </button>
-          <div id="earnBreakdown" class="hidden">
-            <table class="breakdown-table">
-              <thead><tr><th>Component · Period</th><th>Status</th><th>Earned</th></tr></thead>
+          <div id="body-mgroverride" class="hidden px-5 pb-5">
+            <table class="w-full text-xs">
+              <thead><tr class="text-[10px] uppercase text-text-muted border-b border-border"><th class="text-left py-2">Component · Basis</th><th class="text-left py-2">Status</th><th class="text-left py-2">Earned</th></tr></thead>
               <tbody>
-                <tr><td>Deposits | 2 deposits (100%)</td><td><span class="status-pill sp-good">Done</span></td><td>₹4,000</td></tr>
-                <tr><td>Lock-ins (C2I)</td><td><span class="status-pill sp-track">On Track</span></td><td>₹8,000</td></tr>
-                <tr><td>F2F Conversion</td><td><span class="status-pill sp-track">On Track</span></td><td>₹4,400</td></tr>
-                <tr><td>Quality Bonus</td><td><span class="status-pill sp-focus">Below</span></td><td>₹2,000</td></tr>
-                <tr><td><strong>Total</strong></td><td></td><td><strong>₹18,400</strong></td></tr>
+                <tr class="border-b border-border"><td class="py-2">Team Target Achievement Bonus</td><td class="py-2"><span class="ai-badge pending">On Track</span></td><td class="py-2 font-mono font-semibold">₹12,000</td></tr>
+                <tr class="border-b border-border"><td class="py-2">Team Lock-in Override (2% of C2I)</td><td class="py-2"><span class="ai-badge completed">Done</span></td><td class="py-2 font-mono font-semibold">₹9,600</td></tr>
+                <tr class="border-b border-border"><td class="py-2">Team Quality Bonus</td><td class="py-2"><span class="ai-badge pending" style="background:#FEF2F2;color:#DC2626;border-color:#FCA5A5">Below</span></td><td class="py-2 font-mono font-semibold">₹3,200</td></tr>
+                <tr><td class="py-2 font-bold">Total Override</td><td class="py-2"></td><td class="py-2 font-mono font-bold">₹24,800</td></tr>
               </tbody>
             </table>
           </div>
-        </div>
-        <div class="earn-card orange" onclick="openOppDetail()" style="cursor:pointer">
-          <div class="earn-label">Opportunity Size</div>
-          <div class="earn-amount orange">₹2,84,000</div>
-          <div class="earn-sub">14 open tasks · Click to view breakdown</div>
-        </div>
-      </div>
+        </section>
 
-      <!-- On Going Offers -->
-      <div class="section-card">
-        <div class="section-card-header" onclick="toggleSection('offers')">
-          <div class="sch-icon icon-orange"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--accent)"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg></div>
-          <div class="sch-title">On Going Offers</div>
-          <span class="sch-badge badge-green">2 active</span>
-          <svg class="chevron" id="chevron-offers" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
-        </div>
-        <div class="section-card-body" id="body-offers">
-          <div class="ibt-grid">
-            <div class="ibt-item"><span class="ibt-label">Referral Drive Sep'26</span><span class="ibt-count green">+₹2K</span></div>
-            <div class="ibt-item"><span class="ibt-label">Lock-in Sprint Bonus</span><span class="ibt-count orange">Ends Sep 15</span></div>
+        <section class="bg-white rounded-xl border border-border overflow-hidden mb-4">
+          <button onclick="toggleSection('mgrearners')" class="w-full flex items-center justify-between px-5 py-4 hover:bg-surface/60 transition-colors cursor-pointer">
+            <h2 class="font-semibold text-text-main flex items-center gap-2">💰 Top Earners on Your Team</h2>
+            <svg class="w-4 h-4 text-text-muted transition-transform" id="chevron-mgrearners" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9" stroke-width="2"/></svg>
+          </button>
+          <div id="body-mgrearners" class="hidden px-5 pb-5">
+            <div class="space-y-2" id="mgrEarnersLeaderboard"></div>
+          </div>
+        </section>
+
+        <section class="bg-white rounded-xl border border-border overflow-hidden">
+          <button onclick="toggleSection('mgrscorecard')" class="w-full flex items-center justify-between px-5 py-4 hover:bg-surface/60 transition-colors cursor-pointer">
+            <h2 class="font-semibold text-text-main flex items-center gap-2">📊 Team Performance Scorecard</h2>
+            <svg class="w-4 h-4 text-text-muted transition-transform" id="chevron-mgrscorecard" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9" stroke-width="2"/></svg>
+          </button>
+          <div id="body-mgrscorecard" class="hidden px-5 pb-5">
+            <div id="mgrPerfScorecardContent"></div>
+          </div>
+        </section>
+      </div><!-- /mgrIncentivesMain -->
+
+      <div id="incentivesMain">
+        <div id="opportunityDetail" class="hidden">
+          <button class="flex items-center gap-1 text-sm font-semibold text-primary mb-4 cursor-pointer" onclick="closeOppDetail()">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6" stroke-width="2"/></svg>
+            Back to Incentives &amp; Earnings
+          </button>
+          <div class="text-sm font-bold mb-2">Total Pipeline Opportunity</div>
+          <div class="rounded-xl p-5 text-white mb-4" style="background:linear-gradient(135deg,#EA580C 0%,#C2410C 100%)">
+            <div class="text-[10px] font-bold uppercase tracking-wide opacity-80 mb-1">Total Pipeline Value</div>
+            <div class="font-mono text-3xl font-extrabold">₹2,84,000</div>
+            <div class="text-xs opacity-80 mt-1">14 tasks across all stages</div>
+          </div>
+          <div class="space-y-2">
+            <div class="flex items-center gap-3 bg-surface rounded-xl border border-border px-4 py-3 cursor-pointer hover:border-accent transition-colors" onclick="openPipeline('sti')">
+              <div class="flex-1"><div class="text-sm font-semibold">Boost STI</div><div class="text-xs text-text-muted">7 tasks</div></div>
+              <div class="font-mono font-bold text-accent">₹1,12,000</div>
+              <svg class="w-4 h-4 text-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6" stroke-width="2"/></svg>
+            </div>
+            <div class="flex items-center gap-3 bg-surface rounded-xl border border-border px-4 py-3 cursor-pointer hover:border-accent transition-colors" onclick="openPipeline('revenue')">
+              <div class="flex-1"><div class="text-sm font-semibold">Boost Revenue</div><div class="text-xs text-text-muted">4 tasks</div></div>
+              <div class="font-mono font-bold text-accent">₹96,000</div>
+              <svg class="w-4 h-4 text-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6" stroke-width="2"/></svg>
+            </div>
+            <div class="flex items-center gap-3 bg-surface rounded-xl border border-border px-4 py-3 cursor-pointer hover:border-accent transition-colors" onclick="openPipeline('loan')">
+              <div class="flex-1"><div class="text-sm font-semibold">Boost Loan</div><div class="text-xs text-text-muted">3 tasks</div></div>
+              <div class="font-mono font-bold text-accent">₹76,000</div>
+              <svg class="w-4 h-4 text-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6" stroke-width="2"/></svg>
+            </div>
           </div>
         </div>
-      </div>
 
-      <!-- Top Earners -->
-      <div class="section-card">
-        <div class="section-card-header" onclick="toggleSection('earners')">
-          <div class="sch-icon icon-green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--success)"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></div>
-          <div class="sch-title">Top Earners</div>
-          <svg class="chevron" id="chevron-earners" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
-        </div>
-        <div class="section-card-body" id="body-earners">
-          <div class="leaderboard">
-            <div class="lb-item"><div class="lb-rank r1">1</div><div class="lb-avatar">RK</div><div class="lb-name">Rahul Kumar</div><div class="lb-val">₹34,200</div></div>
-            <div class="lb-item"><div class="lb-rank r2">2</div><div class="lb-avatar" style="background:#6d28d9">PJ</div><div class="lb-name">Priya Joshi</div><div class="lb-val">₹28,500</div></div>
-            <div class="lb-item"><div class="lb-rank r3">3</div><div class="lb-avatar" style="background:#0369a1">AK</div><div class="lb-name">Amit Khurana</div><div class="lb-val">₹24,800</div></div>
+        <div id="incentivesMainInner">
+          <div class="grid sm:grid-cols-2 gap-4 mb-6">
+            <div class="bg-white border border-border rounded-xl p-5">
+              <div class="text-[10px] font-bold uppercase tracking-wide text-text-muted mb-1">Earned So Far</div>
+              <div class="font-mono text-3xl font-extrabold text-text-main">₹18,400</div>
+              <div class="text-xs text-text-muted mt-1">September 2026 · Monthly</div>
+              <button class="text-xs font-semibold text-primary flex items-center gap-1 mt-2.5 cursor-pointer" onclick="toggleBreakdown()">
+                View Breakdown
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9" stroke-width="2"/></svg>
+              </button>
+              <div id="earnBreakdown" class="hidden mt-2">
+                <table class="w-full text-[11px]">
+                  <thead><tr class="text-[9px] uppercase text-text-muted border-b border-border"><th class="text-left py-1.5">Component · Period</th><th class="text-left py-1.5">Status</th><th class="text-left py-1.5">Earned</th></tr></thead>
+                  <tbody>
+                    <tr class="border-b border-border"><td class="py-1.5">Deposits | 2 deposits (100%)</td><td class="py-1.5"><span class="ai-badge completed">Done</span></td><td class="py-1.5 font-mono">₹4,000</td></tr>
+                    <tr class="border-b border-border"><td class="py-1.5">Lock-ins (C2I)</td><td class="py-1.5"><span class="ai-badge pending">On Track</span></td><td class="py-1.5 font-mono">₹8,000</td></tr>
+                    <tr class="border-b border-border"><td class="py-1.5">F2F Conversion</td><td class="py-1.5"><span class="ai-badge pending">On Track</span></td><td class="py-1.5 font-mono">₹4,400</td></tr>
+                    <tr class="border-b border-border"><td class="py-1.5">Quality Bonus</td><td class="py-1.5"><span class="ai-badge pending" style="background:#FEF2F2;color:#DC2626;border-color:#FCA5A5">Below</span></td><td class="py-1.5 font-mono">₹2,000</td></tr>
+                    <tr><td class="py-1.5 font-bold">Total</td><td></td><td class="py-1.5 font-mono font-bold">₹18,400</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <div class="rounded-xl p-5 text-white cursor-pointer relative overflow-hidden" style="background:linear-gradient(135deg,#EA580C 0%,#C2410C 100%)" onclick="openOppDetail()">
+              <div class="text-[10px] font-bold uppercase tracking-wide opacity-80 mb-1">Opportunity Size</div>
+              <div class="font-mono text-3xl font-extrabold">₹2,84,000</div>
+              <div class="text-xs opacity-80 mt-1">14 open tasks · Click to view breakdown</div>
+            </div>
           </div>
-        </div>
-      </div>
 
-      <!-- Monthly Trend -->
-      <div class="section-card">
-        <div class="section-card-header" onclick="toggleSection('trend')">
-          <div class="sch-icon icon-blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--info)"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
-          <div class="sch-title">Monthly Incentive Earned — FY 2026-27</div>
-          <svg class="chevron" id="chevron-trend" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
-        </div>
-        <div class="section-card-body" id="body-trend">
-          <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:8px;text-align:center;">
-            <div><div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">Apr</div><div style="height:40px;background:var(--primary-light);border-radius:4px;opacity:.4"></div><div style="font-size:10px;margin-top:3px;font-weight:600">₹12K</div></div>
-            <div><div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">May</div><div style="height:55px;background:var(--primary-light);border-radius:4px;opacity:.5"></div><div style="font-size:10px;margin-top:3px;font-weight:600">₹16K</div></div>
-            <div><div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">Jun</div><div style="height:48px;background:var(--primary-light);border-radius:4px;opacity:.55"></div><div style="font-size:10px;margin-top:3px;font-weight:600">₹14K</div></div>
-            <div><div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">Jul</div><div style="height:62px;background:var(--primary-light);border-radius:4px;opacity:.65"></div><div style="font-size:10px;margin-top:3px;font-weight:600">₹18K</div></div>
-            <div><div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">Aug</div><div style="height:70px;background:var(--primary-light);border-radius:4px;opacity:.75"></div><div style="font-size:10px;margin-top:3px;font-weight:600">₹21K</div></div>
-            <div><div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">Sep</div><div style="height:52px;background:var(--accent);border-radius:4px;opacity:.9"></div><div style="font-size:10px;margin-top:3px;font-weight:700;color:var(--accent)">₹18K↑</div></div>
+          <!-- On Going Offers -->
+          <div class="offer-banner mb-4">
+            <div class="text-[10px] font-bold uppercase tracking-wide opacity-90 mb-1.5">🏷️ On Going Offers · 2 active</div>
+            <div class="space-y-1.5 text-sm">
+              <div class="flex justify-between"><span>Referral Drive Sep'26</span><strong>+₹2K</strong></div>
+              <div class="flex justify-between"><span>Lock-in Sprint Bonus</span><strong>Ends Sep 15</strong></div>
+            </div>
           </div>
+
+          <!-- Top Earners -->
+          <section class="bg-white rounded-xl border border-border overflow-hidden mb-4">
+            <button onclick="toggleSection('earners')" class="w-full flex items-center justify-between px-5 py-4 hover:bg-surface/60 transition-colors cursor-pointer">
+              <h2 class="font-semibold text-text-main flex items-center gap-2">💰 Top Earners</h2>
+              <svg class="w-4 h-4 text-text-muted transition-transform" id="chevron-earners" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9" stroke-width="2"/></svg>
+            </button>
+            <div id="body-earners" class="hidden px-5 pb-5">
+              <div class="space-y-2">
+                <div class="flex items-center gap-3 bg-surface rounded-xl border border-border px-3 py-2.5"><span class="rank-badge r1">🥇</span><div class="w-7 h-7 rounded-full bg-accent flex items-center justify-center text-white text-xs font-bold flex-shrink-0">RK</div><span class="flex-1 text-sm font-medium">Rahul Kumar</span><span class="font-mono text-sm font-bold text-primary">₹34,200</span></div>
+                <div class="flex items-center gap-3 bg-surface rounded-xl border border-border px-3 py-2.5"><span class="rank-badge r2">🥈</span><div class="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0" style="background:#6d28d9">PJ</div><span class="flex-1 text-sm font-medium">Priya Joshi</span><span class="font-mono text-sm font-bold text-primary">₹28,500</span></div>
+                <div class="flex items-center gap-3 bg-surface rounded-xl border border-border px-3 py-2.5"><span class="rank-badge r3">🥉</span><div class="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0" style="background:#0369a1">AK</div><span class="flex-1 text-sm font-medium">Amit Khurana</span><span class="font-mono text-sm font-bold text-primary">₹24,800</span></div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Monthly Trend -->
+          <section class="bg-white rounded-xl border border-border overflow-hidden mb-4">
+            <button onclick="toggleSection('trend')" class="w-full flex items-center justify-between px-5 py-4 hover:bg-surface/60 transition-colors cursor-pointer">
+              <h2 class="font-semibold text-text-main flex items-center gap-2">📉 Monthly Incentive Earned — FY 2026-27</h2>
+              <svg class="w-4 h-4 text-text-muted transition-transform" id="chevron-trend" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9" stroke-width="2"/></svg>
+            </button>
+            <div id="body-trend" class="hidden px-5 pb-5">
+              <div class="grid grid-cols-6 gap-2 text-center">
+                <div><div class="text-[10px] text-text-muted mb-1">Apr</div><div class="h-10 bg-primary/40 rounded"></div><div class="text-[10px] mt-1 font-semibold font-mono">₹12K</div></div>
+                <div><div class="text-[10px] text-text-muted mb-1">May</div><div class="h-14 bg-primary/50 rounded"></div><div class="text-[10px] mt-1 font-semibold font-mono">₹16K</div></div>
+                <div><div class="text-[10px] text-text-muted mb-1">Jun</div><div class="h-12 bg-primary/55 rounded"></div><div class="text-[10px] mt-1 font-semibold font-mono">₹14K</div></div>
+                <div><div class="text-[10px] text-text-muted mb-1">Jul</div><div class="h-16 bg-primary/65 rounded"></div><div class="text-[10px] mt-1 font-semibold font-mono">₹18K</div></div>
+                <div><div class="text-[10px] text-text-muted mb-1">Aug</div><div class="h-[70px] bg-primary/75 rounded"></div><div class="text-[10px] mt-1 font-semibold font-mono">₹21K</div></div>
+                <div><div class="text-[10px] text-text-muted mb-1">Sep</div><div class="h-[52px] bg-accent rounded"></div><div class="text-[10px] mt-1 font-bold font-mono text-accent">₹18K↑</div></div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Performance Scorecard -->
+          <section class="bg-white rounded-xl border border-border overflow-hidden">
+            <button onclick="toggleSection('scorecard')" class="w-full flex items-center justify-between px-5 py-4 hover:bg-surface/60 transition-colors cursor-pointer">
+              <h2 class="font-semibold text-text-main flex items-center gap-2">📊 Performance Scorecard</h2>
+              <svg class="w-4 h-4 text-text-muted transition-transform" id="chevron-scorecard" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9" stroke-width="2"/></svg>
+            </button>
+            <div id="body-scorecard" class="hidden px-5 pb-5">
+              <div id="perfScorecardContent"></div>
+            </div>
+          </section>
+        </div>
+      </div><!-- /incentivesMain -->
+    </div><!-- /panel-incentives -->
+
+    <!-- ═══════════ LEARNING & DEVELOPMENT ═══════════ -->
+    <div id="panel-ld" class="tab-panel hidden">
+      <div class="flex items-center justify-between mb-3">
+        <h1 class="text-lg font-bold text-text-main">Learning &amp; Development</h1>
+        <button class="flex items-center gap-1.5 px-4 py-2 bg-accent hover:bg-accent-dark text-white text-xs font-semibold rounded-lg cursor-pointer transition-colors" onclick="openTicketModal()">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19" stroke-width="2"/><line x1="5" y1="12" x2="19" y2="12" stroke-width="2"/></svg>
+          Raise New Ticket
+        </button>
+      </div>
+
+      <div class="text-[10px] font-bold uppercase tracking-wide text-text-muted mb-2" id="ldTicketsLabel">My Tickets</div>
+      <div class="grid grid-cols-3 gap-3.5 mb-6">
+        <div class="metric-card border rounded-xl p-4 cursor-pointer" style="background:linear-gradient(135deg,#F0F9FF,#E0F2FE);border-color:#BAE6FD" onclick="showToast('Opening Total Raised tickets...','info')">
+          <div class="text-[10px] font-bold uppercase tracking-wide text-text-muted mb-1">Total Raised</div>
+          <div class="metric-value font-mono text-2xl font-extrabold" style="color:#0284C7">8</div>
+          <div class="text-[10px] text-text-muted mt-0.5">Tap to view</div>
+        </div>
+        <div class="metric-card green border rounded-xl p-4 cursor-pointer" onclick="showToast('Opening Resolved tickets...','info')">
+          <div class="text-[10px] font-bold uppercase tracking-wide text-text-muted mb-1">Resolved</div>
+          <div class="metric-value font-mono text-2xl font-extrabold">5</div>
+          <div class="text-[10px] text-text-muted mt-0.5">Tap to view</div>
+        </div>
+        <div class="metric-card red border rounded-xl p-4 cursor-pointer" onclick="showToast('Opening Not Resolved tickets...','info')">
+          <div class="text-[10px] font-bold uppercase tracking-wide text-text-muted mb-1">Not Resolved</div>
+          <div class="metric-value font-mono text-2xl font-extrabold">3</div>
+          <div class="text-[10px] text-text-muted mt-0.5">Tap to view</div>
         </div>
       </div>
 
-      <!-- Performance Scorecard -->
-      <div class="section-card">
-        <div class="section-card-header" onclick="toggleSection('scorecard')">
-          <div class="sch-icon icon-blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--info)"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div>
-          <div class="sch-title">Performance Scorecard</div>
-          <svg class="chevron" id="chevron-scorecard" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+      <!-- IMP Sheet -->
+      <div class="text-[10px] font-bold uppercase tracking-wide text-text-muted mb-2">IMP Sheet</div>
+      <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6" id="impSheetGrid">
+        <div class="quick-link-v1" onclick="showToast('Opening Raise SOP Request...','info')">
+          <div class="ql-icon" style="background:#EFF6FF"><svg class="w-5 h-5" style="color:#1D4ED8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8" stroke-width="2"/></svg></div>
+          <div class="text-xs font-semibold">Raise SOP Request</div>
         </div>
-        <div class="section-card-body" id="body-scorecard">
-          <div id="perfScorecardContent"></div>
+        <div class="quick-link-v1" onclick="showToast('Opening Offer Follow Up...','info')">
+          <div class="ql-icon" style="background:#FFF7ED"><svg class="w-5 h-5 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 014.99 9.8a19.79 19.79 0 01-3.07-8.67A2 2 0 013.9 2h3a2 2 0 012 1.72c.13.96.36 1.9.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.9.34 1.85.57 2.81.7A2 2 0 0122 16.92z"/></svg></div>
+          <div class="text-xs font-semibold">Offer Follow Up</div>
         </div>
-      </div>
-    </div>
-  </div><!-- /panel-incentives -->
-
-  <!-- ===== L&D TAB ===== -->
-  <div id="panel-ld" class="hidden">
-    <div class="top-bar">
-      <div class="section-title">Learning & Development</div>
-      <button class="raise-ticket-btn" onclick="openTicketModal()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        Raise New Ticket
-      </button>
-    </div>
-
-    <!-- My Tickets -->
-    <div class="section-label mt-1">My Tickets</div>
-    <div class="ticket-cards">
-      <div class="ticket-card tc-blue" onclick="showToast('Opening Total Raised tickets...')">
-        <div class="tc-label">Total Raised</div>
-        <div class="tc-count">8</div>
-        <div class="tc-sub">Tap to view</div>
-      </div>
-      <div class="ticket-card tc-green" onclick="showToast('Opening Resolved tickets...')">
-        <div class="tc-label">Resolved</div>
-        <div class="tc-count">5</div>
-        <div class="tc-sub">Tap to view</div>
-      </div>
-      <div class="ticket-card tc-red" onclick="showToast('Opening Not Resolved tickets...')">
-        <div class="tc-label">Not Resolved</div>
-        <div class="tc-count">3</div>
-        <div class="tc-sub">Tap to view</div>
-      </div>
-    </div>
-
-    <!-- IMP Sheet -->
-    <div class="section-card mb-1">
-      <div class="section-card-header" onclick="toggleSection('impsheet')">
-        <div class="sch-icon icon-blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--info)"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
-        <div class="sch-title">IMP Sheet</div>
-        <svg class="chevron" id="chevron-impsheet" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
-      </div>
-      <div class="section-card-body" id="body-impsheet">
-        <div class="imp-links">
-          <div class="imp-link" onclick="showToast('Opening Raise SOP Request...')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><span class="imp-link-label">Raise SOP Request</span><svg class="imp-link-arr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></div>
-          <div class="imp-link" onclick="showToast('Opening Offer Follow Up...')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.99 9.8a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.9 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg><span class="imp-link-label">Offer Follow Up</span><svg class="imp-link-arr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></div>
-          <div class="imp-link" onclick="showToast('Opening Lead Transfer Request...')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg><span class="imp-link-label">Raise Lead Transfer Request</span><svg class="imp-link-arr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></div>
-          <div class="imp-link" onclick="showToast('Opening Info-Hub...')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><span class="imp-link-label">Info-Hub</span><svg class="imp-link-arr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></div>
-          <div class="imp-link" onclick="showToast('Opening LeapPay Payment Link...')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg><span class="imp-link-label">LeapPay Payment Link</span><svg class="imp-link-arr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></div>
-          <div class="imp-link" onclick="showToast('Opening Premium Payment Links...')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg><span class="imp-link-label">Premium Payment Links</span><svg class="imp-link-arr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></div>
+        <div class="quick-link-v1" onclick="showToast('Opening Lead Transfer Request...','info')">
+          <div class="ql-icon" style="background:#F0FDF4"><svg class="w-5 h-5 text-success" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="17 1 21 5 17 9" stroke-width="2"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 11V9a4 4 0 014-4h14"/><polyline points="7 23 3 19 7 15" stroke-width="2"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13v2a4 4 0 01-4 4H3"/></svg></div>
+          <div class="text-xs font-semibold">Lead Transfer Request</div>
+        </div>
+        <div class="quick-link-v1" onclick="showToast('Opening Info-Hub...','info')">
+          <div class="ql-icon" style="background:#F5F3FF"><svg class="w-5 h-5" style="color:#7C3AED" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-width="2"/><line x1="12" y1="8" x2="12" y2="12" stroke-width="2"/><line x1="12" y1="16" x2="12.01" y2="16" stroke-width="2"/></svg></div>
+          <div class="text-xs font-semibold">Info-Hub</div>
+        </div>
+        <div class="quick-link-v1" onclick="showToast('Opening LeapPay Payment Link...','info')">
+          <div class="ql-icon" style="background:#F0F9FF"><svg class="w-5 h-5" style="color:#0284C7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2" stroke-width="2"/><line x1="2" y1="10" x2="22" y2="10" stroke-width="2"/></svg></div>
+          <div class="text-xs font-semibold">LeapPay Payment Link</div>
+        </div>
+        <div class="quick-link-v1" onclick="showToast('Opening Premium Payment Links...','info')">
+          <div class="ql-icon" style="background:#FFFBEB"><svg class="w-5 h-5" style="color:#B45309" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></div>
+          <div class="text-xs font-semibold">Premium Payment Links</div>
         </div>
       </div>
-    </div>
 
-    <!-- Training Modules -->
-    <div class="section-card">
-      <div class="section-card-header" onclick="toggleSection('training')">
-        <div class="sch-icon" style="background:#fef3c7"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:#b45309"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg></div>
-        <div class="sch-title">Training Modules</div>
-        <svg class="chevron open" id="chevron-training" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
-      </div>
-      <div class="section-card-body open" id="body-training">
-        <div class="section-label" style="font-size:9px;margin-bottom:6px;color:var(--accent);">PLATFORM INTEGRATIONS</div>
-        <div class="training-cats" id="trainingCats"></div>
-      </div>
-    </div>
-  </div><!-- /panel-ld -->
+      <!-- Training Modules -->
+      <section class="bg-white rounded-xl border border-border overflow-hidden">
+        <div class="flex items-center gap-2 px-5 py-4 border-b border-border">
+          <div class="w-7 h-7 rounded-lg flex items-center justify-center" style="background:#FEF3C7">🎓</div>
+          <h2 class="font-semibold text-text-main flex-1">Training Modules</h2>
+        </div>
+        <div class="px-5 py-4">
+          <div class="text-[9px] font-bold uppercase tracking-wide text-accent mb-2">Platform Integrations</div>
+          <div class="space-y-2" id="trainingCats"></div>
+        </div>
+      </section>
+    </div><!-- /panel-ld -->
 
-</div><!-- /main -->
+  </main>
+</div><!-- /appShell -->
 
-<!-- ─── NOTIFICATION PANEL ─── -->
-<div class="notif-panel" id="notifPanel">
-  <div class="notif-panel-header">
-    <h3>Notifications</h3>
-    <span class="sch-badge badge-orange" id="notifPanelBadge">3</span>
+<!-- ═══ NOTIFICATION PANEL ═══ -->
+<div class="hidden fixed top-16 right-3 w-80 bg-white rounded-xl border border-border shadow-xl z-[150]" id="notifPanel">
+  <div class="px-4 py-3 border-b border-border flex items-center justify-between">
+    <h3 class="text-sm font-bold">Notifications</h3>
+    <span class="text-[10px] px-2 py-0.5 bg-accent/10 text-accent rounded-full font-semibold" id="notifPanelBadge">3</span>
   </div>
-  <div class="notif-subcard">
-    <div class="notif-subcard-header" onclick="toggleNotifSub('reminders')">
-      <span class="nsh-title">Own Reminders</span>
-      <span class="nsh-badge badge-orange" id="reminderBadge">2</span>
-      <svg class="chevron" id="chevron-notif-reminders" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
-    </div>
-    <div class="notif-subcard-body" id="notifRemindersBody">
-      <div class="notif-item"><div class="ni-title">Follow-up with Ananya Sharma</div><div class="ni-sub">Due today · RM-2041</div></div>
-      <div class="notif-item"><div class="ni-title">Submit Loan VC paperwork</div><div class="ni-sub">Due today · General</div></div>
+  <div>
+    <button class="w-full flex items-center gap-2 px-4 py-2.5 border-b border-border hover:bg-surface transition-colors cursor-pointer" onclick="toggleNotifSub('reminders')">
+      <span class="flex-1 text-left text-xs font-semibold">Own Reminders</span>
+      <span class="text-[10px] px-2 py-0.5 bg-accent/10 text-accent rounded-full font-bold" id="reminderBadge">2</span>
+      <svg class="w-3.5 h-3.5 text-text-muted transition-transform" id="chevron-notif-reminders" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9" stroke-width="2"/></svg>
+    </button>
+    <div class="hidden" id="notifRemindersBody">
+      <div class="px-4 py-2.5 border-b border-border"><div class="text-xs font-medium">Follow-up with Ananya Sharma</div><div class="text-[10px] text-text-muted mt-0.5">Due today · RM-2041</div></div>
+      <div class="px-4 py-2.5 border-b border-border"><div class="text-xs font-medium">Submit Loan VC paperwork</div><div class="text-[10px] text-text-muted mt-0.5">Due today · General</div></div>
     </div>
   </div>
-  <div class="notif-subcard">
-    <div class="notif-subcard-header" onclick="toggleNotifSub('unhappy')">
-      <span class="nsh-title">Potential Escalations</span>
-      <span class="nsh-badge badge-red" id="unhappyBadge">1</span>
-      <svg class="chevron" id="chevron-notif-unhappy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
-    </div>
-    <div class="notif-subcard-body" id="notifUnhappyBody">
-      <div class="notif-item"><div class="ni-title">Karan Mehta — ISL Rating: 5</div><div class="ni-sub">Below threshold · Needs follow-up</div></div>
+  <div>
+    <button class="w-full flex items-center gap-2 px-4 py-2.5 hover:bg-surface transition-colors cursor-pointer" onclick="toggleNotifSub('unhappy')">
+      <span class="flex-1 text-left text-xs font-semibold">Potential Escalations</span>
+      <span class="text-[10px] px-2 py-0.5 bg-danger/10 text-danger rounded-full font-bold" id="unhappyBadge">1</span>
+      <svg class="w-3.5 h-3.5 text-text-muted transition-transform" id="chevron-notif-unhappy" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9" stroke-width="2"/></svg>
+    </button>
+    <div class="hidden" id="notifUnhappyBody">
+      <div class="px-4 py-2.5"><div class="text-xs font-medium">Karan Mehta — ISL Rating: 5</div><div class="text-[10px] text-text-muted mt-0.5">Below threshold · Needs follow-up</div></div>
     </div>
   </div>
 </div>
 
-<!-- ─── PROFILE DROPDOWN ─── -->
-<div class="profile-dropdown" id="profileDropdown">
-  <div class="pd-header">
-    <div class="pd-name" id="pdName">Arjun Patel</div>
-    <div class="pd-role" id="pdRole">Relationship Manager</div>
+<!-- ═══ PROFILE DROPDOWN ═══ -->
+<div class="hidden profile-dropdown fixed top-16 right-3 w-52 bg-white rounded-xl border border-border shadow-xl z-[150]" id="profileDropdown">
+  <div class="px-4 py-3 border-b border-border">
+    <div class="text-sm font-bold" id="pdName">Arjun Patel</div>
+    <div class="text-[10px] text-text-muted uppercase tracking-wide" id="pdRole">Student Success Manager</div>
   </div>
-  <div class="pd-item" onclick="openProfile()">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+  <div class="flex items-center gap-2.5 px-4 py-2.5 text-sm hover:bg-surface transition-colors cursor-pointer" onclick="openProfile()">
+    <svg class="w-4 h-4 text-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4" stroke-width="2"/></svg>
     View Profile
   </div>
-  <div class="pd-item danger" onclick="showToast('Logging out...')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+  <div class="flex items-center gap-2.5 px-4 py-2.5 text-sm text-danger hover:bg-surface transition-colors cursor-pointer" onclick="showToast('Logging out...','info')">
+    <svg class="w-4 h-4 text-danger" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7" stroke-width="2"/><line x1="21" y1="12" x2="9" y2="12" stroke-width="2"/></svg>
     Log Out
   </div>
 </div>
 
-<!-- ─── OVERLAY + DRAWER (Leads) ─── -->
-<div class="overlay" id="overlay" onclick="closeDrawer()"></div>
-<div class="drawer" id="drawer">
-  <div class="drawer-header">
-    <button class="drawer-back" onclick="closeDrawer()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg> Back</button>
-    <div class="drawer-title" id="drawerTitle">Pipeline</div>
-    <div class="drawer-close" onclick="closeDrawer()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>
-  </div>
-  <div class="drawer-body" id="drawerBody"></div>
-</div>
-
-<!-- ─── TICKET MODAL ─── -->
-<div class="modal" id="ticketModal">
-  <div class="modal-backdrop" onclick="closeTicketModal()"></div>
-  <div class="modal-card">
-    <div class="modal-header">
-      <h3>Raise New Ticket</h3>
-      <div class="drawer-close" onclick="closeTicketModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>
-    </div>
-    <div class="modal-body">
-      <div class="reminder-form">
-        <div class="form-field">
-          <label class="form-label">Category *</label>
-          <select class="form-input" id="ticketCategory">
-            <option value="">Select category</option>
-            <option>Technical Issue</option>
-            <option>Data Correction</option>
-            <option>Policy Question</option>
-            <option>Access Request</option>
-            <option>Other</option>
-          </select>
-        </div>
-        <div class="form-field">
-          <label class="form-label">Subject *</label>
-          <input class="form-input" type="text" placeholder="Brief subject (max 100 chars)" maxlength="100" id="ticketSubject"/>
-        </div>
-        <div class="form-field">
-          <label class="form-label">Description *</label>
-          <textarea class="form-input" placeholder="Describe the issue in detail (max 1000 chars)" maxlength="1000" id="ticketDesc" style="min-height:100px"></textarea>
-        </div>
-        <div class="form-field">
-          <label class="form-label">Attachment (optional)</label>
-          <input class="form-input" type="file" id="ticketFile"/>
-        </div>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn-secondary" onclick="closeTicketModal()">Cancel</button>
-      <button class="btn-primary" onclick="submitTicket()">Raise Ticket</button>
-    </div>
-  </div>
-</div>
-
-<!-- TOAST -->
-<div id="toast"></div>
-
-<!-- ─── CHAT FEATURE ─── -->
-<button class="chat-fab" id="chatFab" onclick="toggleChat()" title="Ask me Anything">
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-  <span>Ask me Anything</span>
-</button>
-
-<div class="chat-panel" id="chatPanel">
-  <div class="chat-panel-header">
-    <div class="chat-tabs">
-      <button class="chat-tab active" id="chatTabAI" onclick="switchChatMode('ai')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-        Ask CRM
-      </button>
-      <button class="chat-tab" id="chatTabTL" onclick="switchChatMode('tl')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-        Message TL
-      </button>
-    </div>
-    <button class="chat-close" onclick="toggleChat()">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+<!-- ═══ DRAWER ═══ -->
+<div class="hidden fixed inset-0 modal-overlay z-[200]" id="overlay" onclick="closeDrawer()"></div>
+<div class="drawer fixed top-0 right-0 h-full w-full sm:w-[440px] z-[201] bg-white shadow-2xl flex flex-col" id="drawer" style="transform:translateX(100%)">
+  <div class="flex items-center gap-2 px-5 py-4 bg-sidebar flex-shrink-0">
+    <button class="drawer-back-btn flex items-center gap-1 text-white/70 text-xs hover:text-white cursor-pointer" onclick="closeDrawer()">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6" stroke-width="2"/></svg> Back
+    </button>
+    <h2 class="font-semibold text-white text-sm flex-1" id="drawerTitle">Pipeline</h2>
+    <button class="w-7 h-7 rounded-lg bg-white/10 flex items-center justify-center cursor-pointer hover:bg-white/20" onclick="closeDrawer()">
+      <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18" stroke-width="2"/><line x1="6" y1="6" x2="18" y2="18" stroke-width="2"/></svg>
     </button>
   </div>
+  <div class="flex-1 overflow-y-auto p-5" id="drawerBody"></div>
+</div>
 
-  <!-- AI Mode -->
-  <div id="chatAIMode">
-    <div class="chat-messages" id="chatMessages">
-      <div class="chat-msg bot">
-        <div class="chat-bubble bot">Hi! Ask me about your leads, tasks, performance, or incentives.</div>
-        <div class="chat-time">CRM Bot · just now</div>
-      </div>
-    </div>
-    <div class="chat-quick-btns" id="chatQuickBtns">
-      <button onclick="sendQuickQ('How many leads are overdue?')">Overdue leads?</button>
-      <button onclick="sendQuickQ('What is my quality score?')">Quality score?</button>
-      <button onclick="sendQuickQ('How much have I earned this month?')">Earnings?</button>
-      <button onclick="sendQuickQ('Show my top pending task')">Top task?</button>
-    </div>
-    <div class="chat-input-wrap">
-      <input class="chat-input" id="chatInput" type="text" placeholder="Ask anything about your leads…" onkeydown="if(event.key==='Enter')sendChatMsg()"/>
-      <button class="chat-send-btn" onclick="sendChatMsg()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+<!-- ═══ TICKET MODAL ═══ -->
+<div class="hidden fixed inset-0 z-[300] items-center justify-center p-4" id="ticketModal">
+  <div class="absolute inset-0 modal-overlay" onclick="closeTicketModal()"></div>
+  <div class="relative bg-white rounded-xl shadow-2xl w-full max-w-md z-10">
+    <div class="px-5 py-4 border-b border-border flex items-center justify-between">
+      <h3 class="text-base font-bold">Raise New Ticket</h3>
+      <button class="w-7 h-7 rounded-lg bg-surface flex items-center justify-center cursor-pointer" onclick="closeTicketModal()">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18" stroke-width="2"/><line x1="6" y1="6" x2="18" y2="18" stroke-width="2"/></svg>
       </button>
     </div>
-  </div>
-
-  <!-- TL Mode -->
-  <div id="chatTLMode" class="hidden">
-    <div class="chat-tl-header">
-      <div class="chat-tl-avatar">RS</div>
+    <div class="p-5 space-y-3">
       <div>
-        <div class="chat-tl-name">Rahul Sharma</div>
-        <div class="chat-tl-sub">Team Lead · <span class="online-dot"></span> Online</div>
+        <label class="block text-xs font-semibold text-text-muted mb-1">Category *</label>
+        <select class="w-full px-3 py-2 border border-border rounded-lg text-sm bg-white" id="ticketCategory">
+          <option value="">Select category</option>
+          <option>Technical Issue</option>
+          <option>Data Correction</option>
+          <option>Policy Question</option>
+          <option>Access Request</option>
+          <option>Other</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-text-muted mb-1">Subject *</label>
+        <input class="w-full px-3 py-2 border border-border rounded-lg text-sm" type="text" placeholder="Brief subject (max 100 chars)" maxlength="100" id="ticketSubject"/>
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-text-muted mb-1">Description *</label>
+        <textarea class="w-full px-3 py-2 border border-border rounded-lg text-sm" placeholder="Describe the issue in detail (max 1000 chars)" maxlength="1000" id="ticketDesc" style="min-height:90px"></textarea>
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-text-muted mb-1">Attachment (optional)</label>
+        <input class="w-full px-3 py-2 border border-border rounded-lg text-sm" type="file" id="ticketFile"/>
       </div>
     </div>
-    <div class="chat-messages" id="tlMessages">
-      <div class="chat-msg bot">
-        <div class="chat-bubble bot">Hey! How can I help you today?</div>
-        <div class="chat-time">Rahul S. · 10:15 AM</div>
-      </div>
-    </div>
-    <div class="chat-input-wrap">
-      <input class="chat-input" id="tlInput" type="text" placeholder="Message your TL…" onkeydown="if(event.key==='Enter')sendTLMsg()"/>
-      <button class="chat-send-btn" onclick="sendTLMsg()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-      </button>
+    <div class="px-5 py-4 border-t border-border flex gap-2 justify-end">
+      <button class="px-4 py-2 border border-border rounded-lg text-sm font-semibold cursor-pointer hover:bg-surface" onclick="closeTicketModal()">Cancel</button>
+      <button class="px-4 py-2 bg-accent hover:bg-accent-dark text-white rounded-lg text-sm font-semibold cursor-pointer" onclick="submitTicket()">Raise Ticket</button>
     </div>
   </div>
 </div>
 
-<!-- ─── ADMIN PANEL ─── -->
-<div id="adminPanel" class="hidden admin-panel">
-  <div class="admin-header">
-    <div class="admin-header-title">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M4.93 4.93a10 10 0 0 0 0 14.14M8.46 8.46a5 5 0 0 0 0 7.07"/></svg>
-      Admin Configuration
+<!-- ═══ TOAST CONTAINER ═══ -->
+<div id="toastContainer" class="fixed bottom-5 left-1/2 -translate-x-1/2 z-[400] flex flex-col gap-2 items-center pointer-events-none"></div>
+
+<!-- ═══════════ AI CHATBOT ═══════════ -->
+<button id="botBubble" onclick="toggleBot()" aria-label="Ask me Anything"
+  class="fixed right-0 top-[42%] -translate-y-1/2 z-[90] w-12 h-[72px] bg-accent hover:bg-accent-dark text-white rounded-l-2xl shadow-xl flex flex-col items-center justify-center gap-0.5 cursor-pointer transition-colors bot-bubble relative">
+  <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+  <span class="text-[7.5px] font-bold leading-tight text-center px-0.5">Ask me<br/>Anything</span>
+  <span id="botUnreadBadge" class="hidden absolute -top-1 -left-1 w-5 h-5 bg-danger text-white text-[10px] font-bold rounded-full flex items-center justify-center z-10"></span>
+  <span class="bot-pulse-ring"></span>
+</button>
+
+<div id="botPanel" class="fixed z-[500] bg-white rounded-2xl shadow-2xl border border-border flex flex-col bot-panel" style="right:16px; bottom:16px; width:360px; height:520px;">
+  <div class="flex items-center gap-2.5 px-4 py-3 bg-sidebar rounded-t-2xl flex-shrink-0">
+    <div class="w-8 h-8 rounded-full bg-accent flex items-center justify-center text-white flex-shrink-0">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-width="2"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17" stroke-width="2"/></svg>
     </div>
-    <div class="admin-tabs">
-      <button class="admin-tab active" onclick="switchAdminTab('pipeline',this)">Pipeline Logic</button>
-      <button class="admin-tab" onclick="switchAdminTab('incentive',this)">Incentive Config</button>
-      <button class="admin-tab" onclick="switchAdminTab('ld',this)">L&D Content</button>
+    <div class="flex-1 min-w-0">
+      <div class="text-sm font-semibold text-white">RM CRM Assistant</div>
+      <div class="text-[10px] text-white/50">Ask me anything about your CRM</div>
+    </div>
+    <button class="bot-clear-chat" onclick="showClearChatConfirm()">Clear</button>
+    <button class="w-7 h-7 rounded-lg bg-white/10 flex items-center justify-center cursor-pointer hover:bg-white/20 flex-shrink-0" onclick="toggleBot()">
+      <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18" stroke-width="2"/><line x1="6" y1="6" x2="18" y2="18" stroke-width="2"/></svg>
+    </button>
+  </div>
+  <div class="flex border-b border-border flex-shrink-0">
+    <button class="bot-tab flex-1 text-xs font-semibold py-2.5 border-b-2 border-accent text-accent cursor-pointer" id="botTabChat" onclick="switchBotTab('chat')">Chat</button>
+    <button class="bot-tab flex-1 text-xs font-semibold py-2.5 border-b-2 border-transparent text-text-muted cursor-pointer" id="botTabActions" onclick="switchBotTab('actions')">Action Items</button>
+  </div>
+  <div id="botClearConfirm" class="hidden px-4 py-2 bg-amber-50 border-b border-amber-200 flex items-center justify-between flex-shrink-0">
+    <span class="text-[11px] text-accent-dark font-medium">Clear this conversation?</span>
+    <div class="flex gap-2">
+      <button class="text-[11px] font-bold text-accent cursor-pointer" onclick="clearChatHistory()">Yes</button>
+      <button class="text-[11px] text-text-muted cursor-pointer" onclick="document.getElementById('botClearConfirm').classList.add('hidden')">No</button>
     </div>
   </div>
-  <div class="admin-body">
+  <div id="botChatMode" class="flex-1 min-h-0 flex flex-col">
+    <div id="botMessages" class="flex-1 min-h-0 overflow-y-auto p-4 space-y-3 bg-surface"></div>
+    <div id="botInputRow" class="flex items-center gap-2 px-3 py-3 border-t border-border flex-shrink-0">
+      <input class="flex-1 border border-border rounded-full px-3.5 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-primary" id="chatInput" type="text" placeholder="Say hello" onkeydown="if(event.key==='Enter')sendChatMsg()"/>
+      <button class="w-8 h-8 rounded-full bg-accent hover:bg-accent-dark flex items-center justify-center cursor-pointer flex-shrink-0 transition-colors" onclick="sendChatMsg()">
+        <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13" stroke-width="2"/><polygon points="22 2 15 22 11 13 2 9 22 2" stroke-width="2"/></svg>
+      </button>
+    </div>
+  </div>
+  <div id="botActionItems" class="hidden flex-1 min-h-0 overflow-y-auto p-3 space-y-2 bg-surface"></div>
+</div>
+
+<!-- ═══════════ INTERNAL TEAM CHAT ═══════════ -->
+<button id="internalChatBubbleBtn" onclick="toggleInternalChat()" aria-label="Open Internal Team Chat"
+  class="internal-chat-bubble right-0 bottom-28 z-[100] w-[68px] h-[96px] rounded-l-2xl flex flex-col items-center justify-center gap-1 cursor-pointer transition-all duration-200 relative overflow-visible"
+  style="background:linear-gradient(160deg,#10b981 0%,#059669 50%,#047857 100%);box-shadow:-6px 4px 28px rgba(16,185,129,0.65),0 8px 32px rgba(5,150,105,0.4);">
+  <svg class="w-5 h-5 text-white flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4" stroke-width="2"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M23 21v-2a4 4 0 00-3-3.87"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 3.13a4 4 0 010 7.75"/></svg>
+  <span class="text-[9.5px] font-extrabold leading-tight text-center text-white drop-shadow" style="text-shadow:0 1px 3px rgba(0,0,0,0.3)">Chat in<br/>Internal<br/>Team</span>
+  <span id="internalChatBadge" class="hidden absolute -top-1.5 -left-1.5 w-5 h-5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center z-20 shadow-lg"></span>
+  <span class="internal-pulse-ring"></span>
+</button>
+
+<div id="internalChatPanel" class="fixed z-[500] bg-white rounded-2xl shadow-2xl border border-border flex flex-col bot-panel" style="right:16px; bottom:16px; width:346px; height:480px;">
+  <div class="flex items-center gap-2.5 px-4 py-3 bg-emerald-700 rounded-t-2xl flex-shrink-0">
+    <div class="w-8 h-8 rounded-full bg-white/15 flex items-center justify-center text-white flex-shrink-0">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4" stroke-width="2"/></svg>
+    </div>
+    <div class="flex-1 min-w-0">
+      <div class="text-sm font-semibold text-white">Chat in Internal Team</div>
+      <div class="text-[10px] text-white/70" id="chatOnlineBadge">● 3 online</div>
+    </div>
+    <button class="w-7 h-7 rounded-lg bg-white/10 flex items-center justify-center cursor-pointer hover:bg-white/20 flex-shrink-0" onclick="toggleInternalChat()">
+      <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18" stroke-width="2"/><line x1="6" y1="6" x2="18" y2="18" stroke-width="2"/></svg>
+    </button>
+  </div>
+  <div id="teamChatMessages" class="flex-1 min-h-0 overflow-y-auto p-4 space-y-3 bg-surface"></div>
+  <div class="flex items-center gap-2 px-3 py-3 border-t border-border flex-shrink-0">
+    <input class="flex-1 border border-border rounded-full px-3.5 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500" id="teamChatInput" type="text" placeholder="Message your team…" onkeydown="if(event.key==='Enter')sendTeamChat()"/>
+    <button class="w-8 h-8 rounded-full bg-emerald-600 hover:bg-emerald-700 flex items-center justify-center cursor-pointer flex-shrink-0 transition-colors" onclick="sendTeamChat()">
+      <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13" stroke-width="2"/><polygon points="22 2 15 22 11 13 2 9 22 2" stroke-width="2"/></svg>
+    </button>
+  </div>
+</div>
+
+<!-- ═══════════ ADMIN PANEL ═══════════ -->
+<div id="adminPanel" class="hidden admin-panel fixed inset-0 top-14 bg-surface z-[95] flex">
+  <aside class="w-52 bg-white border-r border-border flex-shrink-0 p-3 space-y-1 overflow-y-auto">
+    <div class="px-2 py-2 text-[10px] font-bold uppercase tracking-wide text-text-muted flex items-center gap-1.5">
+      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" stroke-width="2"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.07 4.93a10 10 0 010 14.14M15.54 8.46a5 5 0 010 7.07M4.93 4.93a10 10 0 000 14.14M8.46 8.46a5 5 0 000 7.07"/></svg>
+      Admin Configuration
+    </div>
+    <button class="adm-nav active w-full text-left px-3 py-2 rounded-lg text-sm flex items-center gap-2 cursor-pointer" onclick="switchAdminTab('pipeline',this)">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 11l3 3L22 4"/><rect x="3" y="3" width="18" height="18" rx="2" stroke-width="2"/></svg>
+      Pipeline Logic
+    </button>
+    <button class="adm-nav w-full text-left px-3 py-2 rounded-lg text-sm flex items-center gap-2 cursor-pointer" onclick="switchAdminTab('incentive',this)">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23" stroke-width="2"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+      Incentive Config
+    </button>
+    <button class="adm-nav w-full text-left px-3 py-2 rounded-lg text-sm flex items-center gap-2 cursor-pointer" onclick="switchAdminTab('ld',this)">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M22 10v6M2 10l10-5 10 5-10 5z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+      L&amp;D Content
+    </button>
+  </aside>
+
+  <div class="flex-1 p-6 overflow-auto">
     <!-- Pipeline Logic -->
     <div id="adminPipeline">
-      <div class="admin-notice">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;flex-shrink:0"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <div class="flex items-center gap-2 px-4 py-2.5 bg-blue-50 border border-blue-200 rounded-lg text-xs text-primary mb-4">
+        <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-width="2"/><line x1="12" y1="8" x2="12" y2="12" stroke-width="2"/><line x1="12" y1="16" x2="12.01" y2="16" stroke-width="2"/></svg>
         Pipeline logic is read-only in v0. Changes go through engineering.
       </div>
-      <div class="pipeline-rules-grid">
-        <div class="pipeline-rule-card">
-          <div class="prc-header orange">Boost STI</div>
-          <div class="prc-section"><div class="prc-label">Entry Conditions</div><ul class="prc-list"><li>Lock-in done AND (App Ready date is null OR F2F not yet done)</li></ul></div>
-          <div class="prc-section"><div class="prc-label">Exit Conditions</div><ul class="prc-list"><li>App Ready date is set AND STI date is set</li><li>OR counselling_status = LS_LEAD_DROP_OFF</li></ul></div>
+      <div class="grid grid-cols-3 gap-3 mb-3">
+        <div class="bg-white rounded-xl border border-border overflow-hidden">
+          <div class="px-4 py-2.5 text-xs font-bold uppercase tracking-wide text-white bg-accent">Boost STI</div>
+          <div class="px-4 py-3 border-b border-border"><div class="text-[10px] font-bold uppercase text-text-muted mb-1.5">Entry Conditions</div><ul class="text-xs list-disc pl-4 space-y-1"><li>Lock-in done AND (App Ready date is null OR F2F not yet done)</li></ul></div>
+          <div class="px-4 py-3"><div class="text-[10px] font-bold uppercase text-text-muted mb-1.5">Exit Conditions</div><ul class="text-xs list-disc pl-4 space-y-1"><li>App Ready date is set AND STI date is set</li><li>OR counselling_status = LS_LEAD_DROP_OFF</li></ul></div>
         </div>
-        <div class="pipeline-rule-card">
-          <div class="prc-header green">Boost Revenue</div>
-          <div class="prc-section"><div class="prc-label">Entry Conditions</div><ul class="prc-list"><li>F2F attended = Present AND no lock-in (Prime/C2I) done yet</li></ul></div>
-          <div class="prc-section"><div class="prc-label">Exit Conditions</div><ul class="prc-list"><li>Any lock-in is done</li><li>OR counselling_status = LS_LEAD_DROP_OFF</li></ul></div>
+        <div class="bg-white rounded-xl border border-border overflow-hidden">
+          <div class="px-4 py-2.5 text-xs font-bold uppercase tracking-wide text-white bg-success">Boost Revenue</div>
+          <div class="px-4 py-3 border-b border-border"><div class="text-[10px] font-bold uppercase text-text-muted mb-1.5">Entry Conditions</div><ul class="text-xs list-disc pl-4 space-y-1"><li>F2F attended = Present AND no lock-in (Prime/C2I) done yet</li></ul></div>
+          <div class="px-4 py-3"><div class="text-[10px] font-bold uppercase text-text-muted mb-1.5">Exit Conditions</div><ul class="text-xs list-disc pl-4 space-y-1"><li>Any lock-in is done</li><li>OR counselling_status = LS_LEAD_DROP_OFF</li></ul></div>
         </div>
-        <div class="pipeline-rule-card">
-          <div class="prc-header blue">Boost Loan</div>
-          <div class="prc-section"><div class="prc-label">Entry Conditions</div><ul class="prc-list"><li>Lock-in done AND Loan VC not yet booked/joined</li><li>OR PF Log-in not yet done</li></ul></div>
-          <div class="prc-section"><div class="prc-label">Exit Conditions</div><ul class="prc-list"><li>Loan VC attended AND (IELTS_stage = IELTS_PAID_USER OR counselling_status in DEPOSIT_PAID / LS_LEAD_DROP_OFF)</li></ul></div>
+        <div class="bg-white rounded-xl border border-border overflow-hidden">
+          <div class="px-4 py-2.5 text-xs font-bold uppercase tracking-wide text-white" style="background:#0284C7">Boost Loan</div>
+          <div class="px-4 py-3 border-b border-border"><div class="text-[10px] font-bold uppercase text-text-muted mb-1.5">Entry Conditions</div><ul class="text-xs list-disc pl-4 space-y-1"><li>Lock-in done AND Loan VC not yet booked/joined</li><li>OR PF Log-in not yet done</li></ul></div>
+          <div class="px-4 py-3"><div class="text-[10px] font-bold uppercase text-text-muted mb-1.5">Exit Conditions</div><ul class="text-xs list-disc pl-4 space-y-1"><li>Loan VC attended AND (IELTS_stage = IELTS_PAID_USER OR counselling_status in DEPOSIT_PAID / LS_LEAD_DROP_OFF)</li></ul></div>
         </div>
       </div>
-      <div class="pipeline-rule-card" style="margin-top:12px">
-        <div class="prc-header purple">Priority / Conflict Resolution</div>
-        <div class="prc-section"><div class="prc-label">When a lead qualifies for multiple pipelines</div><ul class="prc-list"><li>Evaluation order: Boost Revenue → Boost Loan → Boost STI</li><li>Lead lands in the first matching pipeline</li><li>No lead sits in more than one pipeline at once</li></ul></div>
+      <div class="bg-white rounded-xl border border-border overflow-hidden">
+        <div class="px-4 py-2.5 text-xs font-bold uppercase tracking-wide text-white bg-primary">Priority / Conflict Resolution</div>
+        <div class="px-4 py-3"><div class="text-[10px] font-bold uppercase text-text-muted mb-1.5">When a lead qualifies for multiple pipelines</div><ul class="text-xs list-disc pl-4 space-y-1"><li>Evaluation order: Boost Revenue → Boost Loan → Boost STI</li><li>Lead lands in the first matching pipeline</li><li>No lead sits in more than one pipeline at once</li></ul></div>
       </div>
     </div>
 
     <!-- Incentive Config -->
     <div id="adminIncentive" class="hidden">
-      <div class="admin-section-title">Performance Band Thresholds</div>
-      <div class="admin-bands">
-        <div class="admin-band-item"><span class="summary-chip chip-good">Good</span><span>≥</span><input class="admin-band-input" type="number" value="80" min="0" max="100"/><span>% of target</span></div>
-        <div class="admin-band-item"><span class="summary-chip chip-track">On Track</span><span>≥</span><input class="admin-band-input" type="number" value="50" min="0" max="100"/><span>% of target</span></div>
-        <div class="admin-band-item"><span class="summary-chip chip-focus">Focus</span><span>&lt;</span><span class="font-bold" style="color:var(--danger)">50%</span><span>(auto-calculated)</span></div>
+      <div class="text-sm font-bold mb-3">Performance Band Thresholds</div>
+      <div class="space-y-2 mb-5 text-xs">
+        <div class="flex items-center gap-2"><span class="ai-badge completed">Good</span><span>≥</span><input class="w-16 px-2 py-1 border border-border rounded text-center font-semibold" type="number" value="80" min="0" max="100"/><span>% of target</span></div>
+        <div class="flex items-center gap-2"><span class="ai-badge pending">On Track</span><span>≥</span><input class="w-16 px-2 py-1 border border-border rounded text-center font-semibold" type="number" value="50" min="0" max="100"/><span>% of target</span></div>
+        <div class="flex items-center gap-2"><span class="ai-badge pending" style="background:#FEF2F2;color:#DC2626;border-color:#FCA5A5">Focus</span><span>&lt;</span><span class="font-bold text-danger">50%</span><span>(auto-calculated)</span></div>
       </div>
-      <div class="admin-section-title" style="margin-top:16px">Volume Metric Targets (Monthly)</div>
-      <div style="overflow-x:auto">
-        <table class="metrics-table" id="adminMetricsTable">
-          <thead><tr><th>Metric</th><th>Monthly Target</th><th>Action</th></tr></thead>
+      <div class="text-sm font-bold mb-3">Volume Metric Targets (Monthly)</div>
+      <div class="overflow-x-auto mb-5">
+        <table class="w-full text-xs">
+          <thead><tr class="text-[10px] uppercase text-text-muted border-b border-border"><th class="text-left py-2">Metric</th><th class="text-left py-2">Monthly Target</th><th class="text-left py-2">Action</th></tr></thead>
           <tbody id="adminMetricRows"></tbody>
         </table>
       </div>
-      <div class="admin-section-title" style="margin-top:16px">Incentive Payout Formula</div>
-      <div style="overflow-x:auto">
-        <table class="metrics-table" id="adminPayoutTable">
-          <thead><tr><th>Component</th><th>Unit</th><th>₹ per Unit</th><th>Drive Period</th><th>Action</th></tr></thead>
+      <div class="text-sm font-bold mb-3">Incentive Payout Formula</div>
+      <div class="overflow-x-auto">
+        <table class="w-full text-xs">
+          <thead><tr class="text-[10px] uppercase text-text-muted border-b border-border"><th class="text-left py-2">Component</th><th class="text-left py-2">Unit</th><th class="text-left py-2">₹ per Unit</th><th class="text-left py-2">Drive Period</th><th class="text-left py-2">Action</th></tr></thead>
           <tbody id="adminPayoutRows"></tbody>
         </table>
       </div>
-      <div style="margin-top:14px;display:flex;gap:8px">
-        <button class="btn-primary btn-sm" onclick="saveIncentiveConfig()">Save Changes</button>
-        <button class="btn-secondary btn-sm" onclick="addPayoutRow()">+ Add Component</button>
+      <div class="flex gap-2 mt-4">
+        <button class="px-4 py-2 bg-accent hover:bg-accent-dark text-white text-sm font-semibold rounded-lg cursor-pointer" onclick="saveIncentiveConfig()">Save Changes</button>
+        <button class="px-4 py-2 border border-border rounded-lg text-sm font-semibold cursor-pointer hover:bg-surface" onclick="addPayoutRow()">+ Add Component</button>
       </div>
     </div>
 
     <!-- L&D Content -->
     <div id="adminLD" class="hidden">
-      <div class="admin-ld-top">
+      <div class="flex items-start justify-between mb-3">
         <div>
-          <div class="admin-section-title">Training Modules</div>
-          <div class="text-muted text-sm">Manage lessons by category</div>
+          <div class="text-sm font-bold">Training Modules</div>
+          <div class="text-xs text-text-muted">Manage lessons by category</div>
         </div>
-        <button class="btn-primary btn-sm" onclick="showToast('Module upload coming soon')">+ Upload Module</button>
+        <button class="px-4 py-2 bg-accent hover:bg-accent-dark text-white text-sm font-semibold rounded-lg cursor-pointer" onclick="showToast('Module upload coming soon','info')">+ Upload Module</button>
       </div>
       <div id="adminModuleList"></div>
-
-      <div class="admin-section-title" style="margin-top:18px">Ticket Categories</div>
-      <div class="admin-ticket-cats" id="adminTicketCats"></div>
-      <button class="btn-secondary btn-sm" style="margin-top:8px" onclick="addTicketCat()">+ Add Category</button>
+      <div class="text-sm font-bold mt-5 mb-3">Ticket Categories</div>
+      <div class="space-y-1.5" id="adminTicketCats"></div>
+      <button class="mt-2 px-4 py-2 border border-border rounded-lg text-sm font-semibold cursor-pointer hover:bg-surface" onclick="addTicketCat()">+ Add Category</button>
     </div>
   </div>
 </div>
 
-<style>
-/* ─── CHAT ─── */
-.chat-fab { position: fixed; bottom: 20px; right: 20px; z-index: 500; display: flex; align-items: center; gap: 8px; background: var(--primary); color: #fff; border: none; border-radius: 24px; padding: 10px 16px; font-size: 13px; font-weight: 600; cursor: pointer; box-shadow: 0 4px 16px rgba(30,27,75,.4); transition: all .2s; }
-.chat-fab:hover { background: var(--primary-mid); transform: translateY(-1px); box-shadow: 0 6px 20px rgba(30,27,75,.5); }
-.chat-fab svg { width: 17px; height: 17px; }
-
-.chat-panel { position: fixed; bottom: 72px; right: 20px; width: 340px; height: 460px; background: var(--card); border-radius: 16px; box-shadow: var(--shadow-lg); border: 1px solid var(--border); z-index: 499; display: none; flex-direction: column; overflow: hidden; }
-.chat-panel.open { display: flex; }
-.chat-panel-header { background: var(--primary); padding: 10px 12px; display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
-.chat-tabs { display: flex; gap: 2px; flex: 1; background: rgba(255,255,255,.1); border-radius: 8px; padding: 2px; }
-.chat-tab { flex: 1; display: flex; align-items: center; justify-content: center; gap: 5px; padding: 5px 8px; border-radius: 6px; font-size: 11px; font-weight: 600; color: rgba(255,255,255,.6); cursor: pointer; transition: all .15s; background: none; border: none; }
-.chat-tab.active { background: #fff; color: var(--primary); }
-.chat-close { width: 26px; height: 26px; border-radius: 6px; background: rgba(255,255,255,.1); display: flex; align-items: center; justify-content: center; cursor: pointer; border: none; flex-shrink: 0; }
-.chat-close svg { width: 14px; height: 14px; color: rgba(255,255,255,.8); }
-
-.chat-messages { flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
-.chat-msg { display: flex; flex-direction: column; }
-.chat-msg.user { align-items: flex-end; }
-.chat-bubble { max-width: 80%; padding: 8px 12px; border-radius: 12px; font-size: 12px; line-height: 1.5; }
-.chat-bubble.bot { background: var(--bg); color: var(--text); border-radius: 4px 12px 12px 12px; }
-.chat-bubble.user { background: var(--primary); color: #fff; border-radius: 12px 12px 4px 12px; }
-.chat-time { font-size: 10px; color: var(--text-muted); margin-top: 3px; padding: 0 4px; }
-.chat-typing { display: flex; gap: 4px; align-items: center; padding: 8px 12px; }
-.typing-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--text-muted); animation: bounce .9s infinite; }
-.typing-dot:nth-child(2) { animation-delay: .15s; }
-.typing-dot:nth-child(3) { animation-delay: .3s; }
-@keyframes bounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-5px)} }
-
-.chat-quick-btns { display: flex; flex-wrap: wrap; gap: 5px; padding: 4px 12px 8px; }
-.chat-quick-btns button { padding: 4px 10px; border-radius: 12px; font-size: 11px; background: var(--bg); border: 1px solid var(--border); color: var(--text); cursor: pointer; transition: all .15s; }
-.chat-quick-btns button:hover { background: #ede9fe; border-color: var(--primary-light); color: var(--primary); }
-.chat-input-wrap { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-top: 1px solid var(--border); flex-shrink: 0; }
-.chat-input { flex: 1; border: 1px solid var(--border); border-radius: 20px; padding: 8px 14px; font-size: 12px; color: var(--text); background: var(--bg); }
-.chat-input:focus { border-color: var(--primary-light); background: #fff; outline: none; }
-.chat-send-btn { width: 32px; height: 32px; border-radius: 50%; background: var(--primary); border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; transition: background .2s; }
-.chat-send-btn:hover { background: var(--primary-mid); }
-.chat-send-btn svg { width: 14px; height: 14px; color: #fff; }
-
-.chat-tl-header { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
-.chat-tl-avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--primary-mid); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; flex-shrink: 0; }
-.chat-tl-name { font-size: 13px; font-weight: 600; color: var(--text); }
-.chat-tl-sub { font-size: 11px; color: var(--text-muted); display: flex; align-items: center; gap: 4px; }
-.online-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--success); display: inline-block; }
-
-/* ─── ADMIN ─── */
-.admin-panel { position: fixed; top: var(--header-h); left: 0; right: 0; bottom: 0; background: var(--bg); z-index: 95; overflow-y: auto; }
-.admin-header { background: var(--card); border-bottom: 1px solid var(--border); padding: 14px 20px; display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
-.admin-header-title { display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 700; color: var(--text); }
-.admin-tabs { display: flex; gap: 2px; background: var(--bg); border-radius: 8px; padding: 3px; border: 1px solid var(--border); }
-.admin-tab { padding: 6px 14px; border-radius: 6px; font-size: 12px; font-weight: 600; color: var(--text-muted); cursor: pointer; transition: all .15s; border: none; background: none; }
-.admin-tab.active { background: var(--primary); color: #fff; }
-.admin-body { padding: 20px; }
-.admin-notice { display: flex; align-items: center; gap: 8px; padding: 10px 14px; background: var(--info-bg); border: 1px solid #bae6fd; border-radius: 8px; font-size: 12px; color: var(--info); margin-bottom: 16px; }
-.pipeline-rules-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
-.pipeline-rule-card { background: var(--card); border-radius: var(--radius); border: 1px solid var(--border); overflow: hidden; box-shadow: var(--shadow); }
-.prc-header { padding: 10px 14px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: #fff; }
-.prc-header.orange { background: var(--accent); }
-.prc-header.green { background: var(--success); }
-.prc-header.blue { background: var(--info); }
-.prc-header.purple { background: var(--primary-light); }
-.prc-section { padding: 10px 14px; border-bottom: 1px solid var(--border); }
-.prc-section:last-child { border-bottom: none; }
-.prc-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; color: var(--text-muted); margin-bottom: 6px; }
-.prc-list { padding-left: 14px; }
-.prc-list li { font-size: 12px; color: var(--text); margin-bottom: 3px; line-height: 1.5; }
-.admin-section-title { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 10px; }
-.admin-bands { display: flex; flex-direction: column; gap: 8px; }
-.admin-band-item { display: flex; align-items: center; gap: 10px; font-size: 12px; color: var(--text); }
-.admin-band-input { width: 60px; padding: 5px 8px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; font-weight: 600; text-align: center; color: var(--text); }
-.admin-band-input:focus { outline: none; border-color: var(--primary-light); }
-.admin-ld-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 12px; }
-.admin-module-cat { background: var(--card); border-radius: var(--radius); border: 1px solid var(--border); margin-bottom: 8px; overflow: hidden; }
-.admin-module-cat-header { display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: #f8fafc; border-bottom: 1px solid var(--border); }
-.admin-module-row { display: flex; align-items: center; gap: 10px; padding: 8px 14px; border-bottom: 1px solid var(--border); font-size: 12px; }
-.admin-module-row:last-child { border-bottom: none; }
-.admin-module-name { flex: 1; color: var(--text); }
-.admin-module-dur { color: var(--text-muted); min-width: 50px; }
-.admin-module-status { min-width: 70px; }
-.admin-row-btns { display: flex; gap: 5px; }
-.admin-row-btn { padding: 3px 8px; border-radius: 5px; font-size: 10px; font-weight: 600; cursor: pointer; border: 1px solid var(--border); background: var(--bg); color: var(--text-muted); }
-.admin-row-btn:hover { background: #ede9fe; color: var(--primary); border-color: var(--primary-light); }
-.admin-row-btn.danger { color: var(--danger); border-color: var(--danger-bg); background: var(--danger-bg); }
-.admin-ticket-cats { display: flex; flex-direction: column; gap: 6px; }
-.admin-ticket-cat-row { display: flex; align-items: center; gap: 10px; padding: 8px 12px; background: var(--card); border-radius: var(--radius-sm); border: 1px solid var(--border); font-size: 12px; }
-.admin-ticket-cat-name { flex: 1; }
-.edit-input { border: 1px solid var(--border); border-radius: 4px; padding: 3px 6px; font-size: 12px; color: var(--text); background: var(--bg); }
-.edit-input:focus { outline: none; border-color: var(--primary-light); }
-</style>
-
-<script src="rm-app.js?v=2"></script>
+<script src="rm-app.js?v=3"></script>
 </body>
 </html>

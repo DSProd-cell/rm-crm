@@ -1,4 +1,4 @@
-// RM CRM App — v1
+// RM CRM App — v2 (Leap CRM design system)
 
 // ─── MOCK DATA ───────────────────────────────────────────────────────────────
 const MOCK_LEADS = {
@@ -38,25 +38,41 @@ const MGR_TEAM = [
   { id:'R05', name:'Tanvir Ali', initials:'TA', color:'#dc2626', sti:8, revenue:1, loan:7, quality:'63%', overdue:6, status:'On Track' },
 ];
 
+const TEAM_ESCALATIONS = [
+  { label:'Customer Support', count:22, cls:'text-danger' },
+  { label:'Low ISL Feedback', count:11, cls:'text-accent' },
+  { label:'Msgs Not Replied', count:27, cls:'text-danger' },
+  { label:'IS Pending', count:8, cls:'text-accent' },
+];
+
+const TEAM_IBT = [
+  { label:'F2F Scheduled', count:19, cls:'text-accent' },
+  { label:'App Ready Follow-up', count:14, cls:'text-accent' },
+  { label:'Lock-in Confirmation', count:21, cls:'text-danger' },
+  { label:'Loan VC Booking', count:9, cls:'text-accent' },
+  { label:'STI Docs Collection', count:3, cls:'text-success' },
+  { label:'Query Resolutions', count:12, cls:'text-accent' },
+];
+
 const TRAINING_CATS = [
-  { name:'Soft Training', icon:'msg', lessons:[
+  { name:'Soft Training', icon:'💬', lessons:[
     { name:'Communication Skills for RMs', dur:'12 min', done:true },
     { name:'Objection Handling Techniques', dur:'18 min', done:true },
     { name:'Empathy in Sales Conversations', dur:'10 min', done:false },
     { name:'Tone & Language on Calls', dur:'8 min', done:false },
   ]},
-  { name:'Domain Training', icon:'book', lessons:[
+  { name:'Domain Training', icon:'📘', lessons:[
     { name:'RM KPI Deep Dive — STI, Lock-in, Loan VC', dur:'25 min', done:true },
     { name:'Understanding Student Profiles', dur:'15 min', done:false },
     { name:'Program & Scholarship Overview', dur:'20 min', done:false },
     { name:'IELTS & Academic Requirements', dur:'12 min', done:false },
   ]},
-  { name:'System Training', icon:'sys', lessons:[
+  { name:'System Training', icon:'💻', lessons:[
     { name:'RM CRM Navigation & Features', dur:'15 min', done:true },
     { name:'Logging Notes & Follow-ups', dur:'8 min', done:true },
     { name:'Query Raising to Counsellor', dur:'6 min', done:false },
   ]},
-  { name:'New Features', icon:'star', lessons:[
+  { name:'New Features', icon:'⭐', lessons:[
     { name:'Pipeline Auto-movement Rules', dur:'10 min', done:false },
     { name:'Incentive Dashboard Walkthrough', dur:'12 min', done:false },
   ]},
@@ -84,6 +100,28 @@ const PERF_METRICS = {
   ]
 };
 
+const TEAM_PERF_METRICS = {
+  volume: [
+    { name:'Leads Assigned', target:400, achieved:352 },
+    { name:'F2F Attended', target:150, achieved:121 },
+    { name:'Lock-ins (C2I + Prime)', target:75, achieved:47 },
+    { name:'Loan VC Booked', target:60, achieved:38 },
+    { name:'Loan VC Joined', target:50, achieved:29 },
+    { name:'Docs Collected', target:125, achieved:96 },
+    { name:'App Ready Completed', target:100, achieved:64 },
+    { name:'Queries to Counsellor', target:40, achieved:52 },
+    { name:'C2I Revenue', target:70, achieved:46 },
+    { name:'Total Drop', target:25, achieved:37 },
+  ],
+  conversion: [
+    { name:'F2F Attendance Rate', target:'75%', achieved:'71%', pct:95 },
+    { name:'Lock-in Conversion Rate', target:'50%', achieved:'39%', pct:78 },
+    { name:'Loan VC Conversion Rate', target:'80%', achieved:'76%', pct:95 },
+    { name:'App Ready Conversion Rate', target:'85%', achieved:'64%', pct:75 },
+    { name:'Query Resolution Rate', target:'90%', achieved:'84%', pct:93 },
+  ]
+};
+
 // ─── STATE ────────────────────────────────────────────────────────────────────
 const state = {
   activeTab: 'tasks',
@@ -93,32 +131,42 @@ const state = {
   selectedLead: null,
   currentPipeline: null,
   mgrDrilldownRm: null,
+  hierRmSelected: new Set(),
 };
 
 // ─── HELPERS ─────────────────────────────────────────────────────────────────
-function showToast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2800);
-}
-
-function getCountColor(n) {
-  if (n === 0) return 'green';
-  if (n <= 5) return 'orange';
-  return 'red';
+function showToast(msg, type) {
+  type = type || 'info';
+  const container = document.getElementById('toastContainer');
+  const el = document.createElement('div');
+  el.className = `toast ${type} pointer-events-auto`;
+  const icons = { success:'✓', error:'✕', info:'ℹ', warning:'⚠' };
+  el.innerHTML = `<span>${icons[type] || 'ℹ'}</span><span>${msg}</span>`;
+  container.appendChild(el);
+  setTimeout(() => {
+    el.style.transition = 'opacity .25s';
+    el.style.opacity = '0';
+    setTimeout(() => el.remove(), 260);
+  }, 2800);
 }
 
 function statusPill(pct) {
-  if (pct >= 80) return '<span class="status-pill sp-good">Good</span>';
-  if (pct >= 50) return '<span class="status-pill sp-track">On Track</span>';
-  return '<span class="status-pill sp-focus">Focus</span>';
+  if (pct >= 80) return '<span class="ai-badge completed">Good</span>';
+  if (pct >= 50) return '<span class="ai-badge pending">On Track</span>';
+  return '<span class="ai-badge pending" style="background:#FEF2F2;color:#DC2626;border-color:#FCA5A5">Focus</span>';
 }
 
 function statusChip(status) {
-  if (status === 'Good') return '<span class="summary-chip chip-good">Good</span>';
-  if (status === 'On Track') return '<span class="summary-chip chip-track">On Track</span>';
-  return '<span class="summary-chip chip-focus">Focus</span>';
+  if (status === 'Good') return '<span class="ai-badge completed">Good</span>';
+  if (status === 'On Track') return '<span class="ai-badge pending">On Track</span>';
+  return '<span class="ai-badge pending" style="background:#FEF2F2;color:#DC2626;border-color:#FCA5A5">Focus</span>';
+}
+
+function rankBadge(i) {
+  if (i === 0) return '<span class="rank-badge r1">🥇</span>';
+  if (i === 1) return '<span class="rank-badge r2">🥈</span>';
+  if (i === 2) return '<span class="rank-badge r3">🥉</span>';
+  return `<span class="rank-badge" style="background:#E2E8F0;color:#64748B">${i + 1}</span>`;
 }
 
 // ─── TABS ─────────────────────────────────────────────────────────────────────
@@ -134,23 +182,46 @@ function switchTab(tab) {
 function switchRole(role) {
   state.role = role;
   const isAdmin = role === 'admin';
-  const isMgr = ['team_lead','manager_rm','senior_manager'].includes(role);
+  const isMgr = ['team_lead','senior_manager'].includes(role);
 
-  // Admin gets its own full panel
   document.getElementById('adminPanel').classList.toggle('hidden', !isAdmin);
   document.getElementById('tabBar').classList.toggle('hidden', isAdmin);
-  document.getElementById('promoBanner').classList.toggle('hidden', isAdmin);
   document.getElementById('main').classList.toggle('hidden', isAdmin);
-  document.getElementById('chatFab').classList.toggle('hidden', isAdmin);
+  document.getElementById('botBubble').classList.toggle('hidden', isAdmin);
+  document.getElementById('internalChatBubbleBtn').classList.toggle('hidden', isAdmin);
+  if (isAdmin) {
+    document.getElementById('botPanel').classList.remove('open');
+    document.getElementById('internalChatPanel').classList.remove('open');
+  }
 
   if (!isAdmin) {
     document.getElementById('rmDashboard').classList.toggle('hidden', isMgr);
     document.getElementById('mgrRollup').classList.toggle('hidden', !isMgr);
-    if (isMgr) renderMgrTable();
+    document.getElementById('incentivesMain').classList.toggle('hidden', isMgr);
+    document.getElementById('mgrIncentivesMain').classList.toggle('hidden', !isMgr);
+    document.getElementById('opportunityDetail').classList.add('hidden');
+    document.getElementById('incentivesMainInner').classList.remove('hidden');
+
+    const hierRow = document.getElementById('hierarchyFilterRow');
+    hierRow.classList.toggle('hidden', !isMgr);
+    hierRow.classList.toggle('flex', isMgr);
+
+    if (isMgr) {
+      closeMgrDrilldown();
+      state.hierRmSelected = new Set();
+      buildHierFilterList();
+      updateHierFilterLabels();
+      renderMgrDashboard();
+      renderMgrIncentives();
+    }
+    const ticketsLabel = document.getElementById('ldTicketsLabel');
+    if (ticketsLabel) ticketsLabel.textContent = isMgr ? 'Team Tickets' : 'My Tickets';
   }
 
-  const roleLabels = { rm:'Relationship Manager', team_lead:'Team Lead', manager_rm:'Manager RM', senior_manager:'Senior Manager', admin:'Administrator' };
+  const roleLabels = { rm:'Student Success Manager', team_lead:'Team Lead', senior_manager:'Senior Manager', admin:'Administrator' };
   document.getElementById('pdRole').textContent = roleLabels[role] || 'RM';
+
+  resetInternalChat();
 }
 
 // ─── COLLAPSIBLE ──────────────────────────────────────────────────────────────
@@ -158,65 +229,107 @@ function toggleSection(id) {
   const body = document.getElementById(`body-${id}`);
   const chevron = document.getElementById(`chevron-${id}`);
   if (!body) return;
-  const isOpen = body.classList.contains('open');
-  body.classList.toggle('open', !isOpen);
-  body.style.display = isOpen ? 'none' : 'block';
-  if (chevron) chevron.classList.toggle('open', !isOpen);
+  body.classList.toggle('hidden');
+  if (chevron) chevron.classList.toggle('rotate-180');
 }
 
 function toggleNotifSub(which) {
   const bodyId = which === 'reminders' ? 'notifRemindersBody' : 'notifUnhappyBody';
   const chevId = which === 'reminders' ? 'chevron-notif-reminders' : 'chevron-notif-unhappy';
-  const body = document.getElementById(bodyId);
-  const chev = document.getElementById(chevId);
-  const isOpen = body.classList.contains('open');
-  body.classList.toggle('open', !isOpen);
-  if (chev) chev.classList.toggle('open', !isOpen);
+  document.getElementById(bodyId).classList.toggle('hidden');
+  document.getElementById(chevId).classList.toggle('rotate-180');
 }
 
 function toggleTrainingCat(idx) {
   const body = document.getElementById(`tcat-body-${idx}`);
   const chev = document.getElementById(`tcat-chev-${idx}`);
   if (!body) return;
-  const isOpen = body.classList.contains('open');
-  body.classList.toggle('open', !isOpen);
-  body.style.display = isOpen ? 'none' : 'block';
-  if (chev) chev.classList.toggle('open', !isOpen);
+  body.classList.toggle('open');
+  if (chev) chev.classList.toggle('rotate-180');
 }
 
-// ─── NOTIFICATION PANEL ───────────────────────────────────────────────────────
+// ─── NOTIFICATION PANEL / PROFILE ─────────────────────────────────────────────
 function toggleNotifPanel() {
   const panel = document.getElementById('notifPanel');
   state.notifOpen = !state.notifOpen;
-  panel.classList.toggle('open', state.notifOpen);
-  if (state.profileOpen) { state.profileOpen = false; document.getElementById('profileDropdown').classList.remove('open'); }
+  panel.classList.toggle('hidden', !state.notifOpen);
+  if (state.profileOpen) { state.profileOpen = false; document.getElementById('profileDropdown').classList.add('hidden'); }
 }
 
 function toggleProfileDropdown() {
   const dd = document.getElementById('profileDropdown');
   state.profileOpen = !state.profileOpen;
-  dd.classList.toggle('open', state.profileOpen);
-  if (state.notifOpen) { state.notifOpen = false; document.getElementById('notifPanel').classList.remove('open'); }
+  dd.classList.toggle('hidden', !state.profileOpen);
+  if (state.notifOpen) { state.notifOpen = false; document.getElementById('notifPanel').classList.add('hidden'); }
 }
 
-// Close on outside click
 document.addEventListener('click', (e) => {
-  if (!e.target.closest('#notifPanel') && !e.target.closest('.icon-btn')) {
-    document.getElementById('notifPanel').classList.remove('open');
+  if (!e.target.closest('#notifPanel') && !e.target.closest('[onclick="toggleNotifPanel()"]')) {
+    document.getElementById('notifPanel')?.classList.add('hidden');
     state.notifOpen = false;
   }
-  if (!e.target.closest('#profileDropdown') && !e.target.closest('.avatar-btn')) {
-    document.getElementById('profileDropdown').classList.remove('open');
+  if (!e.target.closest('#profileDropdown') && !e.target.closest('[onclick="toggleProfileDropdown()"]')) {
+    document.getElementById('profileDropdown')?.classList.add('hidden');
     state.profileOpen = false;
+  }
+  if (!e.target.closest('#rmFilterWrap')) {
+    document.getElementById('rmFilterDropdown')?.classList.add('hidden');
   }
 });
 
 // ─── CALL STATUS ──────────────────────────────────────────────────────────────
 function updateCallStatus(val) {
   const dot = document.getElementById('callDot');
-  dot.className = 'status-dot';
-  if (val === 'busy') dot.classList.add('busy');
-  else if (val === 'away') dot.classList.add('away');
+  dot.className = 'w-2 h-2 rounded-full flex-shrink-0';
+  if (val === 'busy') dot.classList.add('bg-accent');
+  else if (val === 'away') dot.classList.add('bg-text-muted');
+  else dot.classList.add('bg-success');
+}
+
+// ─── HIERARCHY FILTER ROW ─────────────────────────────────────────────────────
+function buildHierFilterList() {
+  const list = document.getElementById('rmFilterList');
+  if (!list) return;
+  list.innerHTML = MGR_TEAM.map(rm => `
+    <div class="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-surface cursor-pointer">
+      <input type="checkbox" id="hierChk_${rm.id}" class="w-3.5 h-3.5 accent-accent cursor-pointer flex-shrink-0" onchange="onHierCheckChange('${rm.id}',this.checked)"/>
+      <label for="hierChk_${rm.id}" class="text-xs text-text-main cursor-pointer leading-tight flex-1">${rm.name}</label>
+    </div>`).join('');
+}
+
+function onHierCheckChange(id, checked) {
+  if (checked) state.hierRmSelected.add(id);
+  else state.hierRmSelected.delete(id);
+}
+
+function toggleHierDropdown(type, e) {
+  e.stopPropagation();
+  document.getElementById('rmFilterDropdown').classList.toggle('hidden');
+}
+
+function applyHierFilter(type) {
+  document.getElementById('rmFilterDropdown').classList.add('hidden');
+  updateHierFilterLabels();
+  renderMgrTable();
+}
+
+function clearHierFilter(type) {
+  state.hierRmSelected = new Set();
+  document.querySelectorAll('#rmFilterList input[type="checkbox"]').forEach(cb => cb.checked = false);
+  updateHierFilterLabels();
+  document.getElementById('rmFilterDropdown').classList.add('hidden');
+  renderMgrTable();
+}
+
+function updateHierFilterLabels() {
+  const n = state.hierRmSelected.size;
+  document.getElementById('rmFilterLabel').textContent = n === 0 ? 'RM: All' : `RM: ${n} selected`;
+  document.getElementById('hierViewAllLabel').textContent = n === 0 ? 'Viewing All' : `Viewing ${n} of ${MGR_TEAM.length} RMs`;
+}
+
+function visibleTeam() {
+  if (state.hierRmSelected.size === 0) return MGR_TEAM;
+  return MGR_TEAM.filter(rm => state.hierRmSelected.has(rm.id));
 }
 
 // ─── PIPELINE DRAWER ─────────────────────────────────────────────────────────
@@ -235,27 +348,27 @@ function openPipeline(type) {
   });
 
   const rows = sorted.map(l => `
-    <tr class="${l.overdue ? 'overdue-row' : l.dueToday ? 'today-row' : ''}" onclick="openLeadDetail('${type}','${l.id}')">
-      <td><strong>${l.name}</strong><br><span style="color:var(--text-muted);font-size:10px">${l.id}</span></td>
-      <td>${l.intake}</td>
-      <td>${l.country}</td>
-      <td>${l.status}</td>
-      <td>${l.caDate || '—'}</td>
-      <td>${l.lastConnect}</td>
-      <td>${l.overdue ? '<span class="status-pill sp-focus">Overdue</span>' : l.dueToday ? '<span class="status-pill sp-track">Due Today</span>' : '<span class="status-pill sp-good">Scheduled</span>'}</td>
+    <tr class="cursor-pointer hover:bg-surface border-b border-border ${l.overdue ? 'bg-red-50/40' : l.dueToday ? 'bg-amber-50/40' : ''}" onclick="openLeadDetail('${type}','${l.id}')">
+      <td class="px-3 py-2.5"><strong class="text-sm">${l.name}</strong><br/><span class="text-text-muted text-[10px] font-mono">${l.id}</span></td>
+      <td class="px-3 py-2.5 text-xs">${l.intake}</td>
+      <td class="px-3 py-2.5 text-xs">${l.country}</td>
+      <td class="px-3 py-2.5 text-xs">${l.status}</td>
+      <td class="px-3 py-2.5 text-xs font-mono">${l.caDate || '—'}</td>
+      <td class="px-3 py-2.5 text-xs font-mono">${l.lastConnect}</td>
+      <td class="px-3 py-2.5">${l.overdue ? '<span class="ai-badge pending" style="background:#FEF2F2;color:#DC2626;border-color:#FCA5A5">Overdue</span>' : l.dueToday ? '<span class="ai-badge pending">Due Today</span>' : '<span class="ai-badge completed">Scheduled</span>'}</td>
     </tr>`).join('');
 
   const html = `
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-      <div style="font-size:12px;color:var(--text-muted)">${leads.length} leads</div>
-      <div style="display:flex;gap:6px;font-size:11px;">
-        <span style="display:flex;align-items:center;gap:4px;"><span style="width:8px;height:8px;background:var(--danger);border-radius:50%;display:inline-block"></span>Overdue</span>
-        <span style="display:flex;align-items:center;gap:4px;"><span style="width:8px;height:8px;background:var(--warning);border-radius:50%;display:inline-block"></span>Due Today</span>
+    <div class="flex items-center justify-between mb-2.5">
+      <div class="text-xs text-text-muted">${leads.length} leads</div>
+      <div class="flex gap-3 text-[11px]">
+        <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-danger inline-block"></span>Overdue</span>
+        <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-accent inline-block"></span>Due Today</span>
       </div>
     </div>
-    <div class="lead-table-wrap">
-      <table class="lead-table">
-        <thead><tr><th>Name / ID</th><th>Intake</th><th>Country</th><th>Status</th><th>CA Date</th><th>Last Connect</th><th>Priority</th></tr></thead>
+    <div class="overflow-x-auto border border-border rounded-lg">
+      <table class="w-full text-xs whitespace-nowrap">
+        <thead><tr class="bg-surface text-[9px] uppercase font-semibold text-text-muted"><th class="px-3 py-2 text-left">Name / ID</th><th class="px-3 py-2 text-left">Intake</th><th class="px-3 py-2 text-left">Country</th><th class="px-3 py-2 text-left">Status</th><th class="px-3 py-2 text-left">CA Date</th><th class="px-3 py-2 text-left">Last Connect</th><th class="px-3 py-2 text-left">Priority</th></tr></thead>
         <tbody>${rows}</tbody>
       </table>
     </div>`;
@@ -269,34 +382,41 @@ function openLeadDetail(pipelineType, leadId) {
   if (!lead) return;
 
   const html = `
-    <div class="lead-info-grid">
-      <div class="lead-info-item"><div class="li-label">Name</div><div class="li-val">${lead.name}</div></div>
-      <div class="lead-info-item"><div class="li-label">Pre-user ID</div><div class="li-val mono">${lead.id}</div></div>
-      <div class="lead-info-item"><div class="li-label">Intake</div><div class="li-val">${lead.intake}</div></div>
-      <div class="lead-info-item"><div class="li-label">Country</div><div class="li-val">${lead.country}</div></div>
-      <div class="lead-info-item"><div class="li-label">Status</div><div class="li-val"><span class="lead-status-tag badge-orange">${lead.status}</span></div></div>
-      <div class="lead-info-item"><div class="li-label">CL Name</div><div class="li-val">${lead.clName}</div></div>
-      <div class="lead-info-item"><div class="li-label">CA Date</div><div class="li-val">${lead.caDate || '—'}</div></div>
-      <div class="lead-info-item"><div class="li-label">Lock-in Date</div><div class="li-val">${lead.lockinDate || '—'}</div></div>
-      <div class="lead-info-item"><div class="li-label">F2F Date</div><div class="li-val">${lead.f2fDate || '—'}</div></div>
-      <div class="lead-info-item"><div class="li-label">App Ready</div><div class="li-val">${lead.appReadyDate || 'Pending'}</div></div>
-      <div class="lead-info-item" style="grid-column:1/-1"><div class="li-label">Last RM Connect</div><div class="li-val">${lead.lastConnect}</div></div>
+    <div class="grid grid-cols-2 gap-3 mb-4">
+      <div><div class="text-[10px] font-bold uppercase text-text-muted mb-0.5">Name</div><div class="text-sm font-medium">${lead.name}</div></div>
+      <div><div class="text-[10px] font-bold uppercase text-text-muted mb-0.5">Pre-user ID</div><div class="text-sm font-medium font-mono">${lead.id}</div></div>
+      <div><div class="text-[10px] font-bold uppercase text-text-muted mb-0.5">Intake</div><div class="text-sm font-medium">${lead.intake}</div></div>
+      <div><div class="text-[10px] font-bold uppercase text-text-muted mb-0.5">Country</div><div class="text-sm font-medium">${lead.country}</div></div>
+      <div><div class="text-[10px] font-bold uppercase text-text-muted mb-0.5">Status</div><div class="text-sm font-medium"><span class="app-badge downloaded" style="background:#FFF7ED;color:#EA580C">${lead.status}</span></div></div>
+      <div><div class="text-[10px] font-bold uppercase text-text-muted mb-0.5">CL Name</div><div class="text-sm font-medium">${lead.clName}</div></div>
+      <div><div class="text-[10px] font-bold uppercase text-text-muted mb-0.5">CA Date</div><div class="text-sm font-medium font-mono">${lead.caDate || '—'}</div></div>
+      <div><div class="text-[10px] font-bold uppercase text-text-muted mb-0.5">Lock-in Date</div><div class="text-sm font-medium font-mono">${lead.lockinDate || '—'}</div></div>
+      <div><div class="text-[10px] font-bold uppercase text-text-muted mb-0.5">F2F Date</div><div class="text-sm font-medium font-mono">${lead.f2fDate || '—'}</div></div>
+      <div><div class="text-[10px] font-bold uppercase text-text-muted mb-0.5">App Ready</div><div class="text-sm font-medium">${lead.appReadyDate || 'Pending'}</div></div>
+      <div class="col-span-2"><div class="text-[10px] font-bold uppercase text-text-muted mb-0.5">Last RM Connect</div><div class="text-sm font-medium font-mono">${lead.lastConnect}</div></div>
     </div>
-    <div class="notes-section">
-      <h4>Last Notes</h4>
-      ${lead.notes.map((n,i) => `<div class="note-item"><div class="note-text">${n}</div><div class="note-time">${i === 0 ? '2 days ago' : '1 week ago'}</div></div>`).join('')}
+    <div class="activity-log mb-4">
+      <div class="text-[11px] font-bold uppercase text-text-muted mb-1.5 tracking-wide">Last Notes</div>
+      ${lead.notes.map((n,i) => `
+        <div class="activity-item">
+          <span class="activity-dot"></span>
+          <div class="activity-content">
+            <p class="activity-action">${n}</p>
+            <p class="activity-time">${i === 0 ? '2 days ago' : '1 week ago'}</p>
+          </div>
+        </div>`).join('')}
     </div>
-    <div class="lead-actions">
-      <button class="action-btn primary" onclick="showNoteForm('${lead.id}')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+    <div class="flex flex-col gap-2">
+      <button class="flex items-center gap-2 px-3.5 py-2.5 rounded-lg text-sm font-semibold cursor-pointer bg-accent text-white hover:bg-accent-dark transition-colors" onclick="showNoteForm('${lead.id}')">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
         Log a Note
       </button>
-      <button class="action-btn" onclick="showFollowupForm('${lead.id}')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      <button class="flex items-center gap-2 px-3.5 py-2.5 rounded-lg text-sm font-semibold cursor-pointer border border-border hover:bg-surface transition-colors" onclick="showFollowupForm('${lead.id}')">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" stroke-width="2"/><line x1="16" y1="2" x2="16" y2="6" stroke-width="2"/><line x1="8" y1="2" x2="8" y2="6" stroke-width="2"/><line x1="3" y1="10" x2="21" y2="10" stroke-width="2"/></svg>
         Set Follow-up Date
       </button>
-      <button class="action-btn" onclick="showQueryForm('${lead.id}','${lead.name}')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      <button class="flex items-center gap-2 px-3.5 py-2.5 rounded-lg text-sm font-semibold cursor-pointer border border-border hover:bg-surface transition-colors" onclick="showQueryForm('${lead.id}','${lead.name}')">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
         Raise Query for Counsellor
       </button>
     </div>`;
@@ -307,14 +427,14 @@ function openLeadDetail(pipelineType, leadId) {
 function showNoteForm(leadId) {
   const body = document.getElementById('drawerBody');
   body.insertAdjacentHTML('beforeend', `
-    <div id="noteFormWrap" style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">
-      <div class="form-field mb-1">
-        <label class="form-label">Note *</label>
-        <textarea class="form-input" id="noteInput" placeholder="Enter your note (max 500 chars)" maxlength="500"></textarea>
+    <div id="noteFormWrap" class="mt-3.5 pt-3.5 border-t border-border">
+      <div class="mb-2.5">
+        <label class="block text-xs font-semibold text-text-muted mb-1">Note *</label>
+        <textarea class="w-full px-3 py-2 border border-border rounded-lg text-sm" id="noteInput" placeholder="Enter your note (max 500 chars)" maxlength="500"></textarea>
       </div>
-      <div style="display:flex;gap:8px">
-        <button class="btn-primary btn-sm" onclick="submitNote('${leadId}')">Save Note</button>
-        <button class="btn-secondary btn-sm" onclick="document.getElementById('noteFormWrap').remove()">Cancel</button>
+      <div class="flex gap-2">
+        <button class="px-3.5 py-1.5 bg-accent text-white text-xs font-semibold rounded-lg cursor-pointer" onclick="submitNote('${leadId}')">Save Note</button>
+        <button class="px-3.5 py-1.5 border border-border text-xs font-semibold rounded-lg cursor-pointer" onclick="document.getElementById('noteFormWrap').remove()">Cancel</button>
       </div>
     </div>`);
   document.getElementById('noteInput').focus();
@@ -322,54 +442,54 @@ function showNoteForm(leadId) {
 
 function submitNote(leadId) {
   const input = document.getElementById('noteInput');
-  if (!input || !input.value.trim()) { showToast('Note cannot be empty.'); return; }
+  if (!input || !input.value.trim()) { showToast('Note cannot be empty.', 'error'); return; }
   document.getElementById('noteFormWrap').remove();
-  showToast('Note saved successfully.');
+  showToast('Note saved successfully.', 'success');
 }
 
 function showFollowupForm(leadId) {
   const body = document.getElementById('drawerBody');
   body.insertAdjacentHTML('beforeend', `
-    <div id="followupFormWrap" style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">
-      <div class="form-field mb-1">
-        <label class="form-label">Follow-up Date *</label>
-        <input class="form-input" type="date" id="followupDate" min="${new Date().toISOString().split('T')[0]}"/>
+    <div id="followupFormWrap" class="mt-3.5 pt-3.5 border-t border-border">
+      <div class="mb-2.5">
+        <label class="block text-xs font-semibold text-text-muted mb-1">Follow-up Date *</label>
+        <input class="w-full px-3 py-2 border border-border rounded-lg text-sm" type="date" id="followupDate" min="${new Date().toISOString().split('T')[0]}"/>
       </div>
-      <div style="display:flex;gap:8px">
-        <button class="btn-primary btn-sm" onclick="submitFollowup('${leadId}')">Set Follow-up</button>
-        <button class="btn-secondary btn-sm" onclick="document.getElementById('followupFormWrap').remove()">Cancel</button>
+      <div class="flex gap-2">
+        <button class="px-3.5 py-1.5 bg-accent text-white text-xs font-semibold rounded-lg cursor-pointer" onclick="submitFollowup('${leadId}')">Set Follow-up</button>
+        <button class="px-3.5 py-1.5 border border-border text-xs font-semibold rounded-lg cursor-pointer" onclick="document.getElementById('followupFormWrap').remove()">Cancel</button>
       </div>
     </div>`);
 }
 
 function submitFollowup(leadId) {
   const input = document.getElementById('followupDate');
-  if (!input || !input.value) { showToast('Please select a follow-up date.'); return; }
+  if (!input || !input.value) { showToast('Please select a follow-up date.', 'error'); return; }
   document.getElementById('followupFormWrap').remove();
-  showToast('Follow-up date set.');
+  showToast('Follow-up date set.', 'success');
 }
 
 function showQueryForm(leadId, leadName) {
   const body = document.getElementById('drawerBody');
   body.insertAdjacentHTML('beforeend', `
-    <div id="queryFormWrap" style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">
-      <div style="font-size:12px;font-weight:600;color:var(--text-muted);margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px">Raise Query for Counsellor — ${leadName}</div>
-      <div class="form-field mb-1">
-        <label class="form-label">Select Counsellor *</label>
-        <select class="form-input" id="queryCounsellor">
+    <div id="queryFormWrap" class="mt-3.5 pt-3.5 border-t border-border">
+      <div class="text-xs font-bold text-text-muted mb-2.5 uppercase tracking-wide">Raise Query — ${leadName}</div>
+      <div class="mb-2.5">
+        <label class="block text-xs font-semibold text-text-muted mb-1">Select Counsellor *</label>
+        <select class="w-full px-3 py-2 border border-border rounded-lg text-sm bg-white" id="queryCounsellor">
           <option value="">— Select counsellor —</option>
           <option>Priya CL (Active)</option>
           <option>Amit CL (Active)</option>
           <option>Rahul CL (Active)</option>
         </select>
       </div>
-      <div class="form-field mb-1">
-        <label class="form-label">Query / Question *</label>
-        <textarea class="form-input" id="queryText" placeholder="Describe the counsellor's query (max 500 chars)" maxlength="500"></textarea>
+      <div class="mb-2.5">
+        <label class="block text-xs font-semibold text-text-muted mb-1">Query / Question *</label>
+        <textarea class="w-full px-3 py-2 border border-border rounded-lg text-sm" id="queryText" placeholder="Describe the counsellor's query (max 500 chars)" maxlength="500"></textarea>
       </div>
-      <div style="display:flex;gap:8px">
-        <button class="btn-primary btn-sm" onclick="submitQuery('${leadId}')">Submit Query</button>
-        <button class="btn-secondary btn-sm" onclick="document.getElementById('queryFormWrap').remove()">Cancel</button>
+      <div class="flex gap-2">
+        <button class="px-3.5 py-1.5 bg-accent text-white text-xs font-semibold rounded-lg cursor-pointer" onclick="submitQuery('${leadId}')">Submit Query</button>
+        <button class="px-3.5 py-1.5 border border-border text-xs font-semibold rounded-lg cursor-pointer" onclick="document.getElementById('queryFormWrap').remove()">Cancel</button>
       </div>
     </div>`);
 }
@@ -377,10 +497,10 @@ function showQueryForm(leadId, leadName) {
 function submitQuery(leadId) {
   const c = document.getElementById('queryCounsellor');
   const q = document.getElementById('queryText');
-  if (!c.value) { showToast('Please select a counsellor.'); return; }
-  if (!q.value.trim()) { showToast('Query cannot be empty.'); return; }
+  if (!c.value) { showToast('Please select a counsellor.', 'error'); return; }
+  if (!q.value.trim()) { showToast('Query cannot be empty.', 'error'); return; }
   document.getElementById('queryFormWrap').remove();
-  showToast('Query sent to counsellor. They have 7 days to respond.');
+  showToast('Query sent to counsellor. They have 7 days to respond.', 'success');
 }
 
 // ─── DRAWER ───────────────────────────────────────────────────────────────────
@@ -388,105 +508,294 @@ function openDrawer(title, html, showBack) {
   document.getElementById('drawerTitle').textContent = title;
   document.getElementById('drawerBody').innerHTML = html;
   document.getElementById('drawer').classList.add('open');
-  document.getElementById('overlay').classList.add('open');
-  const backBtn = document.querySelector('.drawer-back');
+  document.getElementById('overlay').classList.remove('hidden');
+  const backBtn = document.querySelector('.drawer-back-btn');
   if (backBtn) backBtn.style.display = showBack ? 'flex' : 'none';
 }
 
 function closeDrawer() {
   document.getElementById('drawer').classList.remove('open');
-  document.getElementById('overlay').classList.remove('open');
+  document.getElementById('overlay').classList.add('hidden');
 }
 
 // ─── ASSIGNED LEADS DRAWER ────────────────────────────────────────────────────
 function openAssignedLeads() {
   const allLeads = [...MOCK_LEADS.sti, ...MOCK_LEADS.revenue, ...MOCK_LEADS.loan];
   const rows = allLeads.map(l => `
-    <tr onclick="openLeadDetail('sti','${l.id}')">
-      <td><strong>${l.name}</strong><br><span style="color:var(--text-muted);font-size:10px">${l.id}</span></td>
-      <td>${l.intake}</td>
-      <td>${l.country}</td>
-      <td>${l.status}</td>
+    <tr class="cursor-pointer hover:bg-surface border-b border-border" onclick="openLeadDetail('sti','${l.id}')">
+      <td class="px-3 py-2.5"><strong class="text-sm">${l.name}</strong><br/><span class="text-text-muted text-[10px] font-mono">${l.id}</span></td>
+      <td class="px-3 py-2.5 text-xs">${l.intake}</td>
+      <td class="px-3 py-2.5 text-xs">${l.country}</td>
+      <td class="px-3 py-2.5 text-xs">${l.status}</td>
     </tr>`).join('');
-  const html = `<div class="lead-table-wrap"><table class="lead-table"><thead><tr><th>Name / ID</th><th>Intake</th><th>Country</th><th>Status</th></tr></thead><tbody>${rows}</tbody></table></div>`;
-  openDrawer('All Assigned Leads (${allLeads.length})', html);
-  // Fix the title count
-  document.getElementById('drawerTitle').textContent = `All Assigned Leads (${allLeads.length})`;
+  const html = `<div class="overflow-x-auto border border-border rounded-lg"><table class="w-full text-xs"><thead><tr class="bg-surface text-[9px] uppercase font-semibold text-text-muted"><th class="px-3 py-2 text-left">Name / ID</th><th class="px-3 py-2 text-left">Intake</th><th class="px-3 py-2 text-left">Country</th><th class="px-3 py-2 text-left">Status</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+  openDrawer(`All Assigned Leads (${allLeads.length})`, html);
 }
 
 // ─── MANAGER TABLE ────────────────────────────────────────────────────────────
 function renderMgrTable() {
   const tbody = document.getElementById('mgrTableBody');
-  tbody.innerHTML = MGR_TEAM.map(rm => `
-    <tr onclick="openMgrDrilldown('${rm.id}')">
-      <td><div class="rm-name-cell"><div class="rm-avatar" style="background:${rm.color}">${rm.initials}</div><strong>${rm.name}</strong></div></td>
-      <td><span class="${getCountColor(rm.sti) === 'red' ? 'badge-red' : getCountColor(rm.sti) === 'orange' ? 'badge-orange' : 'badge-green'} sch-badge">${rm.sti}</span></td>
-      <td><span class="${getCountColor(rm.revenue) === 'red' ? 'badge-red' : getCountColor(rm.revenue) === 'orange' ? 'badge-orange' : 'badge-green'} sch-badge">${rm.revenue}</span></td>
-      <td><span class="${getCountColor(rm.loan) === 'red' ? 'badge-red' : getCountColor(rm.loan) === 'orange' ? 'badge-orange' : 'badge-green'} sch-badge">${rm.loan}</span></td>
-      <td>${rm.quality}</td>
-      <td><span class="${getCountColor(rm.overdue) === 'red' ? 'badge-red' : getCountColor(rm.overdue) === 'orange' ? 'badge-orange' : 'badge-green'} sch-badge">${rm.overdue}</span></td>
-      <td>${statusChip(rm.status)}</td>
+  const team = visibleTeam();
+  tbody.innerHTML = team.map(rm => `
+    <tr class="cursor-pointer hover:bg-surface border-b border-border" onclick="openMgrDrilldown('${rm.id}')">
+      <td class="px-4 py-2.5"><div class="flex items-center gap-2"><div class="w-7 h-7 rounded-full flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0" style="background:${rm.color}">${rm.initials}</div><strong class="text-sm">${rm.name}</strong></div></td>
+      <td class="px-4 py-2.5"><span class="font-mono font-bold text-xs px-2 py-0.5 rounded-full ${rm.sti > 5 ? 'bg-red-100 text-danger' : rm.sti > 0 ? 'bg-orange-100 text-accent' : 'bg-emerald-100 text-success'}">${rm.sti}</span></td>
+      <td class="px-4 py-2.5"><span class="font-mono font-bold text-xs px-2 py-0.5 rounded-full ${rm.revenue > 5 ? 'bg-red-100 text-danger' : rm.revenue > 0 ? 'bg-orange-100 text-accent' : 'bg-emerald-100 text-success'}">${rm.revenue}</span></td>
+      <td class="px-4 py-2.5"><span class="font-mono font-bold text-xs px-2 py-0.5 rounded-full ${rm.loan > 5 ? 'bg-red-100 text-danger' : rm.loan > 0 ? 'bg-orange-100 text-accent' : 'bg-emerald-100 text-success'}">${rm.loan}</span></td>
+      <td class="px-4 py-2.5 text-sm font-mono">${rm.quality}</td>
+      <td class="px-4 py-2.5"><span class="font-mono font-bold text-xs px-2 py-0.5 rounded-full ${rm.overdue > 5 ? 'bg-red-100 text-danger' : rm.overdue > 0 ? 'bg-orange-100 text-accent' : 'bg-emerald-100 text-success'}">${rm.overdue}</span></td>
+      <td class="px-4 py-2.5">${statusChip(rm.status)}</td>
     </tr>`).join('');
 }
 
+// ─── MANAGER DASHBOARD (Team Lead / Senior Manager) ───────────────────────────
+function renderMgrDashboard() {
+  const roleLabels = { team_lead:'Team Lead Dashboard', senior_manager:'Senior Manager Dashboard' };
+  document.getElementById('mgrTitle').textContent = roleLabels[state.role] || 'Team Dashboard';
+  document.getElementById('mgrSubtitle').textContent = `${MGR_TEAM.length} RMs reporting to you`;
+
+  const totalSti = MGR_TEAM.reduce((s, r) => s + r.sti, 0);
+  const totalRevenue = MGR_TEAM.reduce((s, r) => s + r.revenue, 0);
+  const totalLoan = MGR_TEAM.reduce((s, r) => s + r.loan, 0);
+  const avgQuality = Math.round(MGR_TEAM.reduce((s, r) => s + parseInt(r.quality), 0) / MGR_TEAM.length);
+  const best = [...MGR_TEAM].sort((a, b) => parseInt(b.quality) - parseInt(a.quality))[0];
+
+  document.getElementById('mgrStiCount').textContent = totalSti;
+  document.getElementById('mgrStiSub').textContent = `Across ${MGR_TEAM.length} RMs — Docs + App Ready + F2F`;
+  document.getElementById('mgrRevenueCount').textContent = totalRevenue;
+  document.getElementById('mgrLoanCount').textContent = totalLoan;
+
+  document.getElementById('mgrQualityBars').innerHTML = `
+    <div class="flex items-center gap-2"><span class="text-[10px] text-text-muted w-6">1st</span><div class="flex-1 h-1.5 bg-border rounded-full overflow-hidden"><div class="h-full bg-primary rounded-full" style="width:${avgQuality - 8}%"></div></div><span class="text-[10px] font-semibold font-mono w-8 text-right">${avgQuality - 8}%</span></div>
+    <div class="flex items-center gap-2"><span class="text-[10px] text-text-muted w-6">2nd</span><div class="flex-1 h-1.5 bg-border rounded-full overflow-hidden"><div class="h-full bg-success rounded-full" style="width:${avgQuality + 9}%"></div></div><span class="text-[10px] font-semibold font-mono w-8 text-right">${avgQuality + 9}%</span></div>`;
+  document.getElementById('mgrBestTag').innerHTML = `Best: <strong class="text-success">${best.name}</strong> · ${best.quality}`;
+
+  document.getElementById('mgrEscalationList').innerHTML = TEAM_ESCALATIONS.map(e =>
+    `<div class="flex justify-between py-1 border-b border-border text-xs"><span>${e.label}</span><span class="font-bold font-mono ${e.cls}">${e.count}</span></div>`).join('');
+
+  document.getElementById('mgribtGrid') && null;
+  document.getElementById('body-mgribt').innerHTML = TEAM_IBT.map(i =>
+    `<div class="flex items-center justify-between px-3 py-2.5 bg-surface rounded-lg border border-border"><span class="text-xs font-medium">${i.label}</span><span class="font-mono font-bold ${i.cls}">${i.count}</span></div>`).join('');
+  document.getElementById('mgrIbtBadge').textContent = `${TEAM_IBT.reduce((s, i) => s + i.count, 0)} pending`;
+
+  renderMgrTable();
+  renderMgrTopPerformers();
+  document.getElementById('mgrPerfSummaryContent').innerHTML = buildTeamPerfSummary();
+}
+
+function renderMgrTopPerformers() {
+  const sorted = [...MGR_TEAM].sort((a, b) => b.revenue - a.revenue);
+  document.getElementById('mgrLeaderboard').innerHTML = sorted.map((r, i) => `
+    <div class="flex items-center gap-3 bg-surface rounded-xl border border-border px-3 py-2.5">
+      ${rankBadge(i)}
+      <div class="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0" style="background:${r.color}">${r.initials}</div>
+      <span class="flex-1 text-sm font-medium">${r.name}</span>
+      <span class="font-mono text-sm font-bold text-primary">${r.revenue} lock-ins</span>
+    </div>`).join('');
+}
+
+function buildTeamPerfSummary() {
+  const overallPct = Math.round(TEAM_PERF_METRICS.volume.reduce((s, m) => s + (m.achieved / m.target * 100), 0) / TEAM_PERF_METRICS.volume.length);
+  const status = overallPct >= 80 ? 'Good' : overallPct >= 50 ? 'On Track' : 'Focus';
+  const good = TEAM_PERF_METRICS.volume.filter(m => m.achieved / m.target * 100 >= 80).length;
+  const track = TEAM_PERF_METRICS.volume.filter(m => { const p = m.achieved / m.target * 100; return p >= 50 && p < 80; }).length;
+  const focus = TEAM_PERF_METRICS.volume.length - good - track;
+
+  const volRows = TEAM_PERF_METRICS.volume.map(m => {
+    const pct = Math.round(m.achieved / m.target * 100);
+    return `<tr class="border-b border-border"><td class="py-2">${m.name}</td><td class="py-2 text-right font-bold font-mono">${m.target}</td><td class="py-2 text-right font-mono">${m.achieved}</td><td class="py-2">${statusPill(pct)}</td></tr>`;
+  }).join('');
+
+  const convRows = TEAM_PERF_METRICS.conversion.map(m => {
+    return `<tr class="border-b border-border"><td class="py-2">${m.name}</td><td class="py-2 text-right font-bold font-mono">${m.target}</td><td class="py-2 text-right font-mono">${m.achieved}</td><td class="py-2">${statusPill(m.pct)}</td></tr>`;
+  }).join('');
+
+  return `
+    <div class="flex gap-2 mb-3 flex-wrap items-center">${statusChip(status)}<span class="text-[10px] px-2.5 py-1 bg-surface border border-border rounded-full font-semibold text-text-muted">Sep 2026 · Team</span></div>
+    <div class="grid grid-cols-3 gap-2.5 mb-4 max-w-md">
+      <div class="scorecard-col green"><div class="sc-count">${good}</div><div class="sc-label">Good</div></div>
+      <div class="scorecard-col amber"><div class="sc-count">${track}</div><div class="sc-label">On Track</div></div>
+      <div class="scorecard-col red"><div class="sc-count">${focus}</div><div class="sc-label">Focus</div></div>
+    </div>
+    <div class="rounded-lg p-3.5 mb-4 text-white" style="background:linear-gradient(90deg,#0C1A2E,#1D4ED8)">
+      <div class="text-[10px] font-bold uppercase tracking-wide text-white/60 mb-1">Team Business Goals</div>
+      <div class="flex gap-4 flex-wrap text-xs text-white/85">
+        <div>CA → Lock-in 14d: <strong class="text-accent">34%</strong></div>
+        <div>CA → C2I Conversion 14d: <strong class="text-accent">26%</strong></div>
+      </div>
+    </div>
+    <div class="text-[10px] font-bold uppercase tracking-wide text-text-muted mb-1.5">Volume Metrics</div>
+    <div class="overflow-x-auto mb-3">
+      <table class="w-full text-xs"><thead><tr class="text-[10px] uppercase text-text-muted border-b-2 border-border"><th class="text-left py-1.5">Metric</th><th class="text-right py-1.5">Target</th><th class="text-right py-1.5">Achieved</th><th class="text-left py-1.5">Status</th></tr></thead>
+      <tbody>${volRows}</tbody></table>
+    </div>
+    <div class="text-[10px] font-bold uppercase tracking-wide text-text-muted mb-1.5">Conversion Metrics</div>
+    <div class="overflow-x-auto">
+      <table class="w-full text-xs"><thead><tr class="text-[10px] uppercase text-text-muted border-b-2 border-border"><th class="text-left py-1.5">Metric</th><th class="text-right py-1.5">Target</th><th class="text-right py-1.5">Achieved</th><th class="text-left py-1.5">Status</th></tr></thead>
+      <tbody>${convRows}</tbody></table>
+    </div>`;
+}
+
+function saveReminderMgr() {
+  const text = document.getElementById('reminderTextMgr').value.trim();
+  const dt = document.getElementById('reminderDateTimeMgr').value;
+  if (!text) { showToast('Reminder text cannot be empty.', 'error'); return; }
+  if (!dt) { showToast('Please pick a date and time.', 'error'); return; }
+  if (new Date(dt) < new Date()) { showToast('Date must be in the future.', 'error'); return; }
+  document.getElementById('reminderTextMgr').value = '';
+  document.getElementById('reminderDateTimeMgr').value = '';
+  showToast('Reminder saved!', 'success');
+}
+
+// ─── MANAGER INCENTIVES ───────────────────────────────────────────────────────
+function renderMgrIncentives() {
+  const totalPayout = MGR_TEAM.reduce((s, r) => s + r.revenue * 3400 + r.sti * 800 + r.loan * 600, 0);
+  const teamEarned = totalPayout + 24800;
+  const totalOverdue = MGR_TEAM.reduce((s, r) => s + r.overdue, 0);
+  const oppSize = totalOverdue * 18000 + 40000;
+
+  document.getElementById('mgrEarnedAmt').textContent = `₹${teamEarned.toLocaleString('en-IN')}`;
+  document.getElementById('mgrOppAmt').textContent = `₹${oppSize.toLocaleString('en-IN')}`;
+  document.getElementById('mgrOppSub').textContent = `${TEAM_IBT.reduce((s, i) => s + i.count, 0)} open tasks across the team`;
+
+  const sorted = [...MGR_TEAM].map(r => ({ ...r, earned: r.revenue * 3400 + r.sti * 800 + r.loan * 600 })).sort((a, b) => b.earned - a.earned);
+  document.getElementById('mgrEarnersLeaderboard').innerHTML = sorted.map((r, i) => `
+    <div class="flex items-center gap-3 bg-surface rounded-xl border border-border px-3 py-2.5">
+      ${rankBadge(i)}
+      <div class="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0" style="background:${r.color}">${r.initials}</div>
+      <span class="flex-1 text-sm font-medium">${r.name}</span>
+      <span class="font-mono text-sm font-bold text-primary">₹${r.earned.toLocaleString('en-IN')}</span>
+    </div>`).join('');
+
+  document.getElementById('mgrPerfScorecardContent').innerHTML = buildTeamPerfSummary();
+}
+
+function teamTotalOverdue() { return MGR_TEAM.reduce((s, r) => s + r.overdue, 0); }
+function worstRm() { return [...MGR_TEAM].sort((a, b) => b.overdue - a.overdue)[0]; }
+function bestQualityRm() { return [...MGR_TEAM].sort((a, b) => parseInt(b.quality) - parseInt(a.quality))[0]; }
+function avgTeamQuality() { return Math.round(MGR_TEAM.reduce((s, r) => s + parseInt(r.quality), 0) / MGR_TEAM.length); }
+
 function openMgrDrilldown(rmId) {
-  state.mgrDrilldownRm = MGR_TEAM.find(r => r.id === rmId);
+  const rm = MGR_TEAM.find(r => r.id === rmId);
+  if (!rm) return;
+  state.mgrDrilldownRm = rm;
+  document.getElementById('mgrOverviewWrap').classList.add('hidden');
   document.getElementById('mgrDrilldown').classList.remove('hidden');
-  document.getElementById('mgrTable').closest('.mgr-table-wrap').classList.add('hidden');
+  document.getElementById('mgrDrilldownContent').innerHTML = buildMgrDrilldown(rm);
 }
 
 function closeMgrDrilldown() {
   document.getElementById('mgrDrilldown').classList.add('hidden');
-  document.getElementById('mgrTable').closest('.mgr-table-wrap').classList.remove('hidden');
+  document.getElementById('mgrOverviewWrap').classList.remove('hidden');
 }
 
-// ─── INCENTIVES ───────────────────────────────────────────────────────────────
+function buildMgrDrilldown(rm) {
+  const esc = {
+    support: Math.max(0, Math.ceil(rm.overdue * 0.4)),
+    isl: Math.max(0, Math.ceil(rm.overdue * 0.2)),
+    msgs: Math.max(0, Math.ceil(rm.overdue * 0.5)),
+    is: Math.max(0, Math.ceil(rm.overdue * 0.15)),
+  };
+  const statCard = (label, val, cls) => `
+    <div class="metric-card ${cls} border rounded-xl p-3 text-center">
+      <div class="metric-value font-mono text-lg font-extrabold">${val}</div>
+      <div class="text-[10px] text-text-muted mt-0.5">${label}</div>
+    </div>`;
+  return `
+    <div class="flex items-center gap-3 mb-5">
+      <div class="w-11 h-11 rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0" style="background:${rm.color}">${rm.initials}</div>
+      <div class="flex-1">
+        <div class="text-base font-bold">${rm.name}</div>
+        <div class="text-xs text-text-muted">RM ID: ${rm.id} · ${statusChip(rm.status)}</div>
+      </div>
+      <button class="px-3.5 py-1.5 border border-border rounded-lg text-xs font-semibold cursor-pointer hover:bg-surface" onclick="showToast('Opening chat with ${rm.name}...','info')">Message</button>
+    </div>
+    <div class="text-[10px] font-bold uppercase tracking-wide text-text-muted mb-2">Pipeline Snapshot</div>
+    <div class="grid grid-cols-5 gap-2 mb-5">
+      ${statCard('Boost STI', rm.sti, rm.sti > 5 ? 'red' : 'amber')}
+      ${statCard('Revenue', rm.revenue, 'green')}
+      ${statCard('Loan', rm.loan, rm.loan > 5 ? 'red' : 'amber')}
+      ${statCard('Quality', rm.quality, parseInt(rm.quality) >= 80 ? 'green' : parseInt(rm.quality) >= 50 ? 'amber' : 'red')}
+      ${statCard('Overdue', rm.overdue, rm.overdue > 5 ? 'red' : 'amber')}
+    </div>
+    <div class="text-[10px] font-bold uppercase tracking-wide text-text-muted mb-2">Potential Escalations</div>
+    <div class="space-y-1 mb-5 text-xs">
+      <div class="flex justify-between py-1 border-b border-border"><span>Customer Support</span><span class="font-bold text-danger font-mono">${esc.support}</span></div>
+      <div class="flex justify-between py-1 border-b border-border"><span>Low ISL Feedback</span><span class="font-bold text-accent font-mono">${esc.isl}</span></div>
+      <div class="flex justify-between py-1 border-b border-border"><span>Msgs Not Replied</span><span class="font-bold text-danger font-mono">${esc.msgs}</span></div>
+      <div class="flex justify-between py-1"><span>IS Pending</span><span class="font-bold text-accent font-mono">${esc.is}</span></div>
+    </div>
+    <div class="activity-log mb-5">
+      <div class="text-[10px] font-bold uppercase tracking-wide text-text-muted mb-1.5">Recent Activity</div>
+      <div class="activity-item"><span class="activity-dot"></span><div class="activity-content"><p class="activity-action">Logged a note on a Boost ${rm.sti > rm.loan ? 'STI' : 'Loan'} lead — follow-up scheduled.</p><p class="activity-time">Today</p></div></div>
+      <div class="activity-item"><span class="activity-dot"></span><div class="activity-content"><p class="activity-action">${rm.overdue > 3 ? `${rm.overdue} leads are overdue — needs a check-in.` : 'Staying on top of overdue leads this week.'}</p><p class="activity-time">Yesterday</p></div></div>
+    </div>
+    <div class="flex flex-col gap-2">
+      <button class="flex items-center gap-2 px-3.5 py-2.5 rounded-lg text-sm font-semibold cursor-pointer bg-accent text-white hover:bg-accent-dark transition-colors" onclick="showToast('Opening ${rm.name}\\'s full pipeline...','info')">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 11l3 3L22 4"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+        View Full Pipeline
+      </button>
+      <button class="flex items-center gap-2 px-3.5 py-2.5 rounded-lg text-sm font-semibold cursor-pointer border border-border hover:bg-surface transition-colors" onclick="showToast('Nudge sent to ${rm.name}.','success')">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+        Send Nudge
+      </button>
+    </div>`;
+}
+
+// ─── INCENTIVES (RM) ──────────────────────────────────────────────────────────
 function toggleBreakdown() {
-  const bd = document.getElementById('earnBreakdown');
-  bd.classList.toggle('hidden');
+  document.getElementById('earnBreakdown').classList.toggle('hidden');
 }
 
 function openOppDetail() {
-  document.getElementById('incentivesMain').classList.add('hidden');
+  document.getElementById('incentivesMainInner').classList.add('hidden');
   document.getElementById('opportunityDetail').classList.remove('hidden');
 }
 
 function closeOppDetail() {
   document.getElementById('opportunityDetail').classList.add('hidden');
-  document.getElementById('incentivesMain').classList.remove('hidden');
+  document.getElementById('incentivesMainInner').classList.remove('hidden');
 }
 
-// ─── PERFORMANCE SUMMARY ──────────────────────────────────────────────────────
+// ─── PERFORMANCE SUMMARY (RM) ─────────────────────────────────────────────────
 function buildPerfSummary() {
   const overallPct = Math.round(PERF_METRICS.volume.reduce((s,m) => s + (m.achieved/m.target*100), 0) / PERF_METRICS.volume.length);
   const status = overallPct >= 80 ? 'Good' : overallPct >= 50 ? 'On Track' : 'Focus';
+  const good = PERF_METRICS.volume.filter(m => m.achieved / m.target * 100 >= 80).length;
+  const track = PERF_METRICS.volume.filter(m => { const p = m.achieved / m.target * 100; return p >= 50 && p < 80; }).length;
+  const focus = PERF_METRICS.volume.length - good - track;
 
   const volRows = PERF_METRICS.volume.map(m => {
     const pct = Math.round(m.achieved / m.target * 100);
-    return `<tr><td>${m.name}</td><td class="text-right font-bold">${m.target}</td><td class="text-right">${m.achieved}</td><td>${statusPill(pct)}</td></tr>`;
+    return `<tr class="border-b border-border"><td class="py-2">${m.name}</td><td class="py-2 text-right font-bold font-mono">${m.target}</td><td class="py-2 text-right font-mono">${m.achieved}</td><td class="py-2">${statusPill(pct)}</td></tr>`;
   }).join('');
 
   const convRows = PERF_METRICS.conversion.map(m => {
-    return `<tr><td>${m.name}</td><td class="text-right font-bold">${m.target}</td><td class="text-right">${m.achieved}</td><td>${statusPill(m.pct)}</td></tr>`;
+    return `<tr class="border-b border-border"><td class="py-2">${m.name}</td><td class="py-2 text-right font-bold font-mono">${m.target}</td><td class="py-2 text-right font-mono">${m.achieved}</td><td class="py-2">${statusPill(m.pct)}</td></tr>`;
   }).join('');
 
   return `
-    <div class="summary-chips">${statusChip(status)}<span class="summary-chip chip-track">Sep 2026</span></div>
-    <div class="ibg-banner">
-      <div class="ibg-label">Important Business Goals</div>
-      <div class="ibg-items">
-        <div class="ibg-item">CA → Lock-in 14d: <strong>37%</strong></div>
-        <div class="ibg-item">CA → C2I Conversion 14d: <strong>29%</strong></div>
+    <div class="flex gap-2 mb-3 flex-wrap items-center">${statusChip(status)}<span class="text-[10px] px-2.5 py-1 bg-surface border border-border rounded-full font-semibold text-text-muted">Sep 2026</span></div>
+    <div class="grid grid-cols-3 gap-2.5 mb-4 max-w-md">
+      <div class="scorecard-col green"><div class="sc-count">${good}</div><div class="sc-label">Good</div></div>
+      <div class="scorecard-col amber"><div class="sc-count">${track}</div><div class="sc-label">On Track</div></div>
+      <div class="scorecard-col red"><div class="sc-count">${focus}</div><div class="sc-label">Focus</div></div>
+    </div>
+    <div class="rounded-lg p-3.5 mb-4 text-white" style="background:linear-gradient(90deg,#0C1A2E,#1D4ED8)">
+      <div class="text-[10px] font-bold uppercase tracking-wide text-white/60 mb-1">Important Business Goals</div>
+      <div class="flex gap-4 flex-wrap text-xs text-white/85">
+        <div>CA → Lock-in 14d: <strong class="text-accent">37%</strong></div>
+        <div>CA → C2I Conversion 14d: <strong class="text-accent">29%</strong></div>
       </div>
     </div>
-    <div class="section-label" style="margin-bottom:6px">Volume Metrics</div>
-    <div style="overflow-x:auto">
-      <table class="metrics-table"><thead><tr><th>Metric</th><th class="text-right">Target</th><th class="text-right">Achieved</th><th>Status</th></tr></thead>
+    <div class="text-[10px] font-bold uppercase tracking-wide text-text-muted mb-1.5">Volume Metrics</div>
+    <div class="overflow-x-auto mb-3">
+      <table class="w-full text-xs"><thead><tr class="text-[10px] uppercase text-text-muted border-b-2 border-border"><th class="text-left py-1.5">Metric</th><th class="text-right py-1.5">Target</th><th class="text-right py-1.5">Achieved</th><th class="text-left py-1.5">Status</th></tr></thead>
       <tbody>${volRows}</tbody></table>
     </div>
-    <div class="section-label" style="margin:12px 0 6px">Conversion Metrics</div>
-    <div style="overflow-x:auto">
-      <table class="metrics-table"><thead><tr><th>Metric</th><th class="text-right">Target</th><th class="text-right">Achieved</th><th>Status</th></tr></thead>
+    <div class="text-[10px] font-bold uppercase tracking-wide text-text-muted mb-1.5">Conversion Metrics</div>
+    <div class="overflow-x-auto">
+      <table class="w-full text-xs"><thead><tr class="text-[10px] uppercase text-text-muted border-b-2 border-border"><th class="text-left py-1.5">Metric</th><th class="text-right py-1.5">Target</th><th class="text-right py-1.5">Achieved</th><th class="text-left py-1.5">Status</th></tr></thead>
       <tbody>${convRows}</tbody></table>
     </div>`;
 }
@@ -496,60 +805,61 @@ function renderTraining() {
   const container = document.getElementById('trainingCats');
   if (!container) return;
 
-  const icons = {
-    msg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>`,
-    book: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>`,
-    sys: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>`,
-    star: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`,
-  };
-
   container.innerHTML = TRAINING_CATS.map((cat, idx) => {
     const done = cat.lessons.filter(l => l.done).length;
-    const checkSvg = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="width:9px;height:9px"><polyline points="20 6 9 17 4 12"/></svg>`;
     const lessons = cat.lessons.map(l => `
-      <div class="lesson-item" onclick="showToast('Opening: ${l.name}')">
-        <div class="lesson-check ${l.done ? 'done' : ''}">${l.done ? checkSvg : ''}</div>
-        <div class="lesson-name">${l.name}</div>
-        <div class="lesson-dur">${l.dur}</div>
+      <div class="subtask-item ${l.done ? 'done' : ''}" style="cursor:pointer;margin-bottom:4px" onclick="showToast('Opening: ${l.name}','info')">
+        <input type="checkbox" ${l.done ? 'checked' : ''} onclick="event.preventDefault()"/>
+        <div class="flex-1 min-w-0">
+          <div class="text-xs text-text-main">${l.name}</div>
+        </div>
+        <div class="text-[10px] text-text-muted flex-shrink-0">${l.dur}</div>
       </div>`).join('');
     return `
-      <div class="training-cat">
-        <div class="training-cat-header" onclick="toggleTrainingCat(${idx})">
-          <div class="tch-icon">${icons[cat.icon] || icons.book}</div>
-          <div class="tch-title">${cat.name}</div>
-          <div class="tch-count">${done}/${cat.lessons.length} complete</div>
-          <svg class="chevron" id="tcat-chev-${idx}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
-        </div>
-        <div class="training-cat-body" id="tcat-body-${idx}">${lessons}</div>
+      <div class="border border-border rounded-lg overflow-hidden">
+        <button class="w-full flex items-center gap-2.5 px-3 py-2.5 hover:bg-surface transition-colors cursor-pointer" onclick="toggleTrainingCat(${idx})">
+          <div class="w-6 h-6 rounded-md bg-primary flex items-center justify-center text-white text-xs flex-shrink-0">${cat.icon}</div>
+          <span class="flex-1 text-left text-xs font-semibold">${cat.name}</span>
+          <span class="text-[10px] text-text-muted">${done}/${cat.lessons.length} complete</span>
+          <svg class="w-4 h-4 text-text-muted transition-transform" id="tcat-chev-${idx}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9" stroke-width="2"/></svg>
+        </button>
+        <div class="module-body" id="tcat-body-${idx}"><div class="px-3 py-2">${lessons}</div></div>
       </div>`;
   }).join('');
 }
 
 // ─── TICKET MODAL ─────────────────────────────────────────────────────────────
-function openTicketModal() { document.getElementById('ticketModal').classList.add('open'); }
-function closeTicketModal() { document.getElementById('ticketModal').classList.remove('open'); }
+function openTicketModal() {
+  const m = document.getElementById('ticketModal');
+  m.classList.remove('hidden');
+  m.classList.add('flex');
+}
+function closeTicketModal() {
+  const m = document.getElementById('ticketModal');
+  m.classList.add('hidden');
+  m.classList.remove('flex');
+}
 function submitTicket() {
   const cat = document.getElementById('ticketCategory').value;
   const sub = document.getElementById('ticketSubject').value.trim();
   const desc = document.getElementById('ticketDesc').value.trim();
-  if (!cat) { showToast('Please select a category.'); return; }
-  if (!sub) { showToast('Subject cannot be empty.'); return; }
-  if (!desc) { showToast('Description cannot be empty.'); return; }
+  if (!cat) { showToast('Please select a category.', 'error'); return; }
+  if (!sub) { showToast('Subject cannot be empty.', 'error'); return; }
+  if (!desc) { showToast('Description cannot be empty.', 'error'); return; }
   closeTicketModal();
-  showToast('Ticket raised! Your TL and Admin have been notified.');
-  document.querySelectorAll('.tc-count').forEach((el, i) => { if (i === 0) el.textContent = parseInt(el.textContent) + 1; if (i === 2) el.textContent = parseInt(el.textContent) + 1; });
+  showToast('Ticket raised! Your TL and Admin have been notified.', 'success');
 }
 
-// ─── REMINDER ─────────────────────────────────────────────────────────────────
+// ─── REMINDER (RM) ─────────────────────────────────────────────────────────────
 function saveReminder() {
   const text = document.getElementById('reminderText').value.trim();
   const dt = document.getElementById('reminderDateTime').value;
-  if (!text) { showToast('Reminder text cannot be empty.'); return; }
-  if (!dt) { showToast('Please pick a date and time.'); return; }
-  if (new Date(dt) < new Date()) { showToast('Date must be in the future.'); return; }
+  if (!text) { showToast('Reminder text cannot be empty.', 'error'); return; }
+  if (!dt) { showToast('Please pick a date and time.', 'error'); return; }
+  if (new Date(dt) < new Date()) { showToast('Date must be in the future.', 'error'); return; }
   document.getElementById('reminderText').value = '';
   document.getElementById('reminderDateTime').value = '';
-  showToast('Reminder saved!');
+  showToast('Reminder saved!', 'success');
 }
 
 // ─── PERFORMERS ───────────────────────────────────────────────────────────────
@@ -560,132 +870,620 @@ function setPerfWindow(window, btn) {
 
 // ─── PROFILE ──────────────────────────────────────────────────────────────────
 function openProfile() {
-  document.getElementById('profileDropdown').classList.remove('open');
+  document.getElementById('profileDropdown').classList.add('hidden');
   state.profileOpen = false;
   const html = `
-    <div style="text-align:center;margin-bottom:16px">
-      <div style="width:64px;height:64px;border-radius:50%;background:var(--accent);margin:0 auto 10px;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;color:#fff">AP</div>
-      <div style="font-size:16px;font-weight:700">Arjun Patel</div>
-      <div style="font-size:12px;color:var(--text-muted)">RM · ID: RM-001 · arjun.p@leap.in</div>
+    <div class="text-center mb-4">
+      <div class="w-16 h-16 rounded-full bg-accent mx-auto mb-2.5 flex items-center justify-center text-2xl font-bold text-white">AP</div>
+      <div class="text-base font-bold">Arjun Patel</div>
+      <div class="text-xs text-text-muted">Student Success Manager · ID: RM-001 · arjun.p@leap.in</div>
     </div>
-    <div class="ibg-banner" style="text-align:center;margin-bottom:14px">
-      <div class="ibg-label">Performance Rating</div>
-      <div style="font-size:22px;font-weight:700;color:var(--accent);margin:4px 0">7.2 / 10</div>
-      <div style="font-size:11px;color:rgba(255,255,255,.7)">Based on STI, Lock-ins (C2I/Prime), Loan VC, F2F, Docs/App Ready, Queries & Quality Score</div>
+    <div class="rounded-lg p-3.5 mb-3.5 text-center text-white" style="background:linear-gradient(90deg,#0C1A2E,#1D4ED8)">
+      <div class="text-[10px] font-bold uppercase tracking-wide text-white/60 mb-1">Performance Rating</div>
+      <div class="text-xl font-extrabold text-accent font-mono">7.2 / 10</div>
+      <div class="text-[11px] text-white/70 mt-1">Based on STI, Lock-ins (C2I/Prime), Loan VC, F2F, Docs/App Ready, Queries &amp; Quality Score</div>
     </div>
-    <div class="lead-info-grid">
-      <div class="lead-info-item"><div class="li-label">Joining Date</div><div class="li-val">Jan 12, 2025</div></div>
-      <div class="lead-info-item"><div class="li-label">Customer Rating</div><div class="li-val">4.2 / 5</div></div>
-      <div class="lead-info-item"><div class="li-label">Team Lead</div><div class="li-val">Rahul Sharma</div></div>
-      <div class="lead-info-item"><div class="li-label">Senior Manager</div><div class="li-val">Anjali Menon</div></div>
+    <div class="grid grid-cols-2 gap-3">
+      <div><div class="text-[10px] font-bold uppercase text-text-muted mb-0.5">Joining Date</div><div class="text-sm font-medium">Jan 12, 2025</div></div>
+      <div><div class="text-[10px] font-bold uppercase text-text-muted mb-0.5">Customer Rating</div><div class="text-sm font-medium">4.2 / 5</div></div>
+      <div><div class="text-[10px] font-bold uppercase text-text-muted mb-0.5">Team Lead</div><div class="text-sm font-medium">Rahul Sharma</div></div>
+      <div><div class="text-[10px] font-bold uppercase text-text-muted mb-0.5">Senior Manager</div><div class="text-sm font-medium">Anjali Menon</div></div>
     </div>`;
   openDrawer('My Profile', html);
 }
 
-// ─── CHAT ────────────────────────────────────────────────────────────────────
-let chatOpen = false;
-let chatMode = 'ai'; // 'ai' | 'tl'
+// ─── AI CHATBOT — greeting → mood-check → 5-bucket flow ──────────────────────
+let botOpen = false;
+let botMoodResolved = false;
+const RM_FIRST_NAME = 'Arjun';
+const TL_NAME = 'Rahul Sharma';
+const SM_NAME = 'Anjali Menon';
+const HR_LABEL = 'HR Team';
+const DS_LABEL = 'Escalation Desk';
+const TODAY_DATE = '2026-09-01';
 
-function toggleChat() {
-  chatOpen = !chatOpen;
-  const panel = document.getElementById('chatPanel');
-  panel.classList.toggle('open', chatOpen);
-}
-
-function switchChatMode(mode) {
-  chatMode = mode;
-  document.getElementById('chatTabAI').classList.toggle('active', mode === 'ai');
-  document.getElementById('chatTabTL').classList.toggle('active', mode === 'tl');
-  document.getElementById('chatAIMode').classList.toggle('hidden', mode !== 'ai');
-  document.getElementById('chatTLMode').classList.toggle('hidden', mode !== 'tl');
-}
-
-const AI_RESPONSES = [
-  { kw:['overdue','pending','due'], reply:'You have <strong>3 overdue leads</strong> — Ananya Sharma, Deepa Nair, and Aisha Khan need immediate follow-up in Boost STI.' },
-  { kw:['quality','score','call'], reply:'Your call quality score is <strong>59% (1st call)</strong> and <strong>85% (2nd call)</strong>. Best performer: Rahul K. at 94%.' },
-  { kw:['earn','earned','money','incentive','salary'], reply:'You\'ve earned <strong>₹18,400</strong> so far this month. Your pipeline opportunity is <strong>₹2,84,000</strong> — keep pushing!' },
-  { kw:['task','remind','todo'], reply:'You have <strong>5 pending reminders</strong> in Own Tasks. Your top task: follow up with Ananya Sharma on docs.' },
-  { kw:['pipeline','lead','boost'], reply:'Current pipeline: <strong>STI: 7</strong> · <strong>Revenue: 4</strong> · <strong>Loan: 9</strong> leads. Loan VC has the most pending — prioritize today.' },
-  { kw:['sti','stl','document','doc','app ready','f2f'], reply:'You have <strong>7 leads</strong> in Boost STI. 3 are overdue. Top priority: Ananya Sharma (missing bank statement).' },
-  { kw:['revenue','lock','lockin','c2i','prime'], reply:'<strong>4 leads</strong> need a lock-in (C2I or Prime). Tanvir Ahmed and Fatima Shaikh are overdue — follow up today.' },
-  { kw:['loan','vc','video','pf','log'], reply:'<strong>9 leads</strong> in Boost Loan. 3 are overdue. Rahul Jain\'s Loan VC slot was cancelled — reschedule ASAP.' },
-  { kw:['target','goal','performance'], reply:'Overall performance: <strong>On Track</strong>. CA→Lock-in 14d: 37% · CA→C2I 14d: 29%. Push lock-ins this week to reach Good.' },
-  { kw:['ticket','issue','support'], reply:'You have <strong>3 unresolved tickets</strong> in L&D. Head to Learning & Development → My Tickets to check status.' },
-];
-
-function getAIReply(msg) {
-  const lower = msg.toLowerCase();
-  for (const r of AI_RESPONSES) {
-    if (r.kw.some(k => lower.includes(k))) return r.reply;
+function toggleBot() {
+  botOpen = !botOpen;
+  document.getElementById('botPanel').classList.toggle('open', botOpen);
+  if (botOpen) {
+    document.getElementById('botUnreadBadge').classList.add('hidden');
+    if (state.internalChatOpen) toggleInternalChat();
+    switchBotTab('chat');
+    initBotGreeting();
   }
-  return 'I can help with your leads, tasks, pipeline status, earnings, and performance data. Try asking: "How many leads are overdue?" or "What is my quality score?"';
 }
 
-function appendMsg(containerId, text, type) {
-  const container = document.getElementById(containerId);
-  const time = new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
-  const label = type === 'user' ? 'You' : (containerId === 'tlMessages' ? 'Rahul S.' : 'CRM Bot');
+function switchBotTab(tab) {
+  const chatBtn = document.getElementById('botTabChat');
+  const actBtn = document.getElementById('botTabActions');
+  chatBtn.classList.toggle('border-accent', tab === 'chat');
+  chatBtn.classList.toggle('text-accent', tab === 'chat');
+  chatBtn.classList.toggle('border-transparent', tab !== 'chat');
+  chatBtn.classList.toggle('text-text-muted', tab !== 'chat');
+  actBtn.classList.toggle('border-accent', tab === 'actions');
+  actBtn.classList.toggle('text-accent', tab === 'actions');
+  actBtn.classList.toggle('border-transparent', tab !== 'actions');
+  actBtn.classList.toggle('text-text-muted', tab !== 'actions');
+  document.getElementById('botChatMode').classList.toggle('hidden', tab !== 'chat');
+  document.getElementById('botActionItems').classList.toggle('hidden', tab !== 'actions');
+  if (tab === 'actions') renderBotActionItems();
+}
+
+function renderBotActionItems() {
+  const items = [
+    { title:'Follow up with Ananya Sharma', desc:'Missing bank statement — STI docs pending.', badge:'pending', leadId:'RM-2041', pipeline:'sti' },
+    { title:'Book Loan VC for Rahul Jain', desc:'Previous slot was cancelled — reschedule ASAP.', badge:'pending', leadId:'RM-2051', pipeline:'loan' },
+    { title:'Submit weekly report', desc:'Send your weekly summary to your Team Lead.', badge:'completed' },
+  ];
+  document.getElementById('botActionItems').innerHTML = items.map(it => `
+    <div class="action-item-card ${it.badge === 'completed' ? 'completed' : ''}">
+      <div class="flex items-start justify-between gap-2">
+        <div class="ai-title">${it.title}</div>
+        <span class="ai-badge ${it.badge}">${it.badge === 'completed' ? 'Completed' : 'Pending'}</span>
+      </div>
+      <div class="ai-desc">${it.desc}</div>
+      ${it.badge !== 'completed' ? `<button class="ai-complete-btn" onclick="${it.leadId ? `toggleBot();openLeadDetail('${it.pipeline}','${it.leadId}')` : `showToast('Marked complete.','success')`}">${it.leadId ? 'View Lead' : 'Mark Complete'}</button>` : ''}
+    </div>`).join('');
+}
+
+function showClearChatConfirm() {
+  document.getElementById('botClearConfirm').classList.remove('hidden');
+}
+
+function clearChatHistory() {
+  document.getElementById('botClearConfirm').classList.add('hidden');
+  initBotGreeting();
+  showToast('Chat cleared.', 'info');
+}
+
+// ── Render helpers ──
+function appendUserMsg(text) {
+  const container = document.getElementById('botMessages');
   const div = document.createElement('div');
-  div.className = `chat-msg ${type}`;
-  div.innerHTML = `<div class="chat-bubble ${type}">${text}</div><div class="chat-time">${label} · ${time}</div>`;
+  div.className = 'flex justify-end';
+  div.innerHTML = `<div class="user-msg-bubble">${escHtml(text)}</div>`;
   container.appendChild(div);
   container.scrollTop = container.scrollHeight;
 }
 
-function showTyping(containerId) {
-  const container = document.getElementById(containerId);
+function botUserPill(label) {
+  const container = document.getElementById('botMessages');
   const div = document.createElement('div');
-  div.className = 'chat-msg bot';
-  div.id = 'typingIndicator';
-  div.innerHTML = `<div class="chat-typing"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div>`;
+  div.className = 'flex justify-end';
+  div.innerHTML = `<span class="inline-flex items-center px-3.5 py-1.5 rounded-full bg-accent text-white text-xs font-semibold">${escHtml(label)}</span>`;
   container.appendChild(div);
   container.scrollTop = container.scrollHeight;
 }
 
-function removeTyping() {
-  const t = document.getElementById('typingIndicator');
-  if (t) t.remove();
+function appendBotMsg(html) {
+  const container = document.getElementById('botMessages');
+  const div = document.createElement('div');
+  div.className = 'flex gap-2 items-start';
+  div.innerHTML = `<div class="w-6 h-6 rounded-full bg-accent flex-shrink-0 flex items-center justify-center text-white text-[10px] font-bold mt-0.5">AI</div><div class="bot-msg-bubble">${html}</div>`;
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+}
+
+function showBotTyping() {
+  const container = document.getElementById('botMessages');
+  const div = document.createElement('div');
+  div.className = 'flex gap-2 items-start';
+  div.id = 'botTypingWrap';
+  div.innerHTML = `<div class="w-6 h-6 rounded-full bg-accent flex-shrink-0 flex items-center justify-center text-white text-[10px] font-bold mt-0.5">AI</div><div class="bot-typing"><span></span><span></span><span></span></div>`;
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+}
+
+function removeBotTyping() {
+  document.getElementById('botTypingWrap')?.remove();
+}
+
+function escHtml(s) {
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+function botSay(html) {
+  return new Promise(resolve => {
+    showBotTyping();
+    setTimeout(() => {
+      removeBotTyping();
+      appendBotMsg(html);
+      resolve();
+    }, 500 + Math.random() * 400);
+  });
+}
+
+function botButtons(list) {
+  const container = document.getElementById('botMessages');
+  const row = document.createElement('div');
+  row.className = 'quick-reply-row';
+  list.forEach(item => {
+    const btn = document.createElement('button');
+    btn.className = 'quick-reply-btn';
+    btn.textContent = item.label;
+    btn.onclick = () => {
+      row.querySelectorAll('button').forEach(b => b.disabled = true);
+      row.style.display = 'none';
+      botUserPill(item.label);
+      item.action();
+    };
+    row.appendChild(btn);
+  });
+  container.appendChild(row);
+  container.scrollTop = container.scrollHeight;
+  return row;
+}
+
+async function botRedirect(sectionName, action) {
+  await botSay(`🎁 Taking you to the ${sectionName} section!`);
+  if (botOpen) toggleBot();
+  action();
+}
+
+function showBotInput(visible) {
+  document.getElementById('botInputRow').classList.toggle('hidden', !visible);
+}
+
+// ── Greeting / mood-check ──
+function initBotGreeting() {
+  document.getElementById('botMessages').innerHTML = '';
+  const hour = new Date().getHours();
+  const timeGreeting = hour < 12 ? 'Good Morning' : hour < 17 ? 'Good Afternoon' : 'Good Evening';
+  appendBotMsg(`${timeGreeting}, ${RM_FIRST_NAME}! 👋`);
+  botMoodResolved = false;
+  showBotInput(true);
+  const input = document.getElementById('chatInput');
+  input.value = '';
+  input.placeholder = 'Say hello';
 }
 
 function sendChatMsg() {
   const input = document.getElementById('chatInput');
   const msg = input.value.trim();
-  if (!msg) return;
+  if (!msg || botMoodResolved) return;
   input.value = '';
-  document.getElementById('chatQuickBtns').style.display = 'none';
-  appendMsg('chatMessages', msg, 'user');
-  showTyping('chatMessages');
-  setTimeout(() => {
-    removeTyping();
-    appendMsg('chatMessages', getAIReply(msg), 'bot');
-  }, 900 + Math.random() * 500);
+  appendUserMsg(msg);
+  if (/^(hi|hello|hey)\b/i.test(msg)) {
+    botSay(`Hi, ${RM_FIRST_NAME}! 😊 How is your day going?`).then(() => {
+      botButtons([
+        { label: 'Good', action: onMoodGood },
+        { label: 'Not okay', action: onMoodNotOkay },
+      ]);
+    });
+  } else {
+    botSay('Try typing "hi" to get started 👋');
+  }
 }
 
-function sendQuickQ(question) {
-  document.getElementById('chatInput').value = question;
-  sendChatMsg();
+async function onMoodGood() {
+  botMoodResolved = true;
+  showBotInput(false);
+  await botSay(`Awesome! I'm ready to help make it even better. How can I help you make it even better today?`);
+  showMainMenu();
 }
 
-const TL_REPLIES = [
-  'Got it, I\'ll look into that.',
-  'Sure, let me check and get back to you.',
-  'Thanks for the update! Keep pushing.',
-  'Noted. Focus on the overdue leads first.',
-  'Good work today! Let me know if you need anything.',
-  'I\'ll escalate that if needed. Keep logging your activities.',
+async function onMoodNotOkay() {
+  await botSay(`Oh no, ${RM_FIRST_NAME} — sorry to hear this. Want me to connect you with SM, HR, or DS? Let's get this sorted and make sure you feel better before you start working again.`);
+  botButtons([
+    { label: 'Yes', action: flowConnect },
+    { label: 'No', action: onMoodGood },
+  ]);
+}
+
+// ── Main menu / buckets ──
+const BUCKETS = {
+  day: { name: 'My Day & Tasks', icon: '📋' },
+  perf: { name: 'Performance & Leaderboard', icon: '🏆' },
+  incentives: { name: 'Incentives & Earnings', icon: '💰' },
+  learning: { name: 'Learning & Growth', icon: '🎓' },
+  support: { name: 'Support & Help', icon: '🛠️' },
+};
+
+function showMainMenu() {
+  botButtons([
+    { label: '📋 My Day & Tasks', action: () => showBucket('day') },
+    { label: '🏆 Performance & Leaderboard', action: () => showBucket('perf') },
+    { label: '💰 Incentives & Earnings', action: () => showBucket('incentives') },
+    { label: '🎓 Learning & Growth', action: () => showBucket('learning') },
+    { label: '🛠️ Support & Help', action: () => showBucket('support') },
+  ]);
+}
+
+const BUCKET_SUBS = {
+  day: () => [
+    { label: 'How to Start my Day', action: flowStartMyDay },
+    { label: "Today's Target", action: flowTodaysTarget },
+    { label: 'Priority Leads to Call', action: flowPriorityLeads },
+    { label: 'What Should I Do This Week', action: flowThisWeek },
+    { label: 'F2F Scheduled Today', action: flowF2FToday },
+    { label: 'Escalations Needing Response', action: flowEscalations },
+  ],
+  perf: () => [
+    { label: 'Top Performer in Team', action: flowTopPerformer },
+    { label: 'How Am I Performing', action: flowHowAmIPerforming },
+    { label: 'Where Should I Focus', action: flowWhereFocus },
+    { label: 'My Standing vs Team', action: flowMyStanding },
+  ],
+  incentives: () => [
+    { label: 'Live Offers Running?', action: flowLiveOffers },
+    { label: 'Incentive Details', action: flowIncentiveDetails },
+    { label: 'How Can I Earn More', action: flowEarnMore },
+  ],
+  learning: () => [
+    { label: 'Training / I Want to Learn', action: flowTraining },
+  ],
+  support: () => [
+    { label: 'My Raised Tickets', action: flowMyTickets },
+    { label: 'Raise Support Ticket', action: flowRaiseTicket },
+    { label: 'Connect with Manager/HR/DS', action: flowConnect },
+    { label: 'Ask TL a Question', action: flowAskTL },
+  ],
+};
+
+async function showBucket(key) {
+  const b = BUCKETS[key];
+  await botSay(`Sure! Here's what I can help with under ${b.icon} ${b.name} 👇`);
+  const subs = BUCKET_SUBS[key]();
+  subs.push({ label: '⬅ Back to Main Menu', action: showMainMenu });
+  botButtons(subs);
+}
+
+// ── Bucket 1: My Day & Tasks ──
+async function flowStartMyDay() {
+  const overdueSti = MOCK_LEADS.sti.filter(l => l.overdue);
+  const overdueRev = MOCK_LEADS.revenue.filter(l => l.overdue);
+  const calls = [...overdueSti, ...overdueRev].slice(0, 2);
+  const callLines = calls.map(l => `📞 Call ${l.name} — ${l.status}`).join('<br>');
+  await botSay(`Good morning, ${RM_FIRST_NAME}! Here's your day plan 📋<br><br><strong>Yesterday's Report Card:</strong><br>🔴 STI: 7<br>🟡 Revenue (Lock-ins): 4<br>🔴 Loan: 9<br><br><strong>Top Actions for Today:</strong><br>${callLines}<br>🎯 Boost Loan — needs focus today<br><br>Where do you want to start?`);
+  const btns = calls.map(l => ({
+    label: `Call ${l.name.split(' ')[0]}`,
+    action: () => botRedirect(l.name, () => openLeadDetail(MOCK_LEADS.sti.includes(l) ? 'sti' : 'revenue', l.id)),
+  }));
+  btns.push({ label: '🎯 Boost Loan', action: () => botRedirect('Boost Loan', () => openPipeline('loan')) });
+  btns.push({ label: 'No thanks', action: () => botSay('👍 Let me know if you need anything else.') });
+  botButtons(btns);
+}
+
+async function flowTodaysTarget() {
+  await botSay(`🎯 Your targets for today:<br>STI: 2/3<br>Loan: 1/2<br>Revenue (Lock-ins): 1/1<br><br>Should I take you to the Boost Tasks section?`);
+  botButtons([
+    { label: 'Yes, take me there!', action: () => botRedirect('Boost Loan', () => openPipeline('loan')) },
+    { label: 'No thanks', action: () => botSay('👍 Anytime!') },
+  ]);
+}
+
+async function flowPriorityLeads() {
+  const all = [...MOCK_LEADS.sti, ...MOCK_LEADS.revenue, ...MOCK_LEADS.loan];
+  const priority = all.filter(l => l.overdue || l.dueToday).slice(0, 3);
+  if (!priority.length) {
+    await botSay(`✅ You're all caught up — no priority leads to call right now.`);
+    return;
+  }
+  const lines = priority.map(l => `• ${l.name} — ${l.status}`).join('<br>');
+  await botSay(`📞 Priority leads to call today:<br>${lines}<br><br>Should I take you to the full list?`);
+  botButtons([
+    { label: 'Yes, take me there!', action: () => botRedirect('Boost Tasks', () => switchTab('tasks')) },
+    { label: 'No thanks', action: () => botSay('👍 Good luck today!') },
+  ]);
+}
+
+async function flowThisWeek() {
+  await botSay(`📅 Here's what's still open right now:<br>🎯 ${MOCK_LEADS.sti.length} STI tasks open<br>💰 ${MOCK_LEADS.revenue.length} Revenue tasks open<br>💳 ${MOCK_LEADS.loan.length} Loan tasks open<br>🚨 19 escalations pending<br>📋 12 business tasks pending<br><br>Want to open your full task list?`);
+  botButtons([
+    { label: 'Yes, take me there!', action: () => botRedirect('Tasks & Performance', () => switchTab('tasks')) },
+    { label: 'No thanks', action: () => botSay('👍 Sounds good.') },
+  ]);
+}
+
+async function flowF2FToday() {
+  const all = [...MOCK_LEADS.sti, ...MOCK_LEADS.revenue, ...MOCK_LEADS.loan];
+  const today = all.filter(l => l.f2fDate === TODAY_DATE);
+  if (!today.length) {
+    await botSay('📅 No F2F sessions scheduled today.');
+    return;
+  }
+  const preview = today.slice(0, 3).map(l => `• ${l.name} — ${l.country} · ${l.f2fDate}`).join('<br>');
+  await botSay(`📅 You have ${today.length} lead(s) with an F2F scheduled today.<br>${preview}<br><br>View the full list?`);
+  botButtons([
+    { label: 'View All', action: () => botRedirect('Tasks & Performance', () => switchTab('tasks')) },
+    { label: 'No thanks', action: () => botSay('👍 Noted.') },
+  ]);
+}
+
+async function flowEscalations() {
+  await botSay(`⏰ You have escalations needing a response:<br>🚨 Messages Not Replied: 8<br>🚨 IS Pending: 2<br>🚨 Low ISL Feedback: 3<br><br>View the full list?`);
+  botButtons([
+    { label: 'View All', action: () => botRedirect('Potential Escalations', () => switchTab('tasks')) },
+    { label: 'No thanks', action: () => botSay('👍 Got it.') },
+  ]);
+}
+
+// ── Bucket 2: Performance & Leaderboard ──
+async function flowTopPerformer() {
+  await botSay('Great question! Which metric are you asking about?');
+  botButtons([
+    { label: 'Revenue', action: () => showTopPerformerResult('revenue', 'Revenue') },
+    { label: 'STI', action: () => showTopPerformerResult('sti', 'STI') },
+    { label: 'Loan', action: () => showTopPerformerResult('loan', 'Loan') },
+  ]);
+}
+
+async function showTopPerformerResult(metric, label) {
+  const sorted = [...MGR_TEAM].sort((a, b) => b[metric] - a[metric]).slice(0, 3);
+  const medals = ['🥇', '🥈', '🥉'];
+  const lines = sorted.map((r, i) => `${medals[i]} ${r.name} — ${r[metric]}`).join('<br>');
+  await botSay(`📊 Top performers for ${label}:<br>${lines}`);
+  botButtons([{ label: 'Show me the leaderboard', action: () => botRedirect('Top Performers', () => switchTab('tasks')) }]);
+}
+
+async function flowHowAmIPerforming() {
+  const good = PERF_METRICS.volume.filter(m => m.achieved / m.target * 100 >= 80).length;
+  const track = PERF_METRICS.volume.filter(m => { const p = m.achieved / m.target * 100; return p >= 50 && p < 80; }).length;
+  const focus = PERF_METRICS.volume.length - good - track;
+  await botSay(`📊 Your performance snapshot:<br>✅ Good: ${good} metrics<br>🟡 On Track: ${track} metrics<br>🔴 Focus: ${focus} metrics<br><br>🎯 CA→Lock-in (14d): 37% — On Track<br>🎯 CA→C2I (14d): 29% — Focus<br><br>Want the full scorecard?`);
+  botButtons([
+    { label: 'Yes, show full table', action: () => botRedirect('Performance Summary', () => switchTab('tasks')) },
+    { label: 'No thanks', action: () => botSay('👍 Keep it up!') },
+  ]);
+}
+
+async function flowWhereFocus() {
+  botButtons([
+    { label: 'Input Metrics', action: flowFocusInput },
+    { label: 'Output Metrics', action: flowFocusOutput },
+  ]);
+}
+
+async function flowFocusInput() {
+  await botSay(`📥 Here's where your input quality needs attention:<br>🎯 Quality Score: 59% (1st) / 85% (2nd)<br>🚨 Low ISL Feedback: 3<br>🚨 Messages Not Replied: 8<br>🚨 IS Pending: 2`);
+  botButtons([{ label: 'Open Boost Input', action: () => botRedirect('Boost Input', () => switchTab('tasks')) }]);
+}
+
+async function flowFocusOutput() {
+  await botSay(`🚀 Your priority output actions today:<br>🎯 Boost STI — 7 leads (2 due today)<br>💰 Boost Revenue — 4 leads (1 due today)<br>💳 Boost Loan — 9 leads (1 due today)`);
+  botButtons([{ label: 'Open Boost Output', action: () => botRedirect('Boost Output', () => switchTab('tasks')) }]);
+}
+
+async function flowMyStanding() {
+  await botSay('Which metric would you like to compare?');
+  botButtons([
+    { label: 'Revenue', action: () => showStandingResult('revenue', 'Revenue') },
+    { label: 'STI', action: () => showStandingResult('sti', 'STI') },
+    { label: 'Quality', action: () => showStandingResult('qualityNum', 'Quality') },
+  ]);
+}
+
+async function showStandingResult(metric, label) {
+  const me = MGR_TEAM.find(r => r.name === 'Arjun Patel');
+  const valOf = r => metric === 'qualityNum' ? parseInt(r.quality) : r[metric];
+  const myVal = valOf(me);
+  const worse = MGR_TEAM.filter(r => r !== me && valOf(r) < myVal).length;
+  const peers = MGR_TEAM.length - 1;
+  const pct = peers ? Math.round(worse / peers * 100) : 0;
+  await botSay(`📈 Here's how you compare on ${label}:<br>You're doing better than ${pct}% of your team. ${peers - worse} teammate(s) are ahead of you on this metric.<br><br>Want to see the full ranking?`);
+  botButtons([
+    { label: 'Yes, show me', action: () => botRedirect('Team Overview', () => switchTab('tasks')) },
+    { label: 'No thanks', action: () => botSay('👍 Keep pushing!') },
+  ]);
+}
+
+// ── Bucket 3: Incentives & Earnings ──
+async function flowLiveOffers() {
+  await botSay(`🏷️ You have 2 active offers running:<br>• Referral Drive Sep'26 — +₹2K<br>• Lock-in Sprint Bonus — Ends Sep 15`);
+  botButtons([{ label: 'View Offers', action: () => botRedirect('Ongoing Offers', () => switchTab('incentives')) }]);
+}
+
+async function flowIncentiveDetails() {
+  await botSay(`💰 You've earned ₹18,400 this month. Want the full breakdown?`);
+  botButtons([
+    { label: 'Yes, show breakdown', action: () => botRedirect('Incentives & Earnings', () => switchTab('incentives')) },
+    { label: 'No thanks', action: () => botSay('👍 Keep it up!') },
+  ]);
+}
+
+async function flowEarnMore() {
+  await botSay(`🚀 Your opportunity pipeline is worth ₹2,84,000 across 14 open tasks.<br><br>3 ways to earn more:<br>• Close overdue lock-ins — ₹96,000 opportunity<br>• Push Loan VC bookings — ₹76,000 opportunity<br>• Complete STI docs — ₹1,12,000 opportunity`);
+  botButtons([{ label: 'View Opportunity Pipeline', action: () => botRedirect('Opportunity Pipeline', () => { switchTab('incentives'); openOppDetail(); }) }]);
+}
+
+// ── Bucket 4: Learning & Growth ──
+async function flowTraining() {
+  await botSay('🎓 Which area would you like to train in?');
+  botButtons(TRAINING_CATS.map((cat, idx) => ({
+    label: cat.name,
+    action: () => botRedirect('Training', () => {
+      switchTab('ld');
+      setTimeout(() => {
+        const body = document.getElementById(`tcat-body-${idx}`);
+        if (body && !body.classList.contains('open')) toggleTrainingCat(idx);
+      }, 300);
+    }),
+  })));
+}
+
+// ── Bucket 5: Support & Help ──
+async function flowMyTickets() {
+  await botSay(`🎫 You have 8 tickets raised — 5 resolved, 3 open.`);
+  botButtons([{ label: 'View Tickets', action: () => botRedirect('Learning & Development', () => switchTab('ld')) }]);
+}
+
+async function flowRaiseTicket() {
+  await botSay(`Need help with something? Let's get it fixed for you right away.<br>Should I take you to the Raise Support Ticket page?`);
+  botButtons([
+    { label: 'Yes, take me there!', action: () => botRedirect('Raise Support Ticket', () => { switchTab('ld'); openTicketModal(); }) },
+    { label: 'No thanks', action: () => botSay('👍 I\'m here if you need me.') },
+  ]);
+}
+
+async function flowConnect() {
+  await botSay('Please let me know with whom you want to connect.');
+  botButtons([
+    { label: 'SM', action: () => showConnectForm('SM', SM_NAME) },
+    { label: 'HR', action: () => showConnectForm('HR', HR_LABEL) },
+    { label: 'DS', action: () => showConnectForm('DS', DS_LABEL) },
+  ]);
+}
+
+function showConnectForm(type, recipientName) {
+  const container = document.getElementById('botMessages');
+  const uid = 'connectForm_' + Date.now();
+  const slots = ['Morning', 'Afternoon', 'Evening', 'Post Office Hours'];
+  const wrap = document.createElement('div');
+  wrap.innerHTML = `<div class="bot-msg-bubble" style="max-width:100%">
+    <div class="text-[10px] font-bold uppercase tracking-wide text-text-muted mb-2">Connect with ${escHtml(recipientName)}</div>
+    <textarea class="w-full px-2.5 py-2 border border-border rounded-lg text-xs mb-2" rows="2" placeholder="What would you like to discuss?" id="${uid}_msg"></textarea>
+    <div class="text-[10px] font-semibold text-text-muted mb-1.5">Preferred time (pick 2)</div>
+    <div class="flex flex-wrap gap-1.5 mb-2.5" id="${uid}_slots">
+      ${slots.map(s => `<button type="button" class="px-2.5 py-1 border border-border rounded-full text-[10px] font-medium cursor-pointer" data-slot="${s}">${s}</button>`).join('')}
+    </div>
+    <button class="w-full py-1.5 bg-accent text-white text-xs font-semibold rounded-lg cursor-pointer opacity-50" id="${uid}_submit" disabled>Submit</button>
+  </div>`;
+  container.appendChild(wrap);
+  container.scrollTop = container.scrollHeight;
+
+  const selectedSlots = new Set();
+  const msgInput = wrap.querySelector(`#${uid}_msg`);
+  const submitBtn = wrap.querySelector(`#${uid}_submit`);
+  const updateSubmit = () => {
+    const ok = msgInput.value.trim().length > 0 && selectedSlots.size > 0;
+    submitBtn.disabled = !ok;
+    submitBtn.classList.toggle('opacity-50', !ok);
+  };
+  msgInput.addEventListener('input', updateSubmit);
+  wrap.querySelectorAll(`#${uid}_slots button`).forEach(btn => {
+    btn.addEventListener('click', () => {
+      const slot = btn.dataset.slot;
+      if (selectedSlots.has(slot)) { selectedSlots.delete(slot); btn.classList.remove('bg-accent', 'text-white', 'border-accent'); }
+      else { selectedSlots.add(slot); btn.classList.add('bg-accent', 'text-white', 'border-accent'); }
+      updateSubmit();
+    });
+  });
+  submitBtn.addEventListener('click', async () => {
+    if (submitBtn.disabled) return;
+    wrap.remove();
+    botUserPill(`Connect with ${type}`);
+    await botSay('I have notified the team! They will reach out to you shortly.');
+    showToast(`${recipientName} has been notified.`, 'success');
+  });
+}
+
+async function flowAskTL() {
+  showAskForm(TL_NAME);
+}
+
+function showAskForm(recipientName) {
+  const container = document.getElementById('botMessages');
+  const uid = 'askForm_' + Date.now();
+  const wrap = document.createElement('div');
+  wrap.innerHTML = `<div class="bot-msg-bubble" style="max-width:100%">
+    <div class="text-[10px] font-bold uppercase tracking-wide text-text-muted mb-2">Ask ${escHtml(recipientName)}</div>
+    <textarea class="w-full px-2.5 py-2 border border-border rounded-lg text-xs mb-2" rows="2" placeholder="Type your question…" id="${uid}_msg"></textarea>
+    <button class="w-full py-1.5 bg-accent text-white text-xs font-semibold rounded-lg cursor-pointer opacity-50" id="${uid}_submit" disabled>Submit</button>
+  </div>`;
+  container.appendChild(wrap);
+  container.scrollTop = container.scrollHeight;
+  const msgInput = wrap.querySelector(`#${uid}_msg`);
+  const submitBtn = wrap.querySelector(`#${uid}_submit`);
+  msgInput.addEventListener('input', () => {
+    const ok = msgInput.value.trim().length > 0;
+    submitBtn.disabled = !ok;
+    submitBtn.classList.toggle('opacity-50', !ok);
+  });
+  submitBtn.addEventListener('click', async () => {
+    if (submitBtn.disabled) return;
+    wrap.remove();
+    botUserPill('Ask TL a Question');
+    await botSay(`✅ Your question has been sent to ${recipientName}. They'll get a notification and respond soon.`);
+    showToast(`Question sent to ${recipientName}.`, 'success');
+  });
+}
+
+// ─── INTERNAL TEAM CHAT ────────────────────────────────────────────────────────
+state.internalChatOpen = false;
+const TEAM_CHAT_PERSONAS = [
+  { name:'Anjali M.', reply:'Got it, thanks for the update!' },
+  { name:'Rahul S.', reply:'Sure — let me check and get back to you.' },
+  { name:'Manager', reply:'Noted. Keep pushing on the overdue leads.' },
+];
+let teamChatMessages = [
+  { author:'Rahul S.', text:'Morning team! Let\'s clear overdue leads before EOD.', self:false, manager:false },
+  { author:'Anjali M.', text:'Reminder: lock-in sprint bonus ends Sep 15 — push C2I this week.', self:false, manager:true },
 ];
 
-function sendTLMsg() {
-  const input = document.getElementById('tlInput');
+function toggleInternalChat() {
+  state.internalChatOpen = !state.internalChatOpen;
+  document.getElementById('internalChatPanel').classList.toggle('open', state.internalChatOpen);
+  if (state.internalChatOpen) {
+    document.getElementById('internalChatBadge').classList.add('hidden');
+    if (botOpen) toggleBot();
+    renderTeamChat();
+  }
+}
+
+function resetInternalChat() {
+  teamChatMessages = [
+    { author:'Rahul S.', text:'Morning team! Let\'s clear overdue leads before EOD.', self:false, manager:false },
+    { author:'Anjali M.', text:'Reminder: lock-in sprint bonus ends Sep 15 — push C2I this week.', self:false, manager:true },
+  ];
+  if (state.internalChatOpen) renderTeamChat();
+}
+
+function renderTeamChat() {
+  const container = document.getElementById('teamChatMessages');
+  container.innerHTML = teamChatMessages.map(m => {
+    if (m.self) {
+      return `<div class="flex justify-end"><div class="user-msg-bubble" style="background:#059669">${escHtml(m.text)}</div></div>`;
+    }
+    const bubbleStyle = m.manager ? 'background:#FFFBEB;border-color:#FDE68A' : '';
+    return `<div class="flex gap-2 items-start">
+      <div class="w-6 h-6 rounded-full flex-shrink-0 flex items-center justify-center text-white text-[10px] font-bold mt-0.5" style="background:${m.manager ? '#B45309' : '#0369A1'}">${m.author.split(' ').map(p=>p[0]).join('').slice(0,2)}</div>
+      <div>
+        <div class="text-[10px] font-semibold text-text-muted mb-0.5">${m.author}</div>
+        <div class="bot-msg-bubble" style="${bubbleStyle}">${escHtml(m.text)}</div>
+      </div>
+    </div>`;
+  }).join('');
+  container.scrollTop = container.scrollHeight;
+}
+
+function sendTeamChat() {
+  const input = document.getElementById('teamChatInput');
   const msg = input.value.trim();
   if (!msg) return;
   input.value = '';
-  appendMsg('tlMessages', msg, 'user');
-  showTyping('tlMessages');
+  teamChatMessages.push({ author:'You', text: msg, self:true });
+  renderTeamChat();
   setTimeout(() => {
-    removeTyping();
-    const reply = TL_REPLIES[Math.floor(Math.random() * TL_REPLIES.length)];
-    appendMsg('tlMessages', reply, 'bot');
+    const persona = TEAM_CHAT_PERSONAS[Math.floor(Math.random() * TEAM_CHAT_PERSONAS.length)];
+    teamChatMessages.push({ author: persona.name, text: persona.reply, self:false, manager: persona.name === 'Manager' || persona.name === 'Anjali M.' });
+    renderTeamChat();
+    if (!state.internalChatOpen) {
+      const badge = document.getElementById('internalChatBadge');
+      badge.textContent = (parseInt(badge.textContent) || 0) + 1;
+      badge.classList.remove('hidden');
+    }
   }, 1200 + Math.random() * 800);
 }
 
@@ -717,7 +1515,7 @@ function switchAdminTab(tab, btn) {
     const el = document.getElementById(id);
     if (el) el.classList.toggle('hidden', t !== tab);
   });
-  document.querySelectorAll('.admin-tab').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.adm-nav').forEach(b => b.classList.remove('active'));
   if (btn) btn.classList.add('active');
   if (tab === 'incentive') renderAdminMetrics();
   if (tab === 'ld') renderAdminLD();
@@ -726,20 +1524,20 @@ function switchAdminTab(tab, btn) {
 function renderAdminMetrics() {
   const tbody = document.getElementById('adminMetricRows');
   tbody.innerHTML = ADMIN_METRICS.map((m, i) => `
-    <tr>
-      <td>${m}</td>
-      <td><input class="edit-input" type="number" value="${ADMIN_METRIC_TARGETS[i]}" min="0" style="width:80px"/></td>
-      <td><button class="admin-row-btn" onclick="showToast('Target updated.')">Save</button></td>
+    <tr class="border-b border-border">
+      <td class="py-2">${m}</td>
+      <td class="py-2"><input class="w-20 px-2 py-1 border border-border rounded text-xs" type="number" value="${ADMIN_METRIC_TARGETS[i]}" min="0"/></td>
+      <td class="py-2"><button class="px-2 py-1 border border-border rounded text-[10px] font-semibold hover:bg-surface cursor-pointer" onclick="showToast('Target updated.','success')">Save</button></td>
     </tr>`).join('');
 
   const payoutTbody = document.getElementById('adminPayoutRows');
   payoutTbody.innerHTML = adminPayoutRows.map((p, i) => `
-    <tr>
-      <td><input class="edit-input" value="${p.name}" style="width:160px"/></td>
-      <td><input class="edit-input" value="${p.unit}" style="width:120px"/></td>
-      <td><input class="edit-input" type="number" value="${p.rate}" style="width:80px"/></td>
-      <td><input class="edit-input" value="${p.period}" style="width:80px"/></td>
-      <td><button class="admin-row-btn danger" onclick="removePayoutRow(${i})">Remove</button></td>
+    <tr class="border-b border-border">
+      <td class="py-2"><input class="w-40 px-2 py-1 border border-border rounded text-xs" value="${p.name}"/></td>
+      <td class="py-2"><input class="w-28 px-2 py-1 border border-border rounded text-xs" value="${p.unit}"/></td>
+      <td class="py-2"><input class="w-20 px-2 py-1 border border-border rounded text-xs" type="number" value="${p.rate}"/></td>
+      <td class="py-2"><input class="w-20 px-2 py-1 border border-border rounded text-xs" value="${p.period}"/></td>
+      <td class="py-2"><button class="px-2 py-1 border border-red-200 bg-red-50 text-danger rounded text-[10px] font-semibold cursor-pointer" onclick="removePayoutRow(${i})">Remove</button></td>
     </tr>`).join('');
 }
 
@@ -753,41 +1551,41 @@ function removePayoutRow(i) {
   renderAdminMetrics();
 }
 
-function saveIncentiveConfig() { showToast('Incentive config saved.'); }
+function saveIncentiveConfig() { showToast('Incentive config saved.', 'success'); }
 
 function renderAdminLD() {
   const list = document.getElementById('adminModuleList');
-  list.innerHTML = TRAINING_CATS.map((cat, ci) => `
-    <div class="admin-module-cat">
-      <div class="admin-module-cat-header">
-        <strong style="flex:1;font-size:13px">${cat.name}</strong>
-        <button class="admin-row-btn" onclick="showToast('Add lesson coming soon')">+ Add Lesson</button>
+  list.innerHTML = TRAINING_CATS.map((cat) => `
+    <div class="bg-white border border-border rounded-lg mb-2 overflow-hidden">
+      <div class="flex items-center gap-2 px-3.5 py-2.5 bg-surface border-b border-border">
+        <strong class="flex-1 text-xs">${cat.name}</strong>
+        <button class="px-2 py-1 border border-border rounded text-[10px] font-semibold hover:bg-white cursor-pointer" onclick="showToast('Add lesson coming soon','info')">+ Add Lesson</button>
       </div>
-      ${cat.lessons.map((l, li) => `
-        <div class="admin-module-row">
-          <div class="admin-module-name">${l.name}</div>
-          <div class="admin-module-dur">${l.dur}</div>
-          <div class="admin-module-status">${l.done ? '<span class="status-pill sp-good">Active</span>' : '<span class="status-pill sp-track">Active</span>'}</div>
-          <div class="admin-row-btns">
-            <button class="admin-row-btn" onclick="showToast('Edit coming soon')">Edit</button>
-            <button class="admin-row-btn danger" onclick="showToast('Module retired.')">Retire</button>
+      ${cat.lessons.map(l => `
+        <div class="flex items-center gap-2.5 px-3.5 py-2 border-b border-border text-xs last:border-b-0">
+          <div class="flex-1">${l.name}</div>
+          <div class="text-text-muted">${l.dur}</div>
+          <div>${l.done ? '<span class="ai-badge completed">Active</span>' : '<span class="ai-badge pending">Active</span>'}</div>
+          <div class="flex gap-1">
+            <button class="px-2 py-1 border border-border rounded text-[10px] font-semibold hover:bg-surface cursor-pointer" onclick="showToast('Edit coming soon','info')">Edit</button>
+            <button class="px-2 py-1 border border-red-200 bg-red-50 text-danger rounded text-[10px] font-semibold cursor-pointer" onclick="showToast('Module retired.','info')">Retire</button>
           </div>
         </div>`).join('')}
     </div>`).join('');
 
   const cats = document.getElementById('adminTicketCats');
   cats.innerHTML = adminTicketCats.map((c, i) => `
-    <div class="admin-ticket-cat-row">
-      <input class="edit-input admin-ticket-cat-name" value="${c}" style="flex:1"/>
-      <button class="admin-row-btn" onclick="saveCat(${i})">Save</button>
-      <button class="admin-row-btn danger" onclick="removeCat(${i})">Remove</button>
+    <div class="flex items-center gap-2.5 bg-white border border-border rounded-lg px-3.5 py-2">
+      <input class="flex-1 px-2 py-1 border border-border rounded text-xs admin-ticket-cat-name" value="${c}"/>
+      <button class="px-2 py-1 border border-border rounded text-[10px] font-semibold hover:bg-surface cursor-pointer" onclick="saveCat(${i})">Save</button>
+      <button class="px-2 py-1 border border-red-200 bg-red-50 text-danger rounded text-[10px] font-semibold cursor-pointer" onclick="removeCat(${i})">Remove</button>
     </div>`).join('');
 }
 
 function saveCat(i) {
   const inputs = document.querySelectorAll('#adminTicketCats .admin-ticket-cat-name');
   adminTicketCats[i] = inputs[i].value;
-  showToast('Category saved.');
+  showToast('Category saved.', 'success');
 }
 
 function removeCat(i) {
@@ -798,7 +1596,6 @@ function removeCat(i) {
 function addTicketCat() {
   adminTicketCats.push('New Category');
   renderAdminLD();
-  // Also update the ticket form dropdown
   const sel = document.getElementById('ticketCategory');
   if (sel) {
     const opt = document.createElement('option');
@@ -809,16 +1606,14 @@ function addTicketCat() {
 
 // ─── BOOT ─────────────────────────────────────────────────────────────────────
 function boot() {
-  // Performance summary content
   const perfHtml = buildPerfSummary();
   document.getElementById('perfSummaryContent').innerHTML = perfHtml;
   document.getElementById('perfScorecardContent').innerHTML = perfHtml;
 
-  // Training modules
   renderTraining();
+  updateCallStatus('active');
 
-  // Set initial section open states
-  document.getElementById('body-ibt').style.display = 'block';
+  document.getElementById('body-ibt').classList.remove('hidden');
 }
 
 boot();
