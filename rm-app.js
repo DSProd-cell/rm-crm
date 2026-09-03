@@ -3,30 +3,32 @@
 // ─── MOCK DATA ───────────────────────────────────────────────────────────────
 const MOCK_LEADS = {
   sti: [
-    { id:'RM-2041', name:'Ananya Sharma', intake:'Jan 2027', country:'Canada', status:'App Ready Pending', caDate:'2026-08-15', f2fDate:'2026-09-01', lockinDate:'2026-08-20', appReadyDate:null, stiDate:null, lastConnect:'2026-09-01 10:30', clName:'Priya CL', overdue:true, notes:['Docs partially submitted — missing bank statement','Called on Sep 1, will share remaining docs by Sep 5'] },
-    { id:'RM-2089', name:'Karan Mehta', intake:'Sep 2026', country:'Germany', status:'F2F Pending', caDate:'2026-08-20', f2fDate:null, lockinDate:'2026-08-25', appReadyDate:null, stiDate:null, lastConnect:'2026-09-02 14:00', clName:'Amit CL', overdue:false, dueToday:true, notes:['Agreed to join F2F on Sep 3'] },
-    { id:'RM-2103', name:'Deepa Nair', intake:'Jan 2027', country:'UK', status:'Docs Pending', caDate:'2026-08-10', f2fDate:'2026-08-28', lockinDate:'2026-08-15', appReadyDate:null, stiDate:null, lastConnect:'2026-08-30 16:15', clName:'Rahul CL', overdue:true, notes:['Awaiting academic transcripts','Follow-up scheduled for Sep 4'] },
-    { id:'RM-2117', name:'Vikram Singh', intake:'Apr 2027', country:'Canada', status:'App Ready Pending', caDate:'2026-09-01', f2fDate:'2026-09-01', lockinDate:'2026-09-02', appReadyDate:null, stiDate:null, lastConnect:'2026-09-03 09:00', clName:'Priya CL', overdue:false, notes:['Enthusiastic, just needs app form filled'] },
-    { id:'RM-2134', name:'Simran Kaur', intake:'Jan 2027', country:'Germany', status:'Docs Pending', caDate:'2026-08-22', f2fDate:'2026-08-29', lockinDate:'2026-08-30', appReadyDate:null, stiDate:null, lastConnect:'2026-09-02 11:00', clName:'Amit CL', overdue:false, dueToday:true, notes:['Waiting for SOP draft review'] },
-    { id:'RM-2158', name:'Rohan Gupta', intake:'Sep 2026', country:'Australia', status:'F2F Pending', caDate:'2026-09-01', f2fDate:null, lockinDate:'2026-09-01', appReadyDate:null, stiDate:null, lastConnect:'2026-09-03 08:30', clName:'Rahul CL', overdue:false, notes:['Will schedule F2F this week'] },
-    { id:'RM-2171', name:'Aisha Khan', intake:'Apr 2027', country:'Canada', status:'App Ready Pending', caDate:'2026-08-18', f2fDate:'2026-08-25', lockinDate:'2026-08-28', appReadyDate:null, stiDate:null, lastConnect:'2026-08-31 15:00', clName:'Priya CL', overdue:true, notes:['Needs IELTS score before app ready'] },
+    { id:'RM-2041', name:'Ananya Sharma', intake:'Jan 2027', country:'Canada', status:'CF - Doc Not Collected', caDate:'2026-08-15', f2fDate:'2026-09-01', lockinDate:'2026-08-20', appReadyDate:null, stiDate:null, lastConnect:'2026-09-01 10:30', clName:'Priya CL', overdue:true, notes:['Docs partially submitted — missing bank statement','Called on Sep 1, will share remaining docs by Sep 5'] },
+    { id:'RM-2089', name:'Karan Mehta', intake:'Sep 2026', country:'Germany', status:'Doc Collected - CF Not Done', caDate:'2026-08-20', f2fDate:null, lockinDate:'2026-08-25', appReadyDate:null, stiDate:null, lastConnect:'2026-09-02 14:00', clName:'Amit CL', overdue:false, dueToday:true, notes:['Agreed to join F2F on Sep 3'] },
+    { id:'RM-2103', name:'Deepa Nair', intake:'Jan 2027', country:'UK', status:'Walkin', caDate:'2026-08-10', f2fDate:'2026-08-28', lockinDate:'2026-08-15', appReadyDate:null, stiDate:null, lastConnect:'2026-08-30 16:15', clName:'Rahul CL', overdue:true, notes:['Awaiting academic transcripts','Follow-up scheduled for Sep 4'] },
+    { id:'RM-2117', name:'Vikram Singh', intake:'Apr 2027', country:'Canada', status:'Video Discussion', caDate:'2026-09-01', f2fDate:'2026-09-01', lockinDate:'2026-09-02', appReadyDate:null, stiDate:null, lastConnect:'2026-09-03 09:00', clName:'Priya CL', overdue:false, notes:['Enthusiastic, just needs app form filled'] },
+    { id:'RM-2134', name:'Simran Kaur', intake:'Jan 2027', country:'Germany', status:'CF - Doc Not Collected', caDate:'2026-08-22', f2fDate:'2026-08-29', lockinDate:'2026-08-30', appReadyDate:null, stiDate:null, lastConnect:'2026-09-02 11:00', clName:'Amit CL', overdue:false, dueToday:true, notes:['Waiting for SOP draft review'] },
+    { id:'RM-2158', name:'Rohan Gupta', intake:'Sep 2026', country:'Australia', status:'Doc Collected - CF Not Done', caDate:'2026-09-01', f2fDate:null, lockinDate:'2026-09-01', appReadyDate:null, stiDate:null, lastConnect:'2026-09-03 08:30', clName:'Rahul CL', overdue:false, notes:['Will schedule F2F this week'] },
+    { id:'RM-2171', name:'Aisha Khan', intake:'Apr 2027', country:'Canada', status:'Walkin', caDate:'2026-08-18', f2fDate:'2026-08-25', lockinDate:'2026-08-28', appReadyDate:null, stiDate:null, lastConnect:'2026-08-31 15:00', clName:'Priya CL', overdue:true, notes:['Needs IELTS score before app ready'] },
   ],
   revenue: [
-    { id:'RM-2045', name:'Tanvir Ahmed', intake:'Sep 2026', country:'Germany', status:'Lock-in Pending (C2I)', caDate:'2026-08-10', f2fDate:'2026-08-20', lockinDate:null, appReadyDate:null, stiDate:null, lastConnect:'2026-09-01 13:00', clName:'Priya CL', overdue:true, notes:['F2F done, deciding on lock-in','Scholarship query raised to counsellor'] },
-    { id:'RM-2062', name:'Meera Pillai', intake:'Jan 2027', country:'UK', status:'Lock-in Pending (Prime)', caDate:'2026-08-25', f2fDate:'2026-09-01', lockinDate:null, appReadyDate:null, stiDate:null, lastConnect:'2026-09-02 10:00', clName:'Amit CL', overdue:false, dueToday:true, notes:['Interested, needs parent meeting'] },
-    { id:'RM-2076', name:'Saurav Das', intake:'Apr 2027', country:'Canada', status:'Lock-in Pending (C2I)', caDate:'2026-09-01', f2fDate:'2026-09-02', lockinDate:null, appReadyDate:null, stiDate:null, lastConnect:'2026-09-03 10:45', clName:'Rahul CL', overdue:false, notes:['Just did F2F today, very positive'] },
-    { id:'RM-2099', name:'Fatima Shaikh', intake:'Sep 2026', country:'Australia', status:'Lock-in Pending (Prime)', caDate:'2026-08-15', f2fDate:'2026-08-28', lockinDate:null, appReadyDate:null, stiDate:null, lastConnect:'2026-08-30 14:30', clName:'Priya CL', overdue:true, notes:['Comparing with another provider'] },
+    { id:'RM-2045', name:'Tanvir Ahmed', intake:'Sep 2026', country:'Germany', status:'Prime Not Done', caDate:'2026-08-10', f2fDate:'2026-08-20', lockinDate:null, appReadyDate:null, stiDate:null, lastConnect:'2026-09-01 13:00', clName:'Priya CL', overdue:true, notes:['F2F done, deciding on lock-in','Scholarship query raised to counsellor'] },
+    { id:'RM-2062', name:'Meera Pillai', intake:'Jan 2027', country:'UK', status:'IELTS', caDate:'2026-08-25', f2fDate:'2026-09-01', lockinDate:null, appReadyDate:null, stiDate:null, lastConnect:'2026-09-02 10:00', clName:'Amit CL', overdue:false, dueToday:true, notes:['Interested, needs parent meeting'] },
+    { id:'RM-2076', name:'Saurav Das', intake:'Apr 2027', country:'Canada', status:'Prime Not Done', caDate:'2026-09-01', f2fDate:'2026-09-02', lockinDate:null, appReadyDate:null, stiDate:null, lastConnect:'2026-09-03 10:45', clName:'Rahul CL', overdue:false, notes:['Just did F2F today, very positive'] },
+    { id:'RM-2099', name:'Fatima Shaikh', intake:'Sep 2026', country:'Australia', status:'PTE', caDate:'2026-08-15', f2fDate:'2026-08-28', lockinDate:null, appReadyDate:null, stiDate:null, lastConnect:'2026-08-30 14:30', clName:'Priya CL', overdue:true, notes:['Comparing with another provider'] },
+    { id:'RM-2201', name:'Yash Kulkarni', intake:'Jan 2027', country:'Canada', status:'DET', caDate:'2026-08-27', f2fDate:'2026-09-01', lockinDate:null, appReadyDate:null, stiDate:null, lastConnect:'2026-09-02 12:15', clName:'Amit CL', overdue:false, dueToday:true, notes:['DET slot booked for next week'] },
+    { id:'RM-2214', name:'Ishita Rao', intake:'Sep 2026', country:'UK', status:'DMAT', caDate:'2026-08-19', f2fDate:'2026-08-30', lockinDate:null, appReadyDate:null, stiDate:null, lastConnect:'2026-09-01 15:20', clName:'Rahul CL', overdue:true, notes:['Awaiting DMAT confirmation from student'] },
   ],
   loan: [
-    { id:'RM-2051', name:'Rahul Jain', intake:'Sep 2026', country:'Germany', status:'Loan VC Booking Pending', caDate:'2026-08-05', f2fDate:'2026-08-12', lockinDate:'2026-08-15', appReadyDate:'2026-08-20', stiDate:null, lastConnect:'2026-08-28 11:00', clName:'Amit CL', overdue:true, notes:['Loan VC slot booked but cancelled','Reschedule pending'] },
-    { id:'RM-2068', name:'Lakshmi Venkat', intake:'Jan 2027', country:'UK', status:'PF Log-in Pending', caDate:'2026-08-18', f2fDate:'2026-08-22', lockinDate:'2026-08-25', appReadyDate:'2026-08-29', stiDate:null, lastConnect:'2026-09-01 09:30', clName:'Rahul CL', overdue:false, dueToday:true, notes:['PF portal access issue, ticket raised'] },
-    { id:'RM-2082', name:'Arjun Reddy', intake:'Apr 2027', country:'Canada', status:'Loan VC Join Pending', caDate:'2026-09-01', f2fDate:'2026-09-01', lockinDate:'2026-09-02', appReadyDate:'2026-09-02', stiDate:null, lastConnect:'2026-09-03 07:00', clName:'Priya CL', overdue:false, notes:['Loan VC booked for Sep 5'] },
-    { id:'RM-2110', name:'Pooja Mishra', intake:'Sep 2026', country:'Germany', status:'Loan VC Booking Pending', caDate:'2026-08-12', f2fDate:'2026-08-19', lockinDate:'2026-08-22', appReadyDate:'2026-08-27', stiDate:null, lastConnect:'2026-08-29 16:00', clName:'Amit CL', overdue:true, notes:['Hesitant about loan amount'] },
-    { id:'RM-2125', name:'Dev Patel', intake:'Jan 2027', country:'UK', status:'PF Log-in Pending', caDate:'2026-08-20', f2fDate:'2026-08-26', lockinDate:'2026-08-28', appReadyDate:'2026-09-01', stiDate:null, lastConnect:'2026-09-02 14:00', clName:'Rahul CL', overdue:false, notes:['Collecting docs for PF portal'] },
-    { id:'RM-2142', name:'Sneha Joshi', intake:'Apr 2027', country:'Australia', status:'Loan VC Join Pending', caDate:'2026-09-02', f2fDate:'2026-09-02', lockinDate:'2026-09-02', appReadyDate:'2026-09-02', stiDate:null, lastConnect:'2026-09-03 08:00', clName:'Priya CL', overdue:false, notes:['New lock-in, scheduling VC'] },
-    { id:'RM-2160', name:'Manish Verma', intake:'Sep 2026', country:'Canada', status:'Loan VC Booking Pending', caDate:'2026-08-08', f2fDate:'2026-08-14', lockinDate:'2026-08-18', appReadyDate:'2026-08-24', stiDate:null, lastConnect:'2026-08-25 10:00', clName:'Amit CL', overdue:true, notes:['Multiple follow-ups done, still delaying'] },
-    { id:'RM-2178', name:'Priti Sharma', intake:'Jan 2027', country:'Germany', status:'Loan VC Booking Pending', caDate:'2026-09-01', f2fDate:'2026-09-01', lockinDate:'2026-09-01', appReadyDate:'2026-09-02', stiDate:null, lastConnect:'2026-09-03 09:30', clName:'Rahul CL', overdue:false, notes:['Confirmed interest, booking VC today'] },
-    { id:'RM-2195', name:'Ravi Teja', intake:'Apr 2027', country:'UK', status:'PF Log-in Pending', caDate:'2026-08-28', f2fDate:'2026-09-01', lockinDate:'2026-09-02', appReadyDate:'2026-09-03', stiDate:null, lastConnect:'2026-09-03 08:45', clName:'Priya CL', overdue:false, notes:['PF process explained, collecting docs'] },
+    { id:'RM-2051', name:'Rahul Jain', intake:'Sep 2026', country:'Germany', status:'Loan VC Not Booked', caDate:'2026-08-05', f2fDate:'2026-08-12', lockinDate:'2026-08-15', appReadyDate:'2026-08-20', stiDate:null, lastConnect:'2026-08-28 11:00', clName:'Amit CL', overdue:true, notes:['Loan VC slot booked but cancelled','Reschedule pending'] },
+    { id:'RM-2068', name:'Lakshmi Venkat', intake:'Jan 2027', country:'UK', status:'Not Attended', caDate:'2026-08-18', f2fDate:'2026-08-22', lockinDate:'2026-08-25', appReadyDate:'2026-08-29', stiDate:null, lastConnect:'2026-09-01 09:30', clName:'Rahul CL', overdue:false, dueToday:true, notes:['PF portal access issue, ticket raised'] },
+    { id:'RM-2082', name:'Arjun Reddy', intake:'Apr 2027', country:'Canada', status:'Loan VC Not Booked', caDate:'2026-09-01', f2fDate:'2026-09-01', lockinDate:'2026-09-02', appReadyDate:'2026-09-02', stiDate:null, lastConnect:'2026-09-03 07:00', clName:'Priya CL', overdue:false, notes:['Loan VC booked for Sep 5'] },
+    { id:'RM-2110', name:'Pooja Mishra', intake:'Sep 2026', country:'Germany', status:'Not Attended', caDate:'2026-08-12', f2fDate:'2026-08-19', lockinDate:'2026-08-22', appReadyDate:'2026-08-27', stiDate:null, lastConnect:'2026-08-29 16:00', clName:'Amit CL', overdue:true, notes:['Hesitant about loan amount'] },
+    { id:'RM-2125', name:'Dev Patel', intake:'Jan 2027', country:'UK', status:'Loan VC Not Booked', caDate:'2026-08-20', f2fDate:'2026-08-26', lockinDate:'2026-08-28', appReadyDate:'2026-09-01', stiDate:null, lastConnect:'2026-09-02 14:00', clName:'Rahul CL', overdue:false, notes:['Collecting docs for PF portal'] },
+    { id:'RM-2142', name:'Sneha Joshi', intake:'Apr 2027', country:'Australia', status:'Not Attended', caDate:'2026-09-02', f2fDate:'2026-09-02', lockinDate:'2026-09-02', appReadyDate:'2026-09-02', stiDate:null, lastConnect:'2026-09-03 08:00', clName:'Priya CL', overdue:false, notes:['New lock-in, scheduling VC'] },
+    { id:'RM-2160', name:'Manish Verma', intake:'Sep 2026', country:'Canada', status:'Loan VC Not Booked', caDate:'2026-08-08', f2fDate:'2026-08-14', lockinDate:'2026-08-18', appReadyDate:'2026-08-24', stiDate:null, lastConnect:'2026-08-25 10:00', clName:'Amit CL', overdue:true, notes:['Multiple follow-ups done, still delaying'] },
+    { id:'RM-2178', name:'Priti Sharma', intake:'Jan 2027', country:'Germany', status:'Not Attended', caDate:'2026-09-01', f2fDate:'2026-09-01', lockinDate:'2026-09-01', appReadyDate:'2026-09-02', stiDate:null, lastConnect:'2026-09-03 09:30', clName:'Rahul CL', overdue:false, notes:['Confirmed interest, booking VC today'] },
+    { id:'RM-2195', name:'Ravi Teja', intake:'Apr 2027', country:'UK', status:'Loan VC Not Booked', caDate:'2026-08-28', f2fDate:'2026-09-01', lockinDate:'2026-09-02', appReadyDate:'2026-09-03', stiDate:null, lastConnect:'2026-09-03 08:45', clName:'Priya CL', overdue:false, notes:['PF process explained, collecting docs'] },
   ]
 };
 
@@ -188,10 +190,8 @@ function switchRole(role) {
   document.getElementById('tabBar').classList.toggle('hidden', isAdmin);
   document.getElementById('main').classList.toggle('hidden', isAdmin);
   document.getElementById('botBubble').classList.toggle('hidden', isAdmin);
-  document.getElementById('internalChatBubbleBtn').classList.toggle('hidden', isAdmin);
   if (isAdmin) {
     document.getElementById('botPanel').classList.remove('open');
-    document.getElementById('internalChatPanel').classList.remove('open');
   }
 
   if (!isAdmin) {
@@ -220,8 +220,6 @@ function switchRole(role) {
 
   const roleLabels = { rm:'Student Success Manager', team_lead:'Team Lead', senior_manager:'Senior Manager', admin:'Administrator' };
   document.getElementById('pdRole').textContent = roleLabels[role] || 'RM';
-
-  resetInternalChat();
 }
 
 // ─── COLLAPSIBLE ──────────────────────────────────────────────────────────────
@@ -335,32 +333,109 @@ function visibleTeam() {
 // ─── PIPELINE DRAWER ─────────────────────────────────────────────────────────
 const PIPELINE_LABELS = { sti:'Boost STI', revenue:'Boost Revenue', loan:'Boost Loan' };
 
-const PIPELINE_STAGES = {
+const PIPELINE_TREE = {
   sti: [
-    { key:'app_ready', label:'App Ready', match:'App Ready Pending' },
-    { key:'f2f', label:'F2F Pending', match:'F2F Pending' },
-    { key:'docs', label:'Docs Pending', match:'Docs Pending' },
+    { path:['F2F Done','App Ready Not Done'], leaves:[
+      { label:'CF - Doc Not Collected' },
+      { label:'Doc Collected - CF Not Done' },
+    ]},
+    { path:['F2F Not Done'], leaves:[
+      { label:'Walkin' },
+      { label:'Video Discussion' },
+    ]},
   ],
   revenue: [
-    { key:'c2i', label:'C2I', match:'Lock-in Pending (C2I)' },
-    { key:'prime', label:'Prime', match:'Lock-in Pending (Prime)' },
+    { path:['F2F Done'], leaves:[
+      { label:'Prime Not Done' },
+    ]},
+    { path:['F2F Done','C2I Not Done'], leaves:[
+      { label:'IELTS' },
+      { label:'PTE' },
+      { label:'DET' },
+      { label:'DMAT' },
+    ]},
   ],
   loan: [
-    { key:'vc_booking', label:'VC Booking', match:'Loan VC Booking Pending' },
-    { key:'vc_join', label:'VC Join', match:'Loan VC Join Pending' },
-    { key:'pf_login', label:'PF Log-in', match:'PF Log-in Pending' },
+    { path:['STI Done'], leaves:[
+      { label:'Loan VC Not Booked' },
+    ]},
+    { path:['Video Call Booked'], leaves:[
+      { label:'Not Attended' },
+    ]},
   ],
 };
+function slugify(s) { return s.toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_|_$/g,''); }
+function pipelineLeaves(type) {
+  return (PIPELINE_TREE[type] || []).flatMap(sec => sec.leaves.map(lf => ({ slug:slugify(lf.label), label:lf.label })));
+}
+
+// ─── SEVERITY COLOR SYSTEM (red/amber/green, driven by count) ────────────────
+function severityColors(level) {
+  if (level === 'green') return { g1:'#F0FDF4', g2:'#DCFCE7', border:'#BBF7D0', label:'#166534', count:'#15803D', sub:'#14532D', cta:'#16A34A', ctaBg:'rgba(22,163,74,0.1)' };
+  if (level === 'amber') return { g1:'#FFF7ED', g2:'#FFEDD5', border:'#FDBA74', label:'#9A3412', count:'#C2410C', sub:'#7C2D12', cta:'#EA580C', ctaBg:'rgba(234,88,12,0.1)' };
+  return { g1:'#FEF2F2', g2:'#FEE2E2', border:'#FCA5A5', label:'#991B1B', count:'#DC2626', sub:'#7F1D1D', cta:'#DC2626', ctaBg:'rgba(220,38,38,0.1)' };
+}
+function boostSeverity(count) {
+  if (count === 0) return severityColors('green');
+  if (count <= 5) return severityColors('amber');
+  return severityColors('red');
+}
+function boostSeverityWide(count) {
+  if (count === 0) return severityColors('green');
+  if (count <= 10) return severityColors('amber');
+  return severityColors('red');
+}
+function qualitySeverity(pct) {
+  if (pct >= 75) return severityColors('green');
+  if (pct >= 50) return severityColors('amber');
+  return severityColors('red');
+}
+function applySeverityToCard(cardId, sev) {
+  const card = document.getElementById(cardId);
+  if (!card) return;
+  card.style.background = `linear-gradient(135deg, ${sev.g1} 0%, ${sev.g2} 100%)`;
+  card.style.borderColor = sev.border;
+  card.style.setProperty('--boost-accent', sev.cta);
+}
+function applyBoostCardSeverity(cardId, count) {
+  const card = document.getElementById(cardId);
+  if (!card) return;
+  const sev = boostSeverity(count);
+  applySeverityToCard(cardId, sev);
+  const label = card.querySelector('.boost-label'); if (label) label.style.color = sev.label;
+  const countEl = card.querySelector('.boost-count'); if (countEl) countEl.style.color = sev.count;
+  const sub = card.querySelector('.boost-sub'); if (sub) sub.style.color = sev.sub;
+  const cta = card.querySelector('.boost-cta'); if (cta) { cta.style.color = sev.cta; cta.style.background = sev.ctaBg; }
+}
+
+const STAGE_COLOR_CYCLE = [
+  { bg:'#EFF6FF', text:'#1D4ED8', border:'#BFDBFE', solidBg:'#1D4ED8' },
+  { bg:'#FFFBEB', text:'#B45309', border:'#FDE68A', solidBg:'#B45309' },
+  { bg:'#ECFDF5', text:'#047857', border:'#A7F3D0', solidBg:'#047857' },
+  { bg:'#FEF2F2', text:'#B91C1C', border:'#FECACA', solidBg:'#B91C1C' },
+];
+function pillHtml(key, label, count, isActive, colorIdx) {
+  if (key === 'all') {
+    const style = isActive ? 'background:#0F172A;color:#fff;border-color:#0F172A' : 'background:#fff;color:#0F172A;border-color:#CBD5E1';
+    return `<button class="filter-pill" style="${style}" onclick="setPipelineStage('all')">${label} <strong>${count}</strong></button>`;
+  }
+  const c = STAGE_COLOR_CYCLE[colorIdx % STAGE_COLOR_CYCLE.length];
+  const style = isActive ? `background:${c.solidBg};color:#fff;border-color:${c.solidBg}` : `background:${c.bg};color:${c.text};border-color:${c.border}`;
+  return `<button class="filter-pill" style="${style}" onclick="setPipelineStage('${key}')">${label} <strong>${count}</strong></button>`;
+}
 
 const CLOSE_GUIDANCE = {
-  'App Ready Pending': 'Confirm all documents are uploaded and submit the application. Task closes once the App Ready date is set. Always update the follow-up date after confirming with the student.',
-  'F2F Pending': 'Schedule and complete the 2nd discussion (F2F) with the student basis their preference — Offline/Online session. Task closes once F2F is marked done.',
-  'Docs Pending': 'Collect the remaining documents (bank statement, transcripts, etc.) from the student. Task closes once all required docs are received.',
-  'Lock-in Pending (C2I)': 'Discuss C2I lock-in benefits and get the student to confirm. Task closes once the lock-in is recorded against this student.',
-  'Lock-in Pending (Prime)': 'Walk the student through Leap Prime and get them to lock in. Task closes once the Prime lock-in is recorded.',
-  'Loan VC Booking Pending': 'Book a Loan VC slot with the student. Task closes once the VC is booked and confirmed.',
-  'Loan VC Join Pending': 'Ensure the student joins their booked Loan VC session. Task closes once VC attendance is marked.',
-  'PF Log-in Pending': 'Help the student complete their PF portal log-in and start the process. Task closes once log-in is confirmed.',
+  'CF - Doc Not Collected': 'F2F and app ready are done but the confirmation fee (CF) document is still pending. Collect the CF document from the student. Task closes once it is received and logged.',
+  'Doc Collected - CF Not Done': 'Document is in — now get the student to complete the CF (confirmation fee) payment. Task closes once CF is confirmed.',
+  'Walkin': 'F2F is not yet done for this student. Get them to walk in for their 2nd discussion. Task closes once the walk-in F2F is completed and logged.',
+  'Video Discussion': 'F2F is not yet done for this student. Schedule and complete a video-call F2F discussion basis their preference. Task closes once F2F is marked done.',
+  'Prime Not Done': 'F2F is done — walk the student through Leap Prime and get them to lock in. Task closes once the Prime lock-in is recorded.',
+  'IELTS': 'F2F is done and the student is on the C2I track — get them to book/complete their IELTS so the C2I lock-in can proceed. Task closes once the test is booked and confirmed.',
+  'PTE': 'F2F is done and the student is on the C2I track — get them to book/complete their PTE so the C2I lock-in can proceed. Task closes once the test is booked and confirmed.',
+  'DET': 'F2F is done and the student is on the C2I track — get them to book/complete their DET so the C2I lock-in can proceed. Task closes once the test is booked and confirmed.',
+  'DMAT': 'F2F is done and the student is on the C2I track — get them to book/complete their DMAT so the C2I lock-in can proceed. Task closes once the test is booked and confirmed.',
+  'Loan VC Not Booked': 'STI is done for this student — book a Loan VC slot with them. Task closes once the VC is booked and confirmed.',
+  'Not Attended': 'Loan VC was booked but the student did not attend. Follow up to reschedule and confirm attendance. Task closes once VC attendance is marked.',
 };
 
 let pipelineFilterState = { type:null, stage:'all', todayOnly:false, search:'' };
@@ -375,12 +450,11 @@ function openPipeline(type) {
 function pipelineFilteredLeads() {
   const { type, stage, todayOnly, search } = pipelineFilterState;
   const leads = MOCK_LEADS[type] || [];
-  const stages = PIPELINE_STAGES[type] || [];
   let filtered = leads;
   if (todayOnly) filtered = filtered.filter(l => l.dueToday);
   if (stage !== 'all') {
-    const stageDef = stages.find(s => s.key === stage);
-    if (stageDef) filtered = filtered.filter(l => l.status === stageDef.match);
+    const leaf = pipelineLeaves(type).find(lf => lf.slug === stage);
+    if (leaf) filtered = filtered.filter(l => l.status === leaf.label);
   }
   if (search.trim()) {
     const q = search.trim().toLowerCase();
@@ -412,8 +486,8 @@ function buildPipelineCards(filtered, type) {
         </div>
       </div>
       <div class="flex gap-2 mt-3">
-        <button class="flex-1 text-xs font-semibold py-2 rounded-lg border border-border hover:bg-surface cursor-pointer transition-colors" onclick="openLeadDetail('${type}','${l.id}')">View Lead</button>
-        <button class="flex-1 text-xs font-semibold py-2 rounded-lg border border-border hover:bg-surface cursor-pointer transition-colors" onclick="openLeadDetail('${type}','${l.id}')">View Task</button>
+        <button class="flex-1 text-xs font-semibold py-2 rounded-lg cursor-pointer transition-colors" style="background:#EEF2FF;color:#4338CA;border:1px solid #C7D2FE" onclick="openLeadDetail('${type}','${l.id}')">View student</button>
+        <button class="flex-1 text-xs font-semibold py-2 rounded-lg cursor-pointer transition-colors" style="background:#EEF2FF;color:#4338CA;border:1px solid #C7D2FE" onclick="openLeadDetail('${type}','${l.id}')">View Task</button>
       </div>
     </div>`).join('');
 }
@@ -421,11 +495,23 @@ function buildPipelineCards(filtered, type) {
 function renderPipelineDrawerBody() {
   const { type, stage, todayOnly, search } = pipelineFilterState;
   const leads = MOCK_LEADS[type] || [];
-  const stages = PIPELINE_STAGES[type] || [];
+  const sections = PIPELINE_TREE[type] || [];
   const dueTodayCount = leads.filter(l => l.dueToday).length;
 
-  const pillDefs = [{ key:'all', label:'All', count:leads.length }, ...stages.map(s => ({ key:s.key, label:s.label, count: leads.filter(l => l.status === s.match).length }))];
-  const pillsHtml = pillDefs.map(p => `<button class="filter-pill ${stage === p.key ? 'active' : ''}" onclick="setPipelineStage('${p.key}')">${p.label} <strong>${p.count}</strong></button>`).join('');
+  let colorIdx = 0;
+  const groupsHtml = sections.map(sec => {
+    const leafPills = sec.leaves.map(lf => {
+      const slug = slugify(lf.label);
+      const count = leads.filter(l => l.status === lf.label).length;
+      const html = pillHtml(slug, lf.label, count, stage === slug, colorIdx);
+      colorIdx++;
+      return html;
+    }).join('');
+    return `<div class="mb-2.5">
+      <div class="text-[10px] font-semibold uppercase tracking-wide text-text-muted mb-1.5">${escHtml(sec.path.join(' → '))}</div>
+      <div class="flex flex-wrap gap-1.5">${leafPills}</div>
+    </div>`;
+  }).join('');
 
   const html = `
     <div class="flex items-center gap-2 mb-3 flex-wrap">
@@ -435,7 +521,8 @@ function renderPipelineDrawerBody() {
       </button>
       <span class="text-xs text-text-muted">${dueTodayCount} due today</span>
     </div>
-    <div class="flex flex-wrap gap-1.5 mb-3">${pillsHtml}</div>
+    <div class="mb-1">${pillHtml('all', 'All', leads.length, stage === 'all', 0)}</div>
+    <div class="mb-3">${groupsHtml}</div>
     <input class="w-full px-3 py-2 border border-border rounded-lg text-sm mb-3 focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Search by name or ID…" value="${escHtml(search)}" oninput="setPipelineSearch(this.value)"/>
     <div id="pipelineCardsList">${buildPipelineCards(pipelineFilteredLeads(), type)}</div>
     <div class="text-center text-xs text-text-muted mt-3 pt-3 border-t border-border">All Tasks — ${leads.length} total</div>`;
@@ -450,56 +537,137 @@ function setPipelineSearch(v) {
   document.getElementById('pipelineCardsList').innerHTML = buildPipelineCards(pipelineFilteredLeads(), pipelineFilterState.type);
 }
 
+const COURSE_OPTIONS = ['Computer Science', 'Data Science', 'Business Analytics', 'Mechanical Engineering', 'Public Health', 'Finance', 'Marketing', 'Civil Engineering', 'Psychology', 'International Business'];
+function courseForLead(lead) {
+  let hash = 0;
+  for (const ch of lead.id) hash = (hash * 31 + ch.charCodeAt(0)) >>> 0;
+  return COURSE_OPTIONS[hash % COURSE_OPTIONS.length];
+}
+function formatDMY(dateStr) {
+  if (!dateStr) return '—';
+  const [y, m, d] = dateStr.split('-');
+  return `${d}/${m}/${y}`;
+}
+function revealPhone(btn) {
+  const num = `+91 ${Math.floor(70000 + Math.random() * 29999)}${Math.floor(10000 + Math.random() * 89999)}`;
+  btn.outerHTML = `<div class="text-sm font-mono font-semibold">${num}</div>`;
+}
+function fetchNotesInline(btn, pipelineType, leadId) {
+  const lead = (MOCK_LEADS[pipelineType] || []).find(l => l.id === leadId);
+  if (!lead) return;
+  const container = document.getElementById(`notesInline-${leadId}`);
+  container.innerHTML = lead.notes.map((n, i) => `<div class="note-item mt-2"><div class="note-text">${n}</div><div class="note-time">${i === 0 ? '2 days ago' : '1 week ago'}</div></div>`).join('');
+  btn.remove();
+}
+
 function openLeadDetail(pipelineType, leadId) {
   const leads = MOCK_LEADS[pipelineType] || [];
   const lead = leads.find(l => l.id === leadId);
   if (!lead) return;
+  const course = courseForLead(lead);
+
+  closeDrawer();
+  if (botOpen) toggleBot();
+
+  document.getElementById('leadDetailName').textContent = lead.name;
+  document.getElementById('leadDetailActions').innerHTML = `
+    <button class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border cursor-pointer transition-colors" style="border-color:#C7D2FE;color:#4338CA;background:#EEF2FF" onclick="showToast('Opening message templates…','info')">
+      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+      Templates
+    </button>
+    <button class="w-9 h-9 rounded-lg flex items-center justify-center cursor-pointer flex-shrink-0" style="background:#4338CA" onclick="showToast('Opening WhatsApp…','info')" title="WhatsApp">
+      <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>
+    </button>
+    <button class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-white cursor-pointer transition-colors" style="background:#16A34A" onclick="showToast('Calling ${escHtml(lead.name)}…','info')">
+      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 014.99 9.8a19.79 19.79 0 01-3.07-8.67A2 2 0 013.9 2h3a2 2 0 012 1.72c.13.96.36 1.9.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.9.34 1.85.57 2.81.7A2 2 0 0122 16.92z"/></svg>
+      Call
+    </button>`;
 
   const html = `
-    <div class="grid grid-cols-2 gap-3 mb-4">
-      <div><div class="text-[10px] font-bold uppercase text-text-muted mb-0.5">Name</div><div class="text-sm font-medium">${lead.name}</div></div>
-      <div><div class="text-[10px] font-bold uppercase text-text-muted mb-0.5">Pre-user ID</div><div class="text-sm font-medium font-mono">${lead.id}</div></div>
-      <div><div class="text-[10px] font-bold uppercase text-text-muted mb-0.5">Intake</div><div class="text-sm font-medium">${lead.intake}</div></div>
-      <div><div class="text-[10px] font-bold uppercase text-text-muted mb-0.5">Country</div><div class="text-sm font-medium">${lead.country}</div></div>
-      <div><div class="text-[10px] font-bold uppercase text-text-muted mb-0.5">Status</div><div class="text-sm font-medium"><span class="app-badge downloaded" style="background:#FFF7ED;color:#EA580C">${lead.status}</span></div></div>
-      <div><div class="text-[10px] font-bold uppercase text-text-muted mb-0.5">CL Name</div><div class="text-sm font-medium">${lead.clName}</div></div>
-      <div><div class="text-[10px] font-bold uppercase text-text-muted mb-0.5">CA Date</div><div class="text-sm font-medium font-mono">${lead.caDate || '—'}</div></div>
-      <div><div class="text-[10px] font-bold uppercase text-text-muted mb-0.5">Lock-in Date</div><div class="text-sm font-medium font-mono">${lead.lockinDate || '—'}</div></div>
-      <div><div class="text-[10px] font-bold uppercase text-text-muted mb-0.5">F2F Date</div><div class="text-sm font-medium font-mono">${lead.f2fDate || '—'}</div></div>
-      <div><div class="text-[10px] font-bold uppercase text-text-muted mb-0.5">App Ready</div><div class="text-sm font-medium">${lead.appReadyDate || 'Pending'}</div></div>
-      <div class="col-span-2"><div class="text-[10px] font-bold uppercase text-text-muted mb-0.5">Last RM Connect</div><div class="text-sm font-medium font-mono">${lead.lastConnect}</div></div>
-    </div>
-    <div class="activity-log mb-4">
-      <div class="text-[11px] font-bold uppercase text-text-muted mb-1.5 tracking-wide">Last Notes</div>
-      ${lead.notes.map((n,i) => `
-        <div class="activity-item">
-          <span class="activity-dot"></span>
-          <div class="activity-content">
-            <p class="activity-action">${n}</p>
-            <p class="activity-time">${i === 0 ? '2 days ago' : '1 week ago'}</p>
+    <div class="bg-white border border-border rounded-xl p-4">
+      <div class="grid grid-cols-2 gap-x-5 gap-y-4 mb-5">
+        <div><div class="text-[10px] font-bold uppercase text-text-muted mb-1">User ID</div><div class="text-sm font-bold font-mono">${lead.id}</div></div>
+        <div><div class="text-[10px] font-bold uppercase text-text-muted mb-1">Course</div><div class="text-sm font-bold">${course}</div></div>
+        <div><div class="text-[10px] font-bold uppercase text-text-muted mb-1">Country</div><div class="text-sm font-bold text-primary">${lead.country}</div></div>
+        <div><div class="text-[10px] font-bold uppercase text-text-muted mb-1">Last Call</div><div class="text-sm text-text-muted">—</div></div>
+        <div>
+          <div class="text-[10px] font-bold uppercase text-text-muted mb-1">Follow-up</div>
+          <div class="flex items-center gap-1.5 text-sm font-bold">
+            <svg class="w-3.5 h-3.5 text-primary cursor-pointer flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" onclick="showFollowupForm('${lead.id}')"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            ${formatDMY(lead.caDate)}
           </div>
-        </div>`).join('')}
+        </div>
+        <div><div class="text-[10px] font-bold uppercase text-text-muted mb-1">Last Connected</div><div class="text-sm text-text-muted font-mono">${lead.lastConnect || '—'}</div></div>
+        <div><div class="text-[10px] font-bold uppercase text-text-muted mb-1">Intake</div><div class="text-sm font-bold">${lead.intake}</div></div>
+        <div>
+          <div class="text-[10px] font-bold uppercase text-text-muted mb-1">Phone</div>
+          <button class="px-3 py-1.5 border border-border rounded-lg text-xs font-semibold text-primary cursor-pointer hover:bg-surface transition-colors" onclick="revealPhone(this)">View Phone Number</button>
+        </div>
+      </div>
+
+      <div class="mb-5">
+        <div class="text-[10px] font-bold uppercase text-text-muted mb-1.5">Notes</div>
+        <button class="px-3 py-1.5 border border-border rounded-lg text-xs font-semibold text-primary cursor-pointer hover:bg-surface transition-colors" onclick="fetchNotesInline(this,'${pipelineType}','${lead.id}')">Fetch Notes</button>
+        <div id="notesInline-${lead.id}"></div>
+      </div>
+
+      <div class="mb-5">
+        <div class="text-[10px] font-bold uppercase text-text-muted mb-2">WhatsApp Groups</div>
+        <div class="flex items-center justify-between flex-wrap gap-2 p-3 bg-surface rounded-lg border border-border">
+          <div class="text-xs font-semibold">Leap Scholar | ${escHtml(lead.name)} | ${lead.id}</div>
+          <div class="flex items-center gap-3 text-xs">
+            <label class="flex items-center gap-1.5 cursor-default"><input type="checkbox" checked disabled class="accent-success"/> You</label>
+            <label class="flex items-center gap-1.5 cursor-default"><input type="checkbox" checked disabled class="accent-success"/> Student</label>
+            <label class="flex items-center gap-1.5 cursor-default"><input type="checkbox" checked disabled class="accent-success"/> Counsellor</label>
+          </div>
+        </div>
+      </div>
+
+      <div class="mb-1">
+        <div class="text-[10px] font-bold uppercase text-text-muted mb-2">Servicing Type</div>
+        <div class="space-y-3">
+          <div>
+            <label class="block text-xs font-semibold text-text-main mb-1">Type <span class="text-danger">*</span></label>
+            <select class="w-full px-3 py-2 border border-border rounded-lg text-sm bg-white">
+              <option>Paid Service</option>
+              <option>Free Service</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-text-main mb-1">Subservicing Type <span class="text-danger">*</span></label>
+            <select class="w-full px-3 py-2 border border-border rounded-lg text-sm bg-white">
+              <option>Premium Universities</option>
+              <option>C2I</option>
+              <option>Prime</option>
+            </select>
+          </div>
+        </div>
+      </div>
     </div>
-    <div class="flex flex-col gap-2">
-      <button class="flex items-center gap-2 px-3.5 py-2.5 rounded-lg text-sm font-semibold cursor-pointer bg-accent text-white hover:bg-accent-dark transition-colors" onclick="showNoteForm('${lead.id}')">
+    <button class="w-full py-2.5 mt-4 bg-accent hover:bg-accent-dark text-white text-sm font-semibold rounded-lg cursor-pointer transition-colors" onclick="showToast('Servicing details saved.','success')">Save</button>
+
+    <div class="flex flex-col gap-2 mt-5">
+      <button class="flex items-center gap-2 px-3.5 py-2.5 rounded-lg text-sm font-semibold cursor-pointer border border-border hover:bg-surface transition-colors" onclick="showNoteForm('${lead.id}')">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
         Log a Note
       </button>
-      <button class="flex items-center gap-2 px-3.5 py-2.5 rounded-lg text-sm font-semibold cursor-pointer border border-border hover:bg-surface transition-colors" onclick="showFollowupForm('${lead.id}')">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" stroke-width="2"/><line x1="16" y1="2" x2="16" y2="6" stroke-width="2"/><line x1="8" y1="2" x2="8" y2="6" stroke-width="2"/><line x1="3" y1="10" x2="21" y2="10" stroke-width="2"/></svg>
-        Set Follow-up Date
-      </button>
-      <button class="flex items-center gap-2 px-3.5 py-2.5 rounded-lg text-sm font-semibold cursor-pointer border border-border hover:bg-surface transition-colors" onclick="showQueryForm('${lead.id}','${lead.name}')">
+      <button class="flex items-center gap-2 px-3.5 py-2.5 rounded-lg text-sm font-semibold cursor-pointer border border-border hover:bg-surface transition-colors" onclick="showQueryForm('${lead.id}','${escHtml(lead.name)}')">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
         Raise Query for Counsellor
       </button>
     </div>`;
 
-  openDrawer(lead.name, html, true);
+  document.getElementById('leadDetailContent').innerHTML = html;
+  document.getElementById('leadDetailPage').classList.remove('hidden');
+  document.getElementById('leadDetailPage').scrollTop = 0;
+}
+
+function closeLeadDetailPage() {
+  document.getElementById('leadDetailPage').classList.add('hidden');
 }
 
 function showNoteForm(leadId) {
-  const body = document.getElementById('drawerBody');
+  const body = document.getElementById('leadDetailContent');
   body.insertAdjacentHTML('beforeend', `
     <div id="noteFormWrap" class="mt-3.5 pt-3.5 border-t border-border">
       <div class="mb-2.5">
@@ -522,7 +690,7 @@ function submitNote(leadId) {
 }
 
 function showFollowupForm(leadId) {
-  const body = document.getElementById('drawerBody');
+  const body = document.getElementById('leadDetailContent');
   body.insertAdjacentHTML('beforeend', `
     <div id="followupFormWrap" class="mt-3.5 pt-3.5 border-t border-border">
       <div class="mb-2.5">
@@ -544,7 +712,7 @@ function submitFollowup(leadId) {
 }
 
 function showQueryForm(leadId, leadName) {
-  const body = document.getElementById('drawerBody');
+  const body = document.getElementById('leadDetailContent');
   body.insertAdjacentHTML('beforeend', `
     <div id="queryFormWrap" class="mt-3.5 pt-3.5 border-t border-border">
       <div class="text-xs font-bold text-text-muted mb-2.5 uppercase tracking-wide">Raise Query — ${leadName}</div>
@@ -757,6 +925,13 @@ function renderMgrDashboard() {
   document.getElementById('mgrRevenueCount').textContent = totalRevenue;
   document.getElementById('mgrLoanCount').textContent = totalLoan;
 
+  applyBoostCardSeverity('boostCardMgrSti', totalSti);
+  applyBoostCardSeverity('boostCardMgrRevenue', totalRevenue);
+  applyBoostCardSeverity('boostCardMgrLoan', totalLoan);
+  applySeverityToCard('boostCardMgrQuality', qualitySeverity(avgQuality));
+  applySeverityToCard('boostCardMgrEscalations', boostSeverityWide(TEAM_ESCALATIONS.reduce((s, e) => s + e.count, 0)));
+  applySeverityToCard('boostCardMgrOwnTasks', boostSeverity(3));
+
   document.getElementById('mgrQualityBars').innerHTML = `
     <div class="flex items-center gap-2"><span class="text-[10px] text-text-muted w-6">1st</span><div class="flex-1 h-1.5 bg-border rounded-full overflow-hidden"><div class="h-full bg-primary rounded-full" style="width:${avgQuality - 8}%"></div></div><span class="text-[10px] font-semibold font-mono w-8 text-right">${avgQuality - 8}%</span></div>
     <div class="flex items-center gap-2"><span class="text-[10px] text-text-muted w-6">2nd</span><div class="flex-1 h-1.5 bg-border rounded-full overflow-hidden"><div class="h-full bg-success rounded-full" style="width:${avgQuality + 9}%"></div></div><span class="text-[10px] font-semibold font-mono w-8 text-right">${avgQuality + 9}%</span></div>`;
@@ -764,11 +939,6 @@ function renderMgrDashboard() {
 
   document.getElementById('mgrEscalationList').innerHTML = TEAM_ESCALATIONS.map(e =>
     `<div class="flex justify-between py-1 border-b border-border text-xs"><span>${e.label}</span><span class="font-bold font-mono ${e.cls}">${e.count}</span></div>`).join('');
-
-  document.getElementById('mgribtGrid') && null;
-  document.getElementById('body-mgribt').innerHTML = TEAM_IBT.map(i =>
-    `<div class="flex items-center justify-between px-3 py-2.5 bg-surface rounded-lg border border-border"><span class="text-xs font-medium">${i.label}</span><span class="font-mono font-bold ${i.cls}">${i.count}</span></div>`).join('');
-  document.getElementById('mgrIbtBadge').textContent = `${TEAM_IBT.reduce((s, i) => s + i.count, 0)} pending`;
 
   renderMgrTable();
   renderMgrTopPerformers();
@@ -789,13 +959,20 @@ function renderMgrTopPerformers() {
 function buildTeamPerfSummary() {
   const uid = 'team' + (++perfSummaryUidCounter);
   const { good, track, focus } = buildScorecardBands(TEAM_PERF_METRICS.volume, m => m.achieved / m.target * 100);
+  const goals = [
+    { label:'CA > STI (14d)', pct:34, target:45 },
+    { label:'CA > Lockin (14d)', pct:26, target:40 },
+  ];
 
   return `
-    <div class="grid grid-cols-3 gap-2.5 mb-4 max-w-md">
-      <div class="scorecard-col green"><div class="sc-count">${good}</div><div class="sc-label">Good</div></div>
-      <div class="scorecard-col amber"><div class="sc-count">${track}</div><div class="sc-label">On Track</div></div>
-      <div class="scorecard-col red"><div class="sc-count">${focus}</div><div class="sc-label">Focus</div></div>
+    <div class="flex justify-end mb-3">
+      <button class="flex items-center gap-1.5 px-3 py-1.5 border border-border rounded-lg text-xs font-semibold hover:bg-surface cursor-pointer transition-colors" onclick="toggleAdvancedFilter('${uid}')">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" stroke-width="2"/></svg>
+        Advanced Filter
+      </button>
     </div>
+    ${buildAdvancedFilterPanel(uid)}
+    ${buildOverallSummaryRow(good, track, focus, goals)}
     ${buildVolumeMetricsTable(uid, TEAM_PERF_METRICS.volume)}
     ${buildConversionFunnel(uid, TEAM_PERF_METRICS.conversion)}`;
 }
@@ -921,11 +1098,109 @@ function closeOppDetail() {
 }
 
 // ─── PERFORMANCE SUMMARY (RM) ─────────────────────────────────────────────────
+function toggleAdvancedFilter(uid) {
+  document.getElementById(`advFilterPanel${uid}`).classList.toggle('hidden');
+}
+
+function buildAdvancedFilterPanel(uid) {
+  return `
+    <div class="hidden mb-4 p-4 bg-surface rounded-lg border border-border" id="advFilterPanel${uid}">
+      <div class="text-[10px] font-bold uppercase tracking-wide text-text-muted mb-2.5">Advanced Filters</div>
+      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 mb-3">
+        <div><label class="block text-[10px] font-semibold text-text-muted mb-1">Intake</label>
+          <select class="w-full px-2 py-1.5 border border-border rounded-lg text-xs bg-white"><option>All Intake</option><option>Sep 2026</option><option>Jan 2027</option><option>Apr 2027</option></select></div>
+        <div><label class="block text-[10px] font-semibold text-text-muted mb-1">Country</label>
+          <select class="w-full px-2 py-1.5 border border-border rounded-lg text-xs bg-white"><option>All Country</option><option>Canada</option><option>UK</option><option>Germany</option><option>Australia</option></select></div>
+        <div><label class="block text-[10px] font-semibold text-text-muted mb-1">User Servicing Type</label>
+          <select class="w-full px-2 py-1.5 border border-border rounded-lg text-xs bg-white"><option>All User Servicing Type</option><option>Free Service</option><option>Paid Service</option></select></div>
+        <div><label class="block text-[10px] font-semibold text-text-muted mb-1">Counsellors</label>
+          <select class="w-full px-2 py-1.5 border border-border rounded-lg text-xs bg-white"><option>All Counsellors</option><option>Priya CL</option><option>Amit CL</option><option>Rahul CL</option></select></div>
+        <div><label class="block text-[10px] font-semibold text-text-muted mb-1">CA Date Range</label>
+          <div class="flex items-center gap-1"><input type="date" class="w-full px-2 py-1.5 border border-border rounded-lg text-xs"/><span class="text-text-muted text-xs flex-shrink-0">→</span><input type="date" class="w-full px-2 py-1.5 border border-border rounded-lg text-xs"/></div></div>
+      </div>
+      <div class="flex justify-end gap-2">
+        <button class="px-3 py-1.5 border border-border rounded-lg text-xs font-semibold hover:bg-white cursor-pointer" onclick="showToast('Filters reset.','info')">Reset</button>
+        <button class="px-3 py-1.5 bg-accent hover:bg-accent-dark text-white rounded-lg text-xs font-semibold cursor-pointer" onclick="showToast('Filters applied.','success')">Apply</button>
+      </div>
+    </div>`;
+}
+
+function buildBusinessGoalPanel(goals) {
+  const cards = goals.map(g => {
+    const status = g.pct >= 80 ? 'Good' : g.pct >= 50 ? 'On Track' : 'Focus';
+    const color = g.pct >= 80 ? '#16A34A' : g.pct >= 50 ? '#EA580C' : '#DC2626';
+    const bg = g.pct >= 80 ? '#F0FDF4' : g.pct >= 50 ? '#FFF7ED' : '#FEF2F2';
+    const border = g.pct >= 80 ? '#BBF7D0' : g.pct >= 50 ? '#FDBA74' : '#FCA5A5';
+    return `
+      <div class="rounded-lg p-3 text-center" style="background:${bg};border:1px solid ${border}">
+        <div class="text-xs font-bold" style="color:${color}">${g.label}</div>
+        <div class="text-xl font-extrabold my-1" style="color:${color}">${g.pct}% <span class="text-[11px] font-medium">vs ${g.target}.0% target (${status})</span></div>
+        <div class="w-full h-1.5 rounded-full overflow-hidden mt-2" style="background:rgba(0,0,0,0.08)"><div class="h-full rounded-full" style="width:${g.pct}%;background:${color}"></div></div>
+      </div>`;
+  }).join('');
+  return `
+    <div class="rounded-xl p-4 border" style="background:#EFF6FF;border-color:#BFDBFE">
+      <div class="flex items-center gap-2 mb-3">
+        <span>🎯</span>
+        <span class="text-xs font-bold uppercase tracking-wide" style="color:#1D4ED8">Important Business Goal</span>
+        <span class="text-[10px] font-bold px-2 py-0.5 rounded-full" style="background:#FEE2E2;color:#DC2626">IMP</span>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">${cards}</div>
+    </div>`;
+}
+
+function buildLegend() {
+  return `
+    <div class="flex items-center gap-4 flex-wrap text-[10px] text-text-muted mb-4 mt-4">
+      <span class="font-semibold uppercase tracking-wide">Legend:</span>
+      <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full inline-block" style="background:#16A34A"></span>Good (≥80%)</span>
+      <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full inline-block" style="background:#EA580C"></span>On Track (50–79%)</span>
+      <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full inline-block" style="background:#DC2626"></span>Focus (&lt;50%)</span>
+    </div>`;
+}
+
+function buildOverallSummaryRow(good, track, focus, goals) {
+  return `
+    <div class="grid grid-cols-1 lg:grid-cols-[200px_1fr] gap-4 mb-1">
+      <div>
+        <div class="text-[10px] font-bold uppercase tracking-wide text-text-muted mb-2">Overall Summary</div>
+        <div class="space-y-2">
+          <div class="scorecard-col green flex items-center gap-2" style="text-align:left;padding:8px 12px"><span class="w-2 h-2 rounded-full flex-shrink-0" style="background:#16A34A"></span><span class="sc-count" style="font-size:15px">${good}</span><span class="sc-label">Good</span></div>
+          <div class="scorecard-col amber flex items-center gap-2" style="text-align:left;padding:8px 12px"><span class="w-2 h-2 rounded-full flex-shrink-0" style="background:#EA580C"></span><span class="sc-count" style="font-size:15px">${track}</span><span class="sc-label">On Track</span></div>
+          <div class="scorecard-col red flex items-center gap-2" style="text-align:left;padding:8px 12px"><span class="w-2 h-2 rounded-full flex-shrink-0" style="background:#DC2626"></span><span class="sc-count" style="font-size:15px">${focus}</span><span class="sc-label">Focus</span></div>
+        </div>
+      </div>
+      ${buildBusinessGoalPanel(goals)}
+    </div>
+    ${buildLegend()}`;
+}
+
 function buildScorecardBands(metricsArr, getPct) {
   const good = metricsArr.filter(m => getPct(m) >= 80).length;
   const track = metricsArr.filter(m => { const p = getPct(m); return p >= 50 && p < 80; }).length;
   const focus = metricsArr.length - good - track;
   return { good, track, focus };
+}
+
+function hashStr(s) {
+  let h = 0;
+  for (const ch of s) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+  return h;
+}
+
+function deriveMetricRow(m) {
+  const h = hashStr(m.name);
+  const targetMTD = m.target;
+  const targetYTD = m.target * 6;
+  const achvMTD = m.achieved;
+  const achvYTD = Math.round(m.achieved * (5 + (h % 3)));
+  const y = Math.max(0, Math.round(m.achieved * 0.1) + (h % 3));
+  const y1 = Math.max(0, y - (h % 2));
+  const y2 = Math.max(0, y1 - ((h >> 1) % 2));
+  const w0 = Math.max(0, Math.round(m.achieved * 0.25) + (h % 4));
+  const w1 = Math.max(0, w0 - (h % 3));
+  const m1 = Math.max(0, Math.round(m.achieved * 0.9) + (h % 5));
+  return { targetMTD, targetYTD, achvMTD, achvYTD, y, y1, y2, w0, w1, m1 };
 }
 
 function buildVolumeMetricsTable(uid, metrics) {
@@ -934,13 +1209,20 @@ function buildVolumeMetricsTable(uid, metrics) {
   const rows = metrics.map((m, i) => {
     const pct = m.achieved / m.target * 100;
     const dotColor = pct >= 80 ? '#16A34A' : pct >= 50 ? '#EA580C' : '#DC2626';
-    const today = Math.max(0, Math.round(m.achieved * 0.08));
+    const d = deriveMetricRow(m);
     return `<tr class="border-b border-border">
       <td class="py-2 pr-2"><span class="inline-block w-1.5 h-1.5 rounded-full flex-shrink-0" style="background:${dotColor}"></span></td>
       <td class="py-2 pr-3 whitespace-nowrap">${i + 1}. ${m.name}</td>
-      <td class="py-2 text-right pr-3 font-mono">${m.target}</td>
-      <td class="py-2 text-right pr-3 font-mono font-bold" style="color:${dotColor}">${m.achieved}</td>
-      <td class="py-2 text-right pr-3 font-mono">${today}</td>
+      <td class="py-2 text-right pr-3 font-mono">${d.targetYTD}</td>
+      <td class="py-2 text-right pr-3 font-mono">${d.targetMTD}</td>
+      <td class="py-2 text-right pr-3 font-mono font-bold" style="color:${dotColor}">${d.achvYTD}</td>
+      <td class="py-2 text-right pr-3 font-mono font-bold" style="color:${dotColor}">${d.achvMTD}</td>
+      <td class="py-2 text-right pr-3 font-mono">${d.y}</td>
+      <td class="py-2 text-right pr-3 font-mono">${d.y1}</td>
+      <td class="py-2 text-right pr-3 font-mono">${d.y2}</td>
+      <td class="py-2 text-right pr-3 font-mono">${d.w0}</td>
+      <td class="py-2 text-right pr-3 font-mono">${d.w1}</td>
+      <td class="py-2 text-right pr-3 font-mono">${d.m1}</td>
       <td class="py-2">${statusPill(pct)}</td>
     </tr>`;
   }).join('');
@@ -953,7 +1235,14 @@ function buildVolumeMetricsTable(uid, metrics) {
     </div>
     <div class="overflow-x-auto mb-1">
       <table class="w-full text-xs">
-        <thead><tr class="text-[9px] uppercase text-text-muted border-b-2 border-border"><th></th><th class="text-left py-1.5">Metric</th><th class="text-right py-1.5">Target</th><th class="text-right py-1.5">Achieved</th><th class="text-right py-1.5">Today</th><th class="text-left py-1.5">Status</th></tr></thead>
+        <thead><tr class="text-[9px] uppercase text-text-muted border-b-2 border-border">
+          <th></th><th class="text-left py-1.5 pr-3">Metric</th>
+          <th class="text-right py-1.5 pr-3">Target YTD</th><th class="text-right py-1.5 pr-3">Target MTD</th>
+          <th class="text-right py-1.5 pr-3">Achv YTD</th><th class="text-right py-1.5 pr-3">Achv MTD</th>
+          <th class="text-right py-1.5 pr-3">Y</th><th class="text-right py-1.5 pr-3">Y-1</th><th class="text-right py-1.5 pr-3">Y-2</th>
+          <th class="text-right py-1.5 pr-3">W0</th><th class="text-right py-1.5 pr-3">W-1</th><th class="text-right py-1.5 pr-3">M-1</th>
+          <th class="text-left py-1.5">Status</th>
+        </tr></thead>
         <tbody>${rows}</tbody>
       </table>
     </div>`;
@@ -995,13 +1284,20 @@ let perfSummaryUidCounter = 0;
 function buildPerfSummary() {
   const uid = ++perfSummaryUidCounter;
   const { good, track, focus } = buildScorecardBands(PERF_METRICS.volume, m => m.achieved / m.target * 100);
+  const goals = [
+    { label:'CA > STI (14d)', pct:37, target:45 },
+    { label:'CA > Lockin (14d)', pct:29, target:40 },
+  ];
 
   return `
-    <div class="grid grid-cols-3 gap-2.5 mb-4 max-w-md">
-      <div class="scorecard-col green"><div class="sc-count">${good}</div><div class="sc-label">Good</div></div>
-      <div class="scorecard-col amber"><div class="sc-count">${track}</div><div class="sc-label">On Track</div></div>
-      <div class="scorecard-col red"><div class="sc-count">${focus}</div><div class="sc-label">Focus</div></div>
+    <div class="flex justify-end mb-3">
+      <button class="flex items-center gap-1.5 px-3 py-1.5 border border-border rounded-lg text-xs font-semibold hover:bg-surface cursor-pointer transition-colors" onclick="toggleAdvancedFilter('${uid}')">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" stroke-width="2"/></svg>
+        Advanced Filter
+      </button>
     </div>
+    ${buildAdvancedFilterPanel(uid)}
+    ${buildOverallSummaryRow(good, track, focus, goals)}
     ${buildVolumeMetricsTable(uid)}
     ${buildConversionFunnel(uid)}`;
 }
@@ -1154,7 +1450,6 @@ function toggleBot() {
   document.getElementById('botPanel').classList.toggle('open', botOpen);
   if (botOpen) {
     document.getElementById('botUnreadBadge').classList.add('hidden');
-    if (state.internalChatOpen) toggleInternalChat();
     switchBotTab('chat');
     initBotGreeting();
   }
@@ -1667,73 +1962,6 @@ function showAskForm(recipientName) {
   });
 }
 
-// ─── INTERNAL TEAM CHAT ────────────────────────────────────────────────────────
-state.internalChatOpen = false;
-const TEAM_CHAT_PERSONAS = [
-  { name:'Anjali M.', reply:'Got it, thanks for the update!' },
-  { name:'Rahul S.', reply:'Sure — let me check and get back to you.' },
-  { name:'Manager', reply:'Noted. Keep pushing on the overdue leads.' },
-];
-let teamChatMessages = [
-  { author:'Rahul S.', text:'Morning team! Let\'s clear overdue leads before EOD.', self:false, manager:false },
-  { author:'Anjali M.', text:'Reminder: lock-in sprint bonus ends Sep 15 — push C2I this week.', self:false, manager:true },
-];
-
-function toggleInternalChat() {
-  state.internalChatOpen = !state.internalChatOpen;
-  document.getElementById('internalChatPanel').classList.toggle('open', state.internalChatOpen);
-  if (state.internalChatOpen) {
-    document.getElementById('internalChatBadge').classList.add('hidden');
-    if (botOpen) toggleBot();
-    renderTeamChat();
-  }
-}
-
-function resetInternalChat() {
-  teamChatMessages = [
-    { author:'Rahul S.', text:'Morning team! Let\'s clear overdue leads before EOD.', self:false, manager:false },
-    { author:'Anjali M.', text:'Reminder: lock-in sprint bonus ends Sep 15 — push C2I this week.', self:false, manager:true },
-  ];
-  if (state.internalChatOpen) renderTeamChat();
-}
-
-function renderTeamChat() {
-  const container = document.getElementById('teamChatMessages');
-  container.innerHTML = teamChatMessages.map(m => {
-    if (m.self) {
-      return `<div class="flex justify-end"><div class="user-msg-bubble" style="background:#059669">${escHtml(m.text)}</div></div>`;
-    }
-    const bubbleStyle = m.manager ? 'background:#FFFBEB;border-color:#FDE68A' : '';
-    return `<div class="flex gap-2 items-start">
-      <div class="w-6 h-6 rounded-full flex-shrink-0 flex items-center justify-center text-white text-[10px] font-bold mt-0.5" style="background:${m.manager ? '#B45309' : '#0369A1'}">${m.author.split(' ').map(p=>p[0]).join('').slice(0,2)}</div>
-      <div>
-        <div class="text-[10px] font-semibold text-text-muted mb-0.5">${m.author}</div>
-        <div class="bot-msg-bubble" style="${bubbleStyle}">${escHtml(m.text)}</div>
-      </div>
-    </div>`;
-  }).join('');
-  container.scrollTop = container.scrollHeight;
-}
-
-function sendTeamChat() {
-  const input = document.getElementById('teamChatInput');
-  const msg = input.value.trim();
-  if (!msg) return;
-  input.value = '';
-  teamChatMessages.push({ author:'You', text: msg, self:true });
-  renderTeamChat();
-  setTimeout(() => {
-    const persona = TEAM_CHAT_PERSONAS[Math.floor(Math.random() * TEAM_CHAT_PERSONAS.length)];
-    teamChatMessages.push({ author: persona.name, text: persona.reply, self:false, manager: persona.name === 'Manager' || persona.name === 'Anjali M.' });
-    renderTeamChat();
-    if (!state.internalChatOpen) {
-      const badge = document.getElementById('internalChatBadge');
-      badge.textContent = (parseInt(badge.textContent) || 0) + 1;
-      badge.classList.remove('hidden');
-    }
-  }, 1200 + Math.random() * 800);
-}
-
 // ─── ADMIN ────────────────────────────────────────────────────────────────────
 const ADMIN_METRICS = [
   'Leads Assigned', 'F2F Attended', 'Lock-ins (C2I + Prime)', 'Loan VC Booked',
@@ -1852,6 +2080,15 @@ function addTicketCat() {
 }
 
 // ─── BOOT ─────────────────────────────────────────────────────────────────────
+function renderRmBoostSeverity() {
+  applyBoostCardSeverity('boostCardSti', 7);
+  applyBoostCardSeverity('boostCardRevenue', 6);
+  applyBoostCardSeverity('boostCardLoan', 9);
+  applySeverityToCard('boostCardQuality', qualitySeverity(Math.round((59 + 85) / 2)));
+  applySeverityToCard('boostCardEscalations', boostSeverityWide(6 + 3 + 8 + 2));
+  applySeverityToCard('boostCardOwnTasks', boostSeverity(5));
+}
+
 function boot() {
   const perfHtml = buildPerfSummary();
   document.getElementById('perfSummaryContent').innerHTML = perfHtml;
@@ -1860,8 +2097,7 @@ function boot() {
   renderTraining();
   updateCallStatus('active');
   renderTopPerformers('yesterday');
-
-  document.getElementById('body-ibt').classList.remove('hidden');
+  renderRmBoostSeverity();
 }
 
 boot();

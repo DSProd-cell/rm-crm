@@ -115,13 +115,14 @@
     </button>
   </nav>
 
-  <!-- ═══ MAIN ═══ -->
-  <main id="main" class="pt-[100px] px-5 pb-24 max-w-[1200px] mx-auto w-full">
+  <!-- ═══ PROMO BANNER (fixed, always visible) ═══ -->
+  <div id="promoBanner" class="fixed left-0 right-0 z-20 text-white text-xs font-medium py-2.5 flex items-center justify-center gap-2" style="top:100px; background:linear-gradient(90deg,#1D4ED8,#7C3AED)">
+    <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-width="2"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3"/></svg>
+    Focus on Correct Lead — Before Logging Off, Clear All the Tasks!
+  </div>
 
-    <div class="rounded-xl bg-gradient-to-r from-accent to-accent-dark text-white text-xs font-medium px-4 py-2 mb-4 flex items-center gap-2">
-      <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-width="2"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3"/></svg>
-      Focus on Correct Lead — Before Logging Off, Clear All the Tasks!
-    </div>
+  <!-- ═══ MAIN ═══ -->
+  <main id="main" class="pt-[158px] px-5 pb-24 max-w-[1200px] mx-auto w-full">
 
     <!-- Hierarchy filter row (Team Lead / Senior Manager only) -->
     <div id="hierarchyFilterRow" class="hidden items-center gap-2 flex-wrap px-4 py-3 bg-white border border-border rounded-xl mb-4">
@@ -164,24 +165,24 @@
         <div id="mgrOverviewWrap">
           <!-- Team Boost Output -->
           <div class="flex items-center gap-2 mb-3">
-            <div class="w-1 h-5 rounded-full bg-gradient-to-b from-accent to-primary"></div>
+            <div class="w-1 h-5 rounded-full bg-gradient-to-b from-primary to-indigo-600"></div>
             <h2 class="text-sm font-bold text-text-main uppercase tracking-wide">🚀 Team Boost Output</h2>
             <span class="text-[10px] px-2 py-0.5 bg-accent/10 text-accent rounded-full font-semibold">Action Required</span>
           </div>
           <div class="grid grid-cols-2 lg:grid-cols-3 gap-3.5 mb-6" id="mgrOutputCards">
-            <div class="boost-card sti" onclick="document.getElementById('mgrTableWrap').scrollIntoView({behavior:'smooth'})">
+            <div class="boost-card" id="boostCardMgrSti" onclick="document.getElementById('mgrTableWrap').scrollIntoView({behavior:'smooth'})">
               <div class="boost-label">🎯 Boost STI</div>
               <div class="boost-count" id="mgrStiCount">0</div>
               <div class="boost-sub" id="mgrStiSub">Across your team</div>
               <span class="boost-cta">View Team Table →</span>
             </div>
-            <div class="boost-card lockin" onclick="document.getElementById('mgrTableWrap').scrollIntoView({behavior:'smooth'})">
+            <div class="boost-card" id="boostCardMgrRevenue" onclick="document.getElementById('mgrTableWrap').scrollIntoView({behavior:'smooth'})">
               <div class="boost-label">💰 Boost Revenue</div>
               <div class="boost-count" id="mgrRevenueCount">0</div>
               <div class="boost-sub">Lock-ins pending — C2I · Prime</div>
               <span class="boost-cta">View Team Table →</span>
             </div>
-            <div class="boost-card deposit" onclick="document.getElementById('mgrTableWrap').scrollIntoView({behavior:'smooth'})">
+            <div class="boost-card" id="boostCardMgrLoan" onclick="document.getElementById('mgrTableWrap').scrollIntoView({behavior:'smooth'})">
               <div class="boost-label">💳 Boost Loan</div>
               <div class="boost-count" id="mgrLoanCount">0</div>
               <div class="boost-sub">Loan VC + PF Log-in pending</div>
@@ -191,40 +192,28 @@
 
           <!-- Team Boost Input -->
           <div class="flex items-center gap-2 mb-3">
-            <div class="w-1 h-5 rounded-full bg-gradient-to-b from-emerald-500 to-teal-600"></div>
+            <div class="w-1 h-5 rounded-full bg-gradient-to-b from-primary to-indigo-600"></div>
             <h2 class="text-sm font-bold text-text-main uppercase tracking-wide">📊 Team Boost Input</h2>
             <span class="text-[10px] px-2 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full font-semibold">Volume + Quality</span>
           </div>
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5 mb-6">
-            <div class="bg-card border border-border rounded-xl p-4">
+            <div class="bg-card border border-border rounded-xl p-4" id="boostCardMgrQuality">
               <div class="text-[11px] font-bold uppercase tracking-wide text-text-muted mb-2">Team Quality Score</div>
               <div id="mgrQualityBars" class="space-y-1.5"></div>
               <div class="text-[11px] text-text-muted mt-2" id="mgrBestTag"></div>
             </div>
-            <div class="bg-card border border-border rounded-xl p-4">
+            <div class="bg-card border border-border rounded-xl p-4" id="boostCardMgrEscalations">
               <div class="text-[11px] font-bold uppercase tracking-wide text-text-muted mb-2">Potential Escalations</div>
               <div id="mgrEscalationList" class="space-y-1"></div>
               <a href="#" class="text-[11px] font-semibold text-primary mt-1 inline-block" onclick="openEscalationDrawer();return false;">View all groups →</a>
             </div>
-            <div class="bg-card border border-border rounded-xl p-4">
+            <div class="bg-card border border-border rounded-xl p-4" id="boostCardMgrOwnTasks">
               <div class="text-[11px] font-bold uppercase tracking-wide text-text-muted mb-2">My Own Tasks</div>
               <div class="font-mono text-2xl font-extrabold text-accent">3</div>
               <div class="text-[11px] text-text-muted mb-2">3 pending reminders</div>
               <span class="text-[11px] font-bold text-primary cursor-pointer" onclick="document.getElementById('body-mgrreminder').scrollIntoView({behavior:'smooth'})">View all →</span>
             </div>
           </div>
-
-          <!-- Important Business Tasks (Team) -->
-          <section class="bg-white rounded-xl border border-border overflow-hidden mb-4">
-            <button onclick="toggleSection('mgribt')" class="w-full flex items-center justify-between px-5 py-4 hover:bg-surface/60 transition-colors cursor-pointer">
-              <h2 class="font-semibold text-text-main flex items-center gap-2">📋 Important Business Tasks — Team</h2>
-              <div class="flex items-center gap-2">
-                <span class="text-[10px] px-2 py-0.5 bg-accent/10 text-accent rounded-full font-semibold" id="mgrIbtBadge">0 pending</span>
-                <svg class="w-4 h-4 text-text-muted transition-transform" id="chevron-mgribt" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9" stroke-width="2"/></svg>
-              </div>
-            </button>
-            <div id="body-mgribt" class="px-5 pb-5 grid grid-cols-1 sm:grid-cols-2 gap-2"></div>
-          </section>
 
           <!-- Team Overview table -->
           <section class="bg-white rounded-xl border border-border overflow-hidden mb-4" id="mgrTableWrap">
@@ -335,24 +324,24 @@
       <!-- ── RM Dashboard ── -->
       <div id="rmDashboard">
         <div class="flex items-center gap-2 mb-3">
-          <div class="w-1 h-5 rounded-full bg-gradient-to-b from-accent to-primary"></div>
+          <div class="w-1 h-5 rounded-full bg-gradient-to-b from-primary to-indigo-600"></div>
           <h2 class="text-sm font-bold text-text-main uppercase tracking-wide">🚀 Boost Output</h2>
           <span class="text-[10px] px-2 py-0.5 bg-accent/10 text-accent rounded-full font-semibold" id="boostOutputLabel">Action Required</span>
         </div>
         <div class="grid grid-cols-2 lg:grid-cols-3 gap-3.5 mb-6">
-          <div class="boost-card sti" onclick="openPipeline('sti')">
+          <div class="boost-card" id="boostCardSti" onclick="openPipeline('sti')">
             <div class="boost-label">🎯 Boost STI</div>
             <div class="boost-count" id="stiCount">7</div>
             <div class="boost-sub">Docs + App Ready + F2F pending</div>
             <span class="boost-cta">View Pipeline →</span>
           </div>
-          <div class="boost-card lockin" onclick="openPipeline('revenue')">
+          <div class="boost-card" id="boostCardRevenue" onclick="openPipeline('revenue')">
             <div class="boost-label">💰 Boost Revenue</div>
-            <div class="boost-count" id="revenueCount">4</div>
+            <div class="boost-count" id="revenueCount">6</div>
             <div class="boost-sub">Lock-ins pending — C2I · Prime</div>
             <span class="boost-cta">View Pipeline →</span>
           </div>
-          <div class="boost-card deposit" onclick="openPipeline('loan')">
+          <div class="boost-card" id="boostCardLoan" onclick="openPipeline('loan')">
             <div class="boost-label">💳 Boost Loan</div>
             <div class="boost-count" id="loanCount">9</div>
             <div class="boost-sub">Loan VC + PF Log-in pending</div>
@@ -361,12 +350,12 @@
         </div>
 
         <div class="flex items-center gap-2 mb-3">
-          <div class="w-1 h-5 rounded-full bg-gradient-to-b from-emerald-500 to-teal-600"></div>
+          <div class="w-1 h-5 rounded-full bg-gradient-to-b from-primary to-indigo-600"></div>
           <h2 class="text-sm font-bold text-text-main uppercase tracking-wide">📊 Boost Input</h2>
           <span class="text-[10px] px-2 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full font-semibold">Volume + Quality</span>
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5 mb-6">
-          <div class="bg-card border border-border rounded-xl p-4">
+          <div class="bg-card border border-border rounded-xl p-4" id="boostCardQuality">
             <div class="text-[11px] font-bold uppercase tracking-wide text-text-muted mb-2">Quality Score</div>
             <div class="space-y-1.5">
               <div class="flex items-center gap-2"><span class="text-[10px] text-text-muted w-6">1st</span><div class="flex-1 h-1.5 bg-border rounded-full overflow-hidden"><div class="h-full bg-primary rounded-full" style="width:59%"></div></div><span class="text-[10px] font-semibold font-mono w-8 text-right">59%</span></div>
@@ -374,7 +363,7 @@
             </div>
             <div class="text-[11px] text-text-muted mt-2">Best: <strong class="text-success">Rahul K.</strong> · 94%</div>
           </div>
-          <div class="bg-card border border-border rounded-xl p-4">
+          <div class="bg-card border border-border rounded-xl p-4" id="boostCardEscalations">
             <div class="text-[11px] font-bold uppercase tracking-wide text-text-muted mb-2">Potential Escalations</div>
             <div class="space-y-1 text-xs">
               <div class="flex justify-between py-1 border-b border-border"><span>Customer Support</span><span class="font-bold text-danger font-mono">6</span></div>
@@ -384,32 +373,13 @@
             </div>
             <a href="#" class="text-[11px] font-semibold text-primary mt-1 inline-block" onclick="openEscalationDrawer();return false;">View all groups →</a>
           </div>
-          <div class="bg-card border border-border rounded-xl p-4">
+          <div class="bg-card border border-border rounded-xl p-4" id="boostCardOwnTasks">
             <div class="text-[11px] font-bold uppercase tracking-wide text-text-muted mb-2">Own Tasks</div>
             <div class="font-mono text-2xl font-extrabold text-accent" id="ownTasksCount">5</div>
             <div class="text-[11px] text-text-muted mb-2">5 pending reminders</div>
             <span class="text-[11px] font-bold text-primary cursor-pointer" onclick="openOwnTasksDrawer()">View all →</span>
           </div>
         </div>
-
-        <!-- Important Business Tasks -->
-        <section class="bg-white rounded-xl border border-border overflow-hidden mb-4">
-          <button onclick="toggleSection('ibt')" class="w-full flex items-center justify-between px-5 py-4 hover:bg-surface/60 transition-colors cursor-pointer">
-            <h2 class="font-semibold text-text-main flex items-center gap-2">📋 Important Business Tasks</h2>
-            <div class="flex items-center gap-2">
-              <span class="text-[10px] px-2 py-0.5 bg-accent/10 text-accent rounded-full font-semibold">12 pending</span>
-              <svg class="w-4 h-4 text-text-muted transition-transform rotate-180" id="chevron-ibt" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9" stroke-width="2"/></svg>
-            </div>
-          </button>
-          <div id="body-ibt" class="px-5 pb-5 grid grid-cols-1 sm:grid-cols-2 gap-2">
-            <div class="flex items-center justify-between px-3 py-2.5 bg-surface rounded-lg border border-border"><span class="text-xs font-medium">F2F Scheduled</span><span class="font-mono font-bold text-accent">4</span></div>
-            <div class="flex items-center justify-between px-3 py-2.5 bg-surface rounded-lg border border-border"><span class="text-xs font-medium">App Ready Follow-up</span><span class="font-mono font-bold text-accent">3</span></div>
-            <div class="flex items-center justify-between px-3 py-2.5 bg-surface rounded-lg border border-border"><span class="text-xs font-medium">Lock-in Confirmation</span><span class="font-mono font-bold text-danger">5</span></div>
-            <div class="flex items-center justify-between px-3 py-2.5 bg-surface rounded-lg border border-border"><span class="text-xs font-medium">Loan VC Booking</span><span class="font-mono font-bold text-accent">2</span></div>
-            <div class="flex items-center justify-between px-3 py-2.5 bg-surface rounded-lg border border-border"><span class="text-xs font-medium">STI Docs Collection</span><span class="font-mono font-bold text-success">0</span></div>
-            <div class="flex items-center justify-between px-3 py-2.5 bg-surface rounded-lg border border-border"><span class="text-xs font-medium">Query Resolutions</span><span class="font-mono font-bold text-accent">3</span></div>
-          </div>
-        </section>
 
         <!-- Top Performers -->
         <section class="bg-white rounded-xl border border-border overflow-hidden mb-4">
@@ -886,36 +856,17 @@
   <div id="botActionItems" class="hidden flex-1 min-h-0 overflow-y-auto p-3 space-y-2 bg-surface"></div>
 </div>
 
-<!-- ═══════════ INTERNAL TEAM CHAT ═══════════ -->
-<button id="internalChatBubbleBtn" onclick="toggleInternalChat()" aria-label="Open Internal Team Chat"
-  class="internal-chat-bubble right-0 bottom-28 z-[100] w-[68px] h-[96px] rounded-l-2xl flex flex-col items-center justify-center gap-1 cursor-pointer transition-all duration-200 relative overflow-visible"
-  style="background:linear-gradient(160deg,#10b981 0%,#059669 50%,#047857 100%);box-shadow:-6px 4px 28px rgba(16,185,129,0.65),0 8px 32px rgba(5,150,105,0.4);">
-  <svg class="w-5 h-5 text-white flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4" stroke-width="2"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M23 21v-2a4 4 0 00-3-3.87"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 3.13a4 4 0 010 7.75"/></svg>
-  <span class="text-[9.5px] font-extrabold leading-tight text-center text-white drop-shadow" style="text-shadow:0 1px 3px rgba(0,0,0,0.3)">Chat in<br/>Internal<br/>Team</span>
-  <span id="internalChatBadge" class="hidden absolute -top-1.5 -left-1.5 w-5 h-5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center z-20 shadow-lg"></span>
-  <span class="internal-pulse-ring"></span>
-</button>
-
-<div id="internalChatPanel" class="fixed z-[500] bg-white rounded-2xl shadow-2xl border border-border flex flex-col bot-panel" style="right:16px; bottom:16px; width:346px; height:480px;">
-  <div class="flex items-center gap-2.5 px-4 py-3 bg-emerald-700 rounded-t-2xl flex-shrink-0">
-    <div class="w-8 h-8 rounded-full bg-white/15 flex items-center justify-center text-white flex-shrink-0">
-      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4" stroke-width="2"/></svg>
-    </div>
-    <div class="flex-1 min-w-0">
-      <div class="text-sm font-semibold text-white">Chat in Internal Team</div>
-      <div class="text-[10px] text-white/70" id="chatOnlineBadge">● 3 online</div>
-    </div>
-    <button class="w-7 h-7 rounded-lg bg-white/10 flex items-center justify-center cursor-pointer hover:bg-white/20 flex-shrink-0" onclick="toggleInternalChat()">
-      <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18" stroke-width="2"/><line x1="6" y1="6" x2="18" y2="18" stroke-width="2"/></svg>
+<!-- ═══════════ LEAD DETAIL — FULL PAGE ═══════════ -->
+<div id="leadDetailPage" class="hidden fixed inset-0 top-14 bg-surface z-[97] overflow-y-auto">
+  <div class="bg-white border-b border-border px-6 py-4 flex items-center gap-3 sticky top-0 z-10">
+    <button onclick="closeLeadDetailPage()" class="flex items-center gap-1.5 text-sm font-semibold text-text-muted hover:text-text-main cursor-pointer flex-shrink-0 transition-colors">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6" stroke-width="2"/></svg>
+      Back
     </button>
+    <h2 class="text-base font-bold flex-1 text-center truncate" id="leadDetailName">—</h2>
+    <div class="flex items-center gap-2 flex-shrink-0" id="leadDetailActions"></div>
   </div>
-  <div id="teamChatMessages" class="flex-1 min-h-0 overflow-y-auto p-4 space-y-3 bg-surface"></div>
-  <div class="flex items-center gap-2 px-3 py-3 border-t border-border flex-shrink-0">
-    <input class="flex-1 border border-border rounded-full px-3.5 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500" id="teamChatInput" type="text" placeholder="Message your team…" onkeydown="if(event.key==='Enter')sendTeamChat()"/>
-    <button class="w-8 h-8 rounded-full bg-emerald-600 hover:bg-emerald-700 flex items-center justify-center cursor-pointer flex-shrink-0 transition-colors" onclick="sendTeamChat()">
-      <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13" stroke-width="2"/><polygon points="22 2 15 22 11 13 2 9 22 2" stroke-width="2"/></svg>
-    </button>
-  </div>
+  <div class="max-w-2xl mx-auto px-6 py-6" id="leadDetailContent"></div>
 </div>
 
 <!-- ═══════════ ADMIN PANEL ═══════════ -->
