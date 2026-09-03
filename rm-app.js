@@ -76,27 +76,36 @@ const TEAM_IBT = [
 ];
 
 const TRAINING_CATS = [
-  { name:'Soft Training', icon:'💬', lessons:[
-    { name:'Communication Skills for RMs', dur:'12 min', done:true },
-    { name:'Objection Handling Techniques', dur:'18 min', done:true },
-    { name:'Empathy in Sales Conversations', dur:'10 min', done:false },
-    { name:'Tone & Language on Calls', dur:'8 min', done:false },
+  { key:'soft', name:'Soft Training', lessons:[
+    { name:'Communication Skills for RMs', desc:'Best practices for clear, empathetic conversations with students.', type:'video' },
+    { name:'Objection Handling Techniques', desc:'Scripts and frameworks to handle common student objections.', type:'document' },
+    { name:'Empathy in Sales Conversations', desc:'Building trust with a student while guiding them toward a decision.', type:'video' },
+    { name:'Tone & Language on Calls', desc:'Do’s and don’ts for phone and WhatsApp communication.', type:'document' },
   ]},
-  { name:'Domain Training', icon:'📘', lessons:[
-    { name:'RM KPI Deep Dive — STI, Lock-in, Loan VC', dur:'25 min', done:true },
-    { name:'Understanding Student Profiles', dur:'15 min', done:false },
-    { name:'Program & Scholarship Overview', dur:'20 min', done:false },
-    { name:'IELTS & Academic Requirements', dur:'12 min', done:false },
+  { key:'domain', name:'Domain Training', lessons:[
+    { name:'RM KPI Deep Dive — STI, Lock-in, Loan VC', desc:'How each KPI is calculated and what drives it.', type:'document' },
+    { name:'Understanding Student Profiles', desc:'Framework for evaluating a student’s academic profile.', type:'document' },
+    { name:'Program & Scholarship Overview', desc:'Overview of programs, intakes, and scholarship criteria.', type:'video' },
+    { name:'IELTS & Academic Requirements', desc:'Minimum score and academic requirements by country.', type:'document' },
   ]},
-  { name:'System Training', icon:'💻', lessons:[
-    { name:'RM CRM Navigation & Features', dur:'15 min', done:true },
-    { name:'Logging Notes & Follow-ups', dur:'8 min', done:true },
-    { name:'Query Raising to Counsellor', dur:'6 min', done:false },
+  { key:'system', name:'System Training', lessons:[
+    { name:'RM CRM Navigation & Features', desc:'Walkthrough of the CRM — pipelines, tasks, and drawers.', type:'video' },
+    { name:'Logging Notes & Follow-ups', desc:'How to log notes and set follow-up reminders correctly.', type:'document' },
+    { name:'Query Raising to Counsellor', desc:'When and how to raise a query for the counsellor.', type:'document' },
   ]},
-  { name:'New Features', icon:'⭐', lessons:[
-    { name:'Pipeline Auto-movement Rules', dur:'10 min', done:false },
-    { name:'Incentive Dashboard Walkthrough', dur:'12 min', done:false },
+  { key:'newfeat', name:'New Features', lessons:[
+    { name:'Pipeline Auto-movement Rules', desc:'How leads move automatically between pipeline stages.', type:'video' },
+    { name:'Incentive Dashboard Walkthrough', desc:'Tour of the new Incentives & Earnings tab.', type:'document' },
   ]},
+];
+
+const IMP_SHEET_LINKS = [
+  { name:'Raise SOP Request' },
+  { name:'Offer Follow up' },
+  { name:'Raise Lead Transfer Request' },
+  { name:'Info-Hub' },
+  { name:'LeapPay Payment Link' },
+  { name:'Premium Payment Links' },
 ];
 
 const PERF_METRICS = {
@@ -257,11 +266,11 @@ function toggleNotifSub(which) {
   document.getElementById(chevId).classList.toggle('rotate-180');
 }
 
-function toggleTrainingCat(idx) {
-  const body = document.getElementById(`tcat-body-${idx}`);
-  const chev = document.getElementById(`tcat-chev-${idx}`);
+function toggleTrainingCat(key) {
+  const body = document.getElementById(`tcat-body-${key}`);
+  const chev = document.getElementById(`tcat-chev-${key}`);
   if (!body) return;
-  body.classList.toggle('open');
+  body.classList.toggle('hidden');
   if (chev) chev.classList.toggle('rotate-180');
 }
 
@@ -1089,7 +1098,7 @@ function offerCardHtml(o, theme) {
     </div>
     <div class="relative z-10 mt-2 flex items-center justify-between gap-2">
       <p class="text-xs text-white/80">Expires ${o.expires}</p>
-      <button class="rounded-full px-3 py-1.5 text-xs font-semibold text-white transition-colors cursor-pointer" style="background:rgba(255,255,255,0.2)" onclick="openOfferStudents('${o.key}');event.stopPropagation();">See Students →</button>
+      ${theme === 'orange' ? `<button class="rounded-full px-3 py-1.5 text-xs font-semibold text-white transition-colors cursor-pointer" style="background:rgba(255,255,255,0.2)" onclick="openOfferStudents('${o.key}');event.stopPropagation();">See Students →</button>` : ''}
     </div>
   </div>`;
 }
@@ -1529,31 +1538,57 @@ function buildPerfSummary() {
 }
 
 // ─── TRAINING MODULES ─────────────────────────────────────────────────────────
+const LESSON_TYPE_BADGE = {
+  document: { bg:'#DBEAFE', text:'#1D4ED8', icon:'<path d="M8 16h8v2H8zm0-4h8v2H8zm6-10H6c-1.1 0-2 .9-2 2v16c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h7v5h5v11z"/>', label:'Document' },
+  video: { bg:'#FEF2F2', text:'#B91C1C', icon:'<path d="m10 16.5 6-4.5-6-4.5v9zM12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/>', label:'Video' },
+};
+const SCHOOL_ICON_PATH = '<path d="M12 3 1 9l4 2.18v6L12 21l7-3.82v-6l2-1.09V17h2V9L12 3zm6.82 6L12 12.72 5.18 9 12 5.28 18.82 9zM17 15.99l-5 2.73-5-2.73v-3.72L12 15l5-2.73v3.72z"/>';
+const OPEN_ICON_PATH = '<path d="M19 19H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z"/>';
+
 function renderTraining() {
-  const container = document.getElementById('trainingCats');
+  const container = document.getElementById('body-training');
   if (!container) return;
 
-  container.innerHTML = TRAINING_CATS.map((cat, idx) => {
-    const done = cat.lessons.filter(l => l.done).length;
-    const lessons = cat.lessons.map(l => `
-      <div class="subtask-item ${l.done ? 'done' : ''}" style="cursor:pointer;margin-bottom:4px" onclick="showToast('Opening: ${l.name}','info')">
-        <input type="checkbox" ${l.done ? 'checked' : ''} onclick="event.preventDefault()"/>
-        <div class="flex-1 min-w-0">
-          <div class="text-xs text-text-main">${l.name}</div>
+  container.innerHTML = TRAINING_CATS.map(cat => {
+    const lessons = cat.lessons.map(l => {
+      const badge = LESSON_TYPE_BADGE[l.type];
+      return `<div class="flex items-start gap-3 px-4 py-3 border-b border-border last:border-b-0 hover:bg-surface transition-colors">
+        <div class="flex-1 min-w-0 flex flex-col gap-0.5">
+          <p class="text-sm text-text-main leading-snug">${l.name}</p>
+          <p class="text-xs text-text-muted leading-snug">${l.desc}</p>
         </div>
-        <div class="text-[10px] text-text-muted flex-shrink-0">${l.dur}</div>
-      </div>`).join('');
+        <div class="flex items-center gap-2 flex-shrink-0">
+          <span class="flex items-center gap-1 text-[10px] font-semibold px-2 py-1 rounded-full" style="background:${badge.bg};color:${badge.text}"><svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">${badge.icon}</svg>${badge.label}</span>
+          <button class="flex items-center gap-1 px-3 py-1.5 rounded-lg text-white text-xs font-semibold cursor-pointer transition-colors" style="background:#443eff" onclick="showToast('Opening: ${l.name}','info')">Open<svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">${OPEN_ICON_PATH}</svg></button>
+        </div>
+      </div>`;
+    }).join('');
     return `
-      <div class="border border-border rounded-lg overflow-hidden">
-        <button class="w-full flex items-center gap-2.5 px-3 py-2.5 hover:bg-surface transition-colors cursor-pointer" onclick="toggleTrainingCat(${idx})">
-          <div class="w-6 h-6 rounded-md bg-primary flex items-center justify-center text-white text-xs flex-shrink-0">${cat.icon}</div>
-          <span class="flex-1 text-left text-xs font-semibold">${cat.name}</span>
-          <span class="text-[10px] text-text-muted">${done}/${cat.lessons.length} complete</span>
-          <svg class="w-4 h-4 text-text-muted transition-transform" id="tcat-chev-${idx}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9" stroke-width="2"/></svg>
+      <div class="rounded-lg overflow-hidden" style="background:#F1F5F9;border:1px solid #E2E8F0">
+        <button class="w-full flex items-center justify-between gap-4 px-4 py-3.5 hover:bg-surface/60 transition-colors cursor-pointer" onclick="toggleTrainingCat('${cat.key}')">
+          <div class="flex items-center gap-3 min-w-0">
+            <div class="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0" style="background:#EEF2FF"><svg class="w-5 h-5" style="color:#443eff" fill="currentColor" viewBox="0 0 24 24">${SCHOOL_ICON_PATH}</svg></div>
+            <div class="flex items-center gap-3">
+              <span class="text-sm font-semibold text-text-main">${cat.name}</span>
+              <span class="text-xs text-text-muted">${cat.lessons.length} lessons</span>
+            </div>
+          </div>
+          <svg class="w-4 h-4 text-text-muted transition-transform flex-shrink-0" id="tcat-chev-${cat.key}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9" stroke-width="2"/></svg>
         </button>
-        <div class="module-body" id="tcat-body-${idx}"><div class="px-3 py-2">${lessons}</div></div>
+        <div class="hidden bg-white" id="tcat-body-${cat.key}">${lessons}</div>
       </div>`;
   }).join('');
+}
+
+function renderImpSheet() {
+  const container = document.getElementById('body-imp');
+  if (!container) return;
+  container.innerHTML = IMP_SHEET_LINKS.map(l => `
+    <a href="#" class="flex items-center gap-3 px-4 py-3 hover:bg-surface transition-colors group" onclick="showToast('Opening ${l.name}…','info');return false;">
+      <div class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style="background:#EEF2FF"><svg class="w-4 h-4" style="color:#443eff" fill="currentColor" viewBox="0 0 24 24"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"/></svg></div>
+      <div class="flex-1 min-w-0"><p class="text-sm font-semibold text-text-main truncate">${l.name}</p></div>
+      <svg class="w-4 h-4 text-text-muted flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">${OPEN_ICON_PATH}</svg>
+    </a>`).join('');
 }
 
 // ─── TICKET MODAL ─────────────────────────────────────────────────────────────
@@ -2320,6 +2355,7 @@ function boot() {
   document.getElementById('perfSummaryContent').innerHTML = buildPerfSummary();
 
   renderTraining();
+  renderImpSheet();
   updateCallStatus('active');
   renderTopPerformers('yesterday');
   renderRmBoostSeverity();
