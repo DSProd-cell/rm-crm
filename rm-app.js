@@ -133,12 +133,23 @@ function switchTab(tab) {
 // ─── ROLE SWITCH ──────────────────────────────────────────────────────────────
 function switchRole(role) {
   state.role = role;
+  const isAdmin = role === 'admin';
   const isMgr = ['team_lead','manager_rm','senior_manager'].includes(role);
-  document.getElementById('rmDashboard').classList.toggle('hidden', isMgr);
-  document.getElementById('mgrRollup').classList.toggle('hidden', !isMgr);
-  if (isMgr) renderMgrTable();
 
-  const roleLabels = { rm:'Relationship Manager', team_lead:'Team Lead', manager_rm:'Manager RM', senior_manager:'Senior Manager' };
+  // Admin gets its own full panel
+  document.getElementById('adminPanel').classList.toggle('hidden', !isAdmin);
+  document.getElementById('tabBar').classList.toggle('hidden', isAdmin);
+  document.getElementById('promoBanner').classList.toggle('hidden', isAdmin);
+  document.getElementById('main').classList.toggle('hidden', isAdmin);
+  document.getElementById('chatFab').classList.toggle('hidden', isAdmin);
+
+  if (!isAdmin) {
+    document.getElementById('rmDashboard').classList.toggle('hidden', isMgr);
+    document.getElementById('mgrRollup').classList.toggle('hidden', !isMgr);
+    if (isMgr) renderMgrTable();
+  }
+
+  const roleLabels = { rm:'Relationship Manager', team_lead:'Team Lead', manager_rm:'Manager RM', senior_manager:'Senior Manager', admin:'Administrator' };
   document.getElementById('pdRole').textContent = roleLabels[role] || 'RM';
 }
 
@@ -569,6 +580,231 @@ function openProfile() {
       <div class="lead-info-item"><div class="li-label">Senior Manager</div><div class="li-val">Anjali Menon</div></div>
     </div>`;
   openDrawer('My Profile', html);
+}
+
+// ─── CHAT ────────────────────────────────────────────────────────────────────
+let chatOpen = false;
+let chatMode = 'ai'; // 'ai' | 'tl'
+
+function toggleChat() {
+  chatOpen = !chatOpen;
+  const panel = document.getElementById('chatPanel');
+  panel.classList.toggle('open', chatOpen);
+}
+
+function switchChatMode(mode) {
+  chatMode = mode;
+  document.getElementById('chatTabAI').classList.toggle('active', mode === 'ai');
+  document.getElementById('chatTabTL').classList.toggle('active', mode === 'tl');
+  document.getElementById('chatAIMode').classList.toggle('hidden', mode !== 'ai');
+  document.getElementById('chatTLMode').classList.toggle('hidden', mode !== 'tl');
+}
+
+const AI_RESPONSES = [
+  { kw:['overdue','pending','due'], reply:'You have <strong>3 overdue leads</strong> — Ananya Sharma, Deepa Nair, and Aisha Khan need immediate follow-up in Boost STI.' },
+  { kw:['quality','score','call'], reply:'Your call quality score is <strong>59% (1st call)</strong> and <strong>85% (2nd call)</strong>. Best performer: Rahul K. at 94%.' },
+  { kw:['earn','earned','money','incentive','salary'], reply:'You\'ve earned <strong>₹18,400</strong> so far this month. Your pipeline opportunity is <strong>₹2,84,000</strong> — keep pushing!' },
+  { kw:['task','remind','todo'], reply:'You have <strong>5 pending reminders</strong> in Own Tasks. Your top task: follow up with Ananya Sharma on docs.' },
+  { kw:['pipeline','lead','boost'], reply:'Current pipeline: <strong>STI: 7</strong> · <strong>Revenue: 4</strong> · <strong>Loan: 9</strong> leads. Loan VC has the most pending — prioritize today.' },
+  { kw:['sti','stl','document','doc','app ready','f2f'], reply:'You have <strong>7 leads</strong> in Boost STI. 3 are overdue. Top priority: Ananya Sharma (missing bank statement).' },
+  { kw:['revenue','lock','lockin','c2i','prime'], reply:'<strong>4 leads</strong> need a lock-in (C2I or Prime). Tanvir Ahmed and Fatima Shaikh are overdue — follow up today.' },
+  { kw:['loan','vc','video','pf','log'], reply:'<strong>9 leads</strong> in Boost Loan. 3 are overdue. Rahul Jain\'s Loan VC slot was cancelled — reschedule ASAP.' },
+  { kw:['target','goal','performance'], reply:'Overall performance: <strong>On Track</strong>. CA→Lock-in 14d: 37% · CA→C2I 14d: 29%. Push lock-ins this week to reach Good.' },
+  { kw:['ticket','issue','support'], reply:'You have <strong>3 unresolved tickets</strong> in L&D. Head to Learning & Development → My Tickets to check status.' },
+];
+
+function getAIReply(msg) {
+  const lower = msg.toLowerCase();
+  for (const r of AI_RESPONSES) {
+    if (r.kw.some(k => lower.includes(k))) return r.reply;
+  }
+  return 'I can help with your leads, tasks, pipeline status, earnings, and performance data. Try asking: "How many leads are overdue?" or "What is my quality score?"';
+}
+
+function appendMsg(containerId, text, type) {
+  const container = document.getElementById(containerId);
+  const time = new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+  const label = type === 'user' ? 'You' : (containerId === 'tlMessages' ? 'Rahul S.' : 'CRM Bot');
+  const div = document.createElement('div');
+  div.className = `chat-msg ${type}`;
+  div.innerHTML = `<div class="chat-bubble ${type}">${text}</div><div class="chat-time">${label} · ${time}</div>`;
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+}
+
+function showTyping(containerId) {
+  const container = document.getElementById(containerId);
+  const div = document.createElement('div');
+  div.className = 'chat-msg bot';
+  div.id = 'typingIndicator';
+  div.innerHTML = `<div class="chat-typing"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div>`;
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+}
+
+function removeTyping() {
+  const t = document.getElementById('typingIndicator');
+  if (t) t.remove();
+}
+
+function sendChatMsg() {
+  const input = document.getElementById('chatInput');
+  const msg = input.value.trim();
+  if (!msg) return;
+  input.value = '';
+  document.getElementById('chatQuickBtns').style.display = 'none';
+  appendMsg('chatMessages', msg, 'user');
+  showTyping('chatMessages');
+  setTimeout(() => {
+    removeTyping();
+    appendMsg('chatMessages', getAIReply(msg), 'bot');
+  }, 900 + Math.random() * 500);
+}
+
+function sendQuickQ(question) {
+  document.getElementById('chatInput').value = question;
+  sendChatMsg();
+}
+
+const TL_REPLIES = [
+  'Got it, I\'ll look into that.',
+  'Sure, let me check and get back to you.',
+  'Thanks for the update! Keep pushing.',
+  'Noted. Focus on the overdue leads first.',
+  'Good work today! Let me know if you need anything.',
+  'I\'ll escalate that if needed. Keep logging your activities.',
+];
+
+function sendTLMsg() {
+  const input = document.getElementById('tlInput');
+  const msg = input.value.trim();
+  if (!msg) return;
+  input.value = '';
+  appendMsg('tlMessages', msg, 'user');
+  showTyping('tlMessages');
+  setTimeout(() => {
+    removeTyping();
+    const reply = TL_REPLIES[Math.floor(Math.random() * TL_REPLIES.length)];
+    appendMsg('tlMessages', reply, 'bot');
+  }, 1200 + Math.random() * 800);
+}
+
+// ─── ADMIN ────────────────────────────────────────────────────────────────────
+const ADMIN_METRICS = [
+  'Leads Assigned', 'F2F Attended', 'Lock-ins (C2I + Prime)', 'Loan VC Booked',
+  'Loan VC Joined', 'Docs Collected', 'App Ready Completed', 'Queries to Counsellor',
+  'C2I Revenue', 'Total Drop'
+];
+const ADMIN_METRIC_TARGETS = [80, 30, 15, 12, 10, 25, 20, 8, 14, 5];
+
+const PAYOUT_COMPONENTS = [
+  { name:'Deposits', unit:'Per deposit', rate:2000, period:'Monthly' },
+  { name:'Lock-in (C2I)', unit:'Per C2I', rate:4000, period:'Monthly' },
+  { name:'Lock-in (Prime)', unit:'Per Prime', rate:2500, period:'Monthly' },
+  { name:'Loan VC Attended', unit:'Per VC', rate:1500, period:'Monthly' },
+  { name:'F2F Conversion Bonus', unit:'Per F2F above target', rate:800, period:'Monthly' },
+  { name:'Quality Score Bonus', unit:'Per % above 80%', rate:200, period:'Monthly' },
+];
+
+let adminPayoutRows = JSON.parse(JSON.stringify(PAYOUT_COMPONENTS));
+
+const TICKET_CATEGORIES = ['Technical Issue', 'Data Correction', 'Policy Question', 'Access Request', 'Other'];
+let adminTicketCats = [...TICKET_CATEGORIES];
+
+function switchAdminTab(tab, btn) {
+  const panelIds = { pipeline:'adminPipeline', incentive:'adminIncentive', ld:'adminLD' };
+  Object.entries(panelIds).forEach(([t, id]) => {
+    const el = document.getElementById(id);
+    if (el) el.classList.toggle('hidden', t !== tab);
+  });
+  document.querySelectorAll('.admin-tab').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  if (tab === 'incentive') renderAdminMetrics();
+  if (tab === 'ld') renderAdminLD();
+}
+
+function renderAdminMetrics() {
+  const tbody = document.getElementById('adminMetricRows');
+  tbody.innerHTML = ADMIN_METRICS.map((m, i) => `
+    <tr>
+      <td>${m}</td>
+      <td><input class="edit-input" type="number" value="${ADMIN_METRIC_TARGETS[i]}" min="0" style="width:80px"/></td>
+      <td><button class="admin-row-btn" onclick="showToast('Target updated.')">Save</button></td>
+    </tr>`).join('');
+
+  const payoutTbody = document.getElementById('adminPayoutRows');
+  payoutTbody.innerHTML = adminPayoutRows.map((p, i) => `
+    <tr>
+      <td><input class="edit-input" value="${p.name}" style="width:160px"/></td>
+      <td><input class="edit-input" value="${p.unit}" style="width:120px"/></td>
+      <td><input class="edit-input" type="number" value="${p.rate}" style="width:80px"/></td>
+      <td><input class="edit-input" value="${p.period}" style="width:80px"/></td>
+      <td><button class="admin-row-btn danger" onclick="removePayoutRow(${i})">Remove</button></td>
+    </tr>`).join('');
+}
+
+function addPayoutRow() {
+  adminPayoutRows.push({ name:'New Component', unit:'Per unit', rate:0, period:'Monthly' });
+  renderAdminMetrics();
+}
+
+function removePayoutRow(i) {
+  adminPayoutRows.splice(i, 1);
+  renderAdminMetrics();
+}
+
+function saveIncentiveConfig() { showToast('Incentive config saved.'); }
+
+function renderAdminLD() {
+  const list = document.getElementById('adminModuleList');
+  list.innerHTML = TRAINING_CATS.map((cat, ci) => `
+    <div class="admin-module-cat">
+      <div class="admin-module-cat-header">
+        <strong style="flex:1;font-size:13px">${cat.name}</strong>
+        <button class="admin-row-btn" onclick="showToast('Add lesson coming soon')">+ Add Lesson</button>
+      </div>
+      ${cat.lessons.map((l, li) => `
+        <div class="admin-module-row">
+          <div class="admin-module-name">${l.name}</div>
+          <div class="admin-module-dur">${l.dur}</div>
+          <div class="admin-module-status">${l.done ? '<span class="status-pill sp-good">Active</span>' : '<span class="status-pill sp-track">Active</span>'}</div>
+          <div class="admin-row-btns">
+            <button class="admin-row-btn" onclick="showToast('Edit coming soon')">Edit</button>
+            <button class="admin-row-btn danger" onclick="showToast('Module retired.')">Retire</button>
+          </div>
+        </div>`).join('')}
+    </div>`).join('');
+
+  const cats = document.getElementById('adminTicketCats');
+  cats.innerHTML = adminTicketCats.map((c, i) => `
+    <div class="admin-ticket-cat-row">
+      <input class="edit-input admin-ticket-cat-name" value="${c}" style="flex:1"/>
+      <button class="admin-row-btn" onclick="saveCat(${i})">Save</button>
+      <button class="admin-row-btn danger" onclick="removeCat(${i})">Remove</button>
+    </div>`).join('');
+}
+
+function saveCat(i) {
+  const inputs = document.querySelectorAll('#adminTicketCats .admin-ticket-cat-name');
+  adminTicketCats[i] = inputs[i].value;
+  showToast('Category saved.');
+}
+
+function removeCat(i) {
+  adminTicketCats.splice(i, 1);
+  renderAdminLD();
+}
+
+function addTicketCat() {
+  adminTicketCats.push('New Category');
+  renderAdminLD();
+  // Also update the ticket form dropdown
+  const sel = document.getElementById('ticketCategory');
+  if (sel) {
+    const opt = document.createElement('option');
+    opt.textContent = 'New Category';
+    sel.appendChild(opt);
+  }
 }
 
 // ─── BOOT ─────────────────────────────────────────────────────────────────────

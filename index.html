@@ -484,6 +484,7 @@ textarea.form-input { resize: vertical; min-height: 70px; }
       <option value="team_lead">Team Lead</option>
       <option value="manager_rm">Manager RM</option>
       <option value="senior_manager">Senior Manager</option>
+      <option value="admin">Admin</option>
     </select>
   </div>
 
@@ -1042,6 +1043,253 @@ textarea.form-input { resize: vertical; min-height: 70px; }
 <!-- TOAST -->
 <div id="toast"></div>
 
-<script src="rm-app.js?v=1"></script>
+<!-- ─── CHAT FEATURE ─── -->
+<button class="chat-fab" id="chatFab" onclick="toggleChat()" title="Ask me Anything">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+  <span>Ask me Anything</span>
+</button>
+
+<div class="chat-panel" id="chatPanel">
+  <div class="chat-panel-header">
+    <div class="chat-tabs">
+      <button class="chat-tab active" id="chatTabAI" onclick="switchChatMode('ai')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        Ask CRM
+      </button>
+      <button class="chat-tab" id="chatTabTL" onclick="switchChatMode('tl')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        Message TL
+      </button>
+    </div>
+    <button class="chat-close" onclick="toggleChat()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+
+  <!-- AI Mode -->
+  <div id="chatAIMode">
+    <div class="chat-messages" id="chatMessages">
+      <div class="chat-msg bot">
+        <div class="chat-bubble bot">Hi! Ask me about your leads, tasks, performance, or incentives.</div>
+        <div class="chat-time">CRM Bot · just now</div>
+      </div>
+    </div>
+    <div class="chat-quick-btns" id="chatQuickBtns">
+      <button onclick="sendQuickQ('How many leads are overdue?')">Overdue leads?</button>
+      <button onclick="sendQuickQ('What is my quality score?')">Quality score?</button>
+      <button onclick="sendQuickQ('How much have I earned this month?')">Earnings?</button>
+      <button onclick="sendQuickQ('Show my top pending task')">Top task?</button>
+    </div>
+    <div class="chat-input-wrap">
+      <input class="chat-input" id="chatInput" type="text" placeholder="Ask anything about your leads…" onkeydown="if(event.key==='Enter')sendChatMsg()"/>
+      <button class="chat-send-btn" onclick="sendChatMsg()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- TL Mode -->
+  <div id="chatTLMode" class="hidden">
+    <div class="chat-tl-header">
+      <div class="chat-tl-avatar">RS</div>
+      <div>
+        <div class="chat-tl-name">Rahul Sharma</div>
+        <div class="chat-tl-sub">Team Lead · <span class="online-dot"></span> Online</div>
+      </div>
+    </div>
+    <div class="chat-messages" id="tlMessages">
+      <div class="chat-msg bot">
+        <div class="chat-bubble bot">Hey! How can I help you today?</div>
+        <div class="chat-time">Rahul S. · 10:15 AM</div>
+      </div>
+    </div>
+    <div class="chat-input-wrap">
+      <input class="chat-input" id="tlInput" type="text" placeholder="Message your TL…" onkeydown="if(event.key==='Enter')sendTLMsg()"/>
+      <button class="chat-send-btn" onclick="sendTLMsg()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── ADMIN PANEL ─── -->
+<div id="adminPanel" class="hidden admin-panel">
+  <div class="admin-header">
+    <div class="admin-header-title">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M4.93 4.93a10 10 0 0 0 0 14.14M8.46 8.46a5 5 0 0 0 0 7.07"/></svg>
+      Admin Configuration
+    </div>
+    <div class="admin-tabs">
+      <button class="admin-tab active" onclick="switchAdminTab('pipeline',this)">Pipeline Logic</button>
+      <button class="admin-tab" onclick="switchAdminTab('incentive',this)">Incentive Config</button>
+      <button class="admin-tab" onclick="switchAdminTab('ld',this)">L&D Content</button>
+    </div>
+  </div>
+  <div class="admin-body">
+    <!-- Pipeline Logic -->
+    <div id="adminPipeline">
+      <div class="admin-notice">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;flex-shrink:0"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        Pipeline logic is read-only in v0. Changes go through engineering.
+      </div>
+      <div class="pipeline-rules-grid">
+        <div class="pipeline-rule-card">
+          <div class="prc-header orange">Boost STI</div>
+          <div class="prc-section"><div class="prc-label">Entry Conditions</div><ul class="prc-list"><li>Lock-in done AND (App Ready date is null OR F2F not yet done)</li></ul></div>
+          <div class="prc-section"><div class="prc-label">Exit Conditions</div><ul class="prc-list"><li>App Ready date is set AND STI date is set</li><li>OR counselling_status = LS_LEAD_DROP_OFF</li></ul></div>
+        </div>
+        <div class="pipeline-rule-card">
+          <div class="prc-header green">Boost Revenue</div>
+          <div class="prc-section"><div class="prc-label">Entry Conditions</div><ul class="prc-list"><li>F2F attended = Present AND no lock-in (Prime/C2I) done yet</li></ul></div>
+          <div class="prc-section"><div class="prc-label">Exit Conditions</div><ul class="prc-list"><li>Any lock-in is done</li><li>OR counselling_status = LS_LEAD_DROP_OFF</li></ul></div>
+        </div>
+        <div class="pipeline-rule-card">
+          <div class="prc-header blue">Boost Loan</div>
+          <div class="prc-section"><div class="prc-label">Entry Conditions</div><ul class="prc-list"><li>Lock-in done AND Loan VC not yet booked/joined</li><li>OR PF Log-in not yet done</li></ul></div>
+          <div class="prc-section"><div class="prc-label">Exit Conditions</div><ul class="prc-list"><li>Loan VC attended AND (IELTS_stage = IELTS_PAID_USER OR counselling_status in DEPOSIT_PAID / LS_LEAD_DROP_OFF)</li></ul></div>
+        </div>
+      </div>
+      <div class="pipeline-rule-card" style="margin-top:12px">
+        <div class="prc-header purple">Priority / Conflict Resolution</div>
+        <div class="prc-section"><div class="prc-label">When a lead qualifies for multiple pipelines</div><ul class="prc-list"><li>Evaluation order: Boost Revenue → Boost Loan → Boost STI</li><li>Lead lands in the first matching pipeline</li><li>No lead sits in more than one pipeline at once</li></ul></div>
+      </div>
+    </div>
+
+    <!-- Incentive Config -->
+    <div id="adminIncentive" class="hidden">
+      <div class="admin-section-title">Performance Band Thresholds</div>
+      <div class="admin-bands">
+        <div class="admin-band-item"><span class="summary-chip chip-good">Good</span><span>≥</span><input class="admin-band-input" type="number" value="80" min="0" max="100"/><span>% of target</span></div>
+        <div class="admin-band-item"><span class="summary-chip chip-track">On Track</span><span>≥</span><input class="admin-band-input" type="number" value="50" min="0" max="100"/><span>% of target</span></div>
+        <div class="admin-band-item"><span class="summary-chip chip-focus">Focus</span><span>&lt;</span><span class="font-bold" style="color:var(--danger)">50%</span><span>(auto-calculated)</span></div>
+      </div>
+      <div class="admin-section-title" style="margin-top:16px">Volume Metric Targets (Monthly)</div>
+      <div style="overflow-x:auto">
+        <table class="metrics-table" id="adminMetricsTable">
+          <thead><tr><th>Metric</th><th>Monthly Target</th><th>Action</th></tr></thead>
+          <tbody id="adminMetricRows"></tbody>
+        </table>
+      </div>
+      <div class="admin-section-title" style="margin-top:16px">Incentive Payout Formula</div>
+      <div style="overflow-x:auto">
+        <table class="metrics-table" id="adminPayoutTable">
+          <thead><tr><th>Component</th><th>Unit</th><th>₹ per Unit</th><th>Drive Period</th><th>Action</th></tr></thead>
+          <tbody id="adminPayoutRows"></tbody>
+        </table>
+      </div>
+      <div style="margin-top:14px;display:flex;gap:8px">
+        <button class="btn-primary btn-sm" onclick="saveIncentiveConfig()">Save Changes</button>
+        <button class="btn-secondary btn-sm" onclick="addPayoutRow()">+ Add Component</button>
+      </div>
+    </div>
+
+    <!-- L&D Content -->
+    <div id="adminLD" class="hidden">
+      <div class="admin-ld-top">
+        <div>
+          <div class="admin-section-title">Training Modules</div>
+          <div class="text-muted text-sm">Manage lessons by category</div>
+        </div>
+        <button class="btn-primary btn-sm" onclick="showToast('Module upload coming soon')">+ Upload Module</button>
+      </div>
+      <div id="adminModuleList"></div>
+
+      <div class="admin-section-title" style="margin-top:18px">Ticket Categories</div>
+      <div class="admin-ticket-cats" id="adminTicketCats"></div>
+      <button class="btn-secondary btn-sm" style="margin-top:8px" onclick="addTicketCat()">+ Add Category</button>
+    </div>
+  </div>
+</div>
+
+<style>
+/* ─── CHAT ─── */
+.chat-fab { position: fixed; bottom: 20px; right: 20px; z-index: 500; display: flex; align-items: center; gap: 8px; background: var(--primary); color: #fff; border: none; border-radius: 24px; padding: 10px 16px; font-size: 13px; font-weight: 600; cursor: pointer; box-shadow: 0 4px 16px rgba(30,27,75,.4); transition: all .2s; }
+.chat-fab:hover { background: var(--primary-mid); transform: translateY(-1px); box-shadow: 0 6px 20px rgba(30,27,75,.5); }
+.chat-fab svg { width: 17px; height: 17px; }
+
+.chat-panel { position: fixed; bottom: 72px; right: 20px; width: 340px; height: 460px; background: var(--card); border-radius: 16px; box-shadow: var(--shadow-lg); border: 1px solid var(--border); z-index: 499; display: none; flex-direction: column; overflow: hidden; }
+.chat-panel.open { display: flex; }
+.chat-panel-header { background: var(--primary); padding: 10px 12px; display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.chat-tabs { display: flex; gap: 2px; flex: 1; background: rgba(255,255,255,.1); border-radius: 8px; padding: 2px; }
+.chat-tab { flex: 1; display: flex; align-items: center; justify-content: center; gap: 5px; padding: 5px 8px; border-radius: 6px; font-size: 11px; font-weight: 600; color: rgba(255,255,255,.6); cursor: pointer; transition: all .15s; background: none; border: none; }
+.chat-tab.active { background: #fff; color: var(--primary); }
+.chat-close { width: 26px; height: 26px; border-radius: 6px; background: rgba(255,255,255,.1); display: flex; align-items: center; justify-content: center; cursor: pointer; border: none; flex-shrink: 0; }
+.chat-close svg { width: 14px; height: 14px; color: rgba(255,255,255,.8); }
+
+.chat-messages { flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+.chat-msg { display: flex; flex-direction: column; }
+.chat-msg.user { align-items: flex-end; }
+.chat-bubble { max-width: 80%; padding: 8px 12px; border-radius: 12px; font-size: 12px; line-height: 1.5; }
+.chat-bubble.bot { background: var(--bg); color: var(--text); border-radius: 4px 12px 12px 12px; }
+.chat-bubble.user { background: var(--primary); color: #fff; border-radius: 12px 12px 4px 12px; }
+.chat-time { font-size: 10px; color: var(--text-muted); margin-top: 3px; padding: 0 4px; }
+.chat-typing { display: flex; gap: 4px; align-items: center; padding: 8px 12px; }
+.typing-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--text-muted); animation: bounce .9s infinite; }
+.typing-dot:nth-child(2) { animation-delay: .15s; }
+.typing-dot:nth-child(3) { animation-delay: .3s; }
+@keyframes bounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-5px)} }
+
+.chat-quick-btns { display: flex; flex-wrap: wrap; gap: 5px; padding: 4px 12px 8px; }
+.chat-quick-btns button { padding: 4px 10px; border-radius: 12px; font-size: 11px; background: var(--bg); border: 1px solid var(--border); color: var(--text); cursor: pointer; transition: all .15s; }
+.chat-quick-btns button:hover { background: #ede9fe; border-color: var(--primary-light); color: var(--primary); }
+.chat-input-wrap { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-top: 1px solid var(--border); flex-shrink: 0; }
+.chat-input { flex: 1; border: 1px solid var(--border); border-radius: 20px; padding: 8px 14px; font-size: 12px; color: var(--text); background: var(--bg); }
+.chat-input:focus { border-color: var(--primary-light); background: #fff; outline: none; }
+.chat-send-btn { width: 32px; height: 32px; border-radius: 50%; background: var(--primary); border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; transition: background .2s; }
+.chat-send-btn:hover { background: var(--primary-mid); }
+.chat-send-btn svg { width: 14px; height: 14px; color: #fff; }
+
+.chat-tl-header { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+.chat-tl-avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--primary-mid); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; flex-shrink: 0; }
+.chat-tl-name { font-size: 13px; font-weight: 600; color: var(--text); }
+.chat-tl-sub { font-size: 11px; color: var(--text-muted); display: flex; align-items: center; gap: 4px; }
+.online-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--success); display: inline-block; }
+
+/* ─── ADMIN ─── */
+.admin-panel { position: fixed; top: var(--header-h); left: 0; right: 0; bottom: 0; background: var(--bg); z-index: 95; overflow-y: auto; }
+.admin-header { background: var(--card); border-bottom: 1px solid var(--border); padding: 14px 20px; display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
+.admin-header-title { display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 700; color: var(--text); }
+.admin-tabs { display: flex; gap: 2px; background: var(--bg); border-radius: 8px; padding: 3px; border: 1px solid var(--border); }
+.admin-tab { padding: 6px 14px; border-radius: 6px; font-size: 12px; font-weight: 600; color: var(--text-muted); cursor: pointer; transition: all .15s; border: none; background: none; }
+.admin-tab.active { background: var(--primary); color: #fff; }
+.admin-body { padding: 20px; }
+.admin-notice { display: flex; align-items: center; gap: 8px; padding: 10px 14px; background: var(--info-bg); border: 1px solid #bae6fd; border-radius: 8px; font-size: 12px; color: var(--info); margin-bottom: 16px; }
+.pipeline-rules-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.pipeline-rule-card { background: var(--card); border-radius: var(--radius); border: 1px solid var(--border); overflow: hidden; box-shadow: var(--shadow); }
+.prc-header { padding: 10px 14px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: #fff; }
+.prc-header.orange { background: var(--accent); }
+.prc-header.green { background: var(--success); }
+.prc-header.blue { background: var(--info); }
+.prc-header.purple { background: var(--primary-light); }
+.prc-section { padding: 10px 14px; border-bottom: 1px solid var(--border); }
+.prc-section:last-child { border-bottom: none; }
+.prc-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; color: var(--text-muted); margin-bottom: 6px; }
+.prc-list { padding-left: 14px; }
+.prc-list li { font-size: 12px; color: var(--text); margin-bottom: 3px; line-height: 1.5; }
+.admin-section-title { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 10px; }
+.admin-bands { display: flex; flex-direction: column; gap: 8px; }
+.admin-band-item { display: flex; align-items: center; gap: 10px; font-size: 12px; color: var(--text); }
+.admin-band-input { width: 60px; padding: 5px 8px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; font-weight: 600; text-align: center; color: var(--text); }
+.admin-band-input:focus { outline: none; border-color: var(--primary-light); }
+.admin-ld-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 12px; }
+.admin-module-cat { background: var(--card); border-radius: var(--radius); border: 1px solid var(--border); margin-bottom: 8px; overflow: hidden; }
+.admin-module-cat-header { display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: #f8fafc; border-bottom: 1px solid var(--border); }
+.admin-module-row { display: flex; align-items: center; gap: 10px; padding: 8px 14px; border-bottom: 1px solid var(--border); font-size: 12px; }
+.admin-module-row:last-child { border-bottom: none; }
+.admin-module-name { flex: 1; color: var(--text); }
+.admin-module-dur { color: var(--text-muted); min-width: 50px; }
+.admin-module-status { min-width: 70px; }
+.admin-row-btns { display: flex; gap: 5px; }
+.admin-row-btn { padding: 3px 8px; border-radius: 5px; font-size: 10px; font-weight: 600; cursor: pointer; border: 1px solid var(--border); background: var(--bg); color: var(--text-muted); }
+.admin-row-btn:hover { background: #ede9fe; color: var(--primary); border-color: var(--primary-light); }
+.admin-row-btn.danger { color: var(--danger); border-color: var(--danger-bg); background: var(--danger-bg); }
+.admin-ticket-cats { display: flex; flex-direction: column; gap: 6px; }
+.admin-ticket-cat-row { display: flex; align-items: center; gap: 10px; padding: 8px 12px; background: var(--card); border-radius: var(--radius-sm); border: 1px solid var(--border); font-size: 12px; }
+.admin-ticket-cat-name { flex: 1; }
+.edit-input { border: 1px solid var(--border); border-radius: 4px; padding: 3px 6px; font-size: 12px; color: var(--text); background: var(--bg); }
+.edit-input:focus { outline: none; border-color: var(--primary-light); }
+</style>
+
+<script src="rm-app.js?v=2"></script>
 </body>
 </html>
