@@ -549,6 +549,25 @@ function setPipelineSearch(v) {
 }
 
 const COURSE_OPTIONS = ['Computer Science', 'Data Science', 'Business Analytics', 'Mechanical Engineering', 'Public Health', 'Finance', 'Marketing', 'Civil Engineering', 'Psychology', 'International Business'];
+
+const DISPOSITION_OPTIONS = ['C2I', 'Prime', 'Loan VC Booking', 'F2F', 'Doc Collection', 'College Finalisation'];
+function dispositionSelectHtml(id) {
+  return `<div>
+    <label class="block text-xs font-semibold text-text-main mb-1">Disposition <span class="text-text-muted font-normal">(purpose of the call)</span></label>
+    <select class="w-full px-3 py-2 border border-border rounded-lg text-sm bg-white" id="${id}">
+      <option value="">— Select disposition —</option>
+      ${DISPOSITION_OPTIONS.map(o => `<option>${o}</option>`).join('')}
+    </select>
+  </div>`;
+}
+function nowLocalISO() {
+  const d = new Date();
+  d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+  return d.toISOString().slice(0, 16);
+}
+function isFutureDateTime(value) {
+  return !!value && new Date(value).getTime() > Date.now();
+}
 function courseForLead(lead) {
   let hash = 0;
   for (const ch of lead.id) hash = (hash * 31 + ch.charCodeAt(0)) >>> 0;
@@ -638,24 +657,17 @@ function openLeadDetail(pipelineType, leadId) {
         <div class="text-[10px] font-bold uppercase text-text-muted mb-2">Servicing Type</div>
         <div class="space-y-3">
           <div>
-            <label class="block text-xs font-semibold text-text-main mb-1">Type <span class="text-danger">*</span></label>
-            <select class="w-full px-3 py-2 border border-border rounded-lg text-sm bg-white">
-              <option>Paid Service</option>
-              <option>Free Service</option>
-            </select>
+            <div class="text-xs font-semibold text-text-muted mb-1">Type</div>
+            <div class="w-full px-3 py-2 border border-border rounded-lg text-sm bg-surface text-text-main">Paid Service</div>
           </div>
           <div>
-            <label class="block text-xs font-semibold text-text-main mb-1">Subservicing Type <span class="text-danger">*</span></label>
-            <select class="w-full px-3 py-2 border border-border rounded-lg text-sm bg-white">
-              <option>Premium Universities</option>
-              <option>C2I</option>
-              <option>Prime</option>
-            </select>
+            <div class="text-xs font-semibold text-text-muted mb-1">Subservicing Type</div>
+            <div class="w-full px-3 py-2 border border-border rounded-lg text-sm bg-surface text-text-main">Premium Universities</div>
           </div>
         </div>
+        <div class="text-[10px] text-text-muted mt-1.5">View only — set by the counsellor.</div>
       </div>
     </div>
-    <button class="w-full py-2.5 mt-4 bg-accent hover:bg-accent-dark text-white text-sm font-semibold rounded-lg cursor-pointer transition-colors" onclick="showToast('Servicing details saved.','success')">Save</button>
 
     <div class="flex flex-col gap-2 mt-5">
       <button class="flex items-center gap-2 px-3.5 py-2.5 rounded-lg text-sm font-semibold cursor-pointer border border-border hover:bg-surface transition-colors" onclick="showNoteForm('${lead.id}')">
@@ -685,6 +697,7 @@ function showNoteForm(leadId) {
         <label class="block text-xs font-semibold text-text-muted mb-1">Note *</label>
         <textarea class="w-full px-3 py-2 border border-border rounded-lg text-sm" id="noteInput" placeholder="Enter your note (max 500 chars)" maxlength="500"></textarea>
       </div>
+      <div class="mb-2.5">${dispositionSelectHtml('noteDisposition')}</div>
       <div class="flex gap-2">
         <button class="px-3.5 py-1.5 bg-accent text-white text-xs font-semibold rounded-lg cursor-pointer" onclick="submitNote('${leadId}')">Save Note</button>
         <button class="px-3.5 py-1.5 border border-border text-xs font-semibold rounded-lg cursor-pointer" onclick="document.getElementById('noteFormWrap').remove()">Cancel</button>
@@ -705,9 +718,10 @@ function showFollowupForm(leadId) {
   body.insertAdjacentHTML('beforeend', `
     <div id="followupFormWrap" class="mt-3.5 pt-3.5 border-t border-border">
       <div class="mb-2.5">
-        <label class="block text-xs font-semibold text-text-muted mb-1">Follow-up Date *</label>
-        <input class="w-full px-3 py-2 border border-border rounded-lg text-sm" type="date" id="followupDate" min="${new Date().toISOString().split('T')[0]}"/>
+        <label class="block text-xs font-semibold text-text-muted mb-1">Follow-up Date &amp; Time *</label>
+        <input class="w-full px-3 py-2 border border-border rounded-lg text-sm" type="datetime-local" id="followupDate" min="${nowLocalISO()}"/>
       </div>
+      <div class="mb-2.5">${dispositionSelectHtml('followupDisposition')}</div>
       <div class="flex gap-2">
         <button class="px-3.5 py-1.5 bg-accent text-white text-xs font-semibold rounded-lg cursor-pointer" onclick="submitFollowup('${leadId}')">Set Follow-up</button>
         <button class="px-3.5 py-1.5 border border-border text-xs font-semibold rounded-lg cursor-pointer" onclick="document.getElementById('followupFormWrap').remove()">Cancel</button>
@@ -717,7 +731,8 @@ function showFollowupForm(leadId) {
 
 function submitFollowup(leadId) {
   const input = document.getElementById('followupDate');
-  if (!input || !input.value) { showToast('Please select a follow-up date.', 'error'); return; }
+  if (!input || !input.value) { showToast('Please select a follow-up date & time.', 'error'); return; }
+  if (!isFutureDateTime(input.value)) { showToast('Follow-up must be a future date and time.', 'error'); return; }
   document.getElementById('followupFormWrap').remove();
   showToast('Follow-up date set.', 'success');
 }
@@ -727,15 +742,6 @@ function showQueryForm(leadId, leadName) {
   body.insertAdjacentHTML('beforeend', `
     <div id="queryFormWrap" class="mt-3.5 pt-3.5 border-t border-border">
       <div class="text-xs font-bold text-text-muted mb-2.5 uppercase tracking-wide">Raise Query — ${leadName}</div>
-      <div class="mb-2.5">
-        <label class="block text-xs font-semibold text-text-muted mb-1">Select Counsellor *</label>
-        <select class="w-full px-3 py-2 border border-border rounded-lg text-sm bg-white" id="queryCounsellor">
-          <option value="">— Select counsellor —</option>
-          <option>Priya CL (Active)</option>
-          <option>Amit CL (Active)</option>
-          <option>Rahul CL (Active)</option>
-        </select>
-      </div>
       <div class="mb-2.5">
         <label class="block text-xs font-semibold text-text-muted mb-1">Query / Question *</label>
         <textarea class="w-full px-3 py-2 border border-border rounded-lg text-sm" id="queryText" placeholder="Describe the counsellor's query (max 500 chars)" maxlength="500"></textarea>
@@ -748,9 +754,7 @@ function showQueryForm(leadId, leadName) {
 }
 
 function submitQuery(leadId) {
-  const c = document.getElementById('queryCounsellor');
   const q = document.getElementById('queryText');
-  if (!c.value) { showToast('Please select a counsellor.', 'error'); return; }
   if (!q.value.trim()) { showToast('Query cannot be empty.', 'error'); return; }
   document.getElementById('queryFormWrap').remove();
   showToast('Query sent to counsellor. They have 7 days to respond.', 'success');
@@ -1090,8 +1094,11 @@ function saveReminderMgr() {
   const userId = document.getElementById('reminderUserIdMgr').value.trim();
   const activeType = document.querySelector('#reminderTypeCardsMgr .reminder-type-btn.active')?.dataset.type;
   if (activeType !== 'custom' && !userId) { showToast('User ID is required for this reminder type.', 'error'); return; }
+  const dt = document.getElementById('reminderDateTimeMgr').value;
+  if (dt && !isFutureDateTime(dt)) { showToast('Reminder date & time must be in the future.', 'error'); return; }
   document.getElementById('reminderUserIdMgr').value = '';
   document.getElementById('reminderDateTimeMgr').value = '';
+  document.getElementById('reminderDispositionMgr').value = '';
   document.getElementById('reminderTextMgr').value = '';
   showToast('Reminder saved!', 'success');
 }
@@ -1641,8 +1648,11 @@ function saveReminder() {
   const userId = document.getElementById('reminderUserId').value.trim();
   const activeType = document.querySelector('#reminderTypeCards .reminder-type-btn.active')?.dataset.type;
   if (activeType !== 'custom' && !userId) { showToast('User ID is required for this reminder type.', 'error'); return; }
+  const dt = document.getElementById('reminderDateTime').value;
+  if (dt && !isFutureDateTime(dt)) { showToast('Reminder date & time must be in the future.', 'error'); return; }
   document.getElementById('reminderUserId').value = '';
   document.getElementById('reminderDateTime').value = '';
+  document.getElementById('reminderDisposition').value = '';
   document.getElementById('reminderText').value = '';
   showToast('Reminder saved!', 'success');
 }
@@ -2388,6 +2398,8 @@ function boot() {
   renderRmBoostSeverity();
   document.getElementById('body-offers').innerHTML = buildOngoingOffers(RM_OFFERS_STUDENTS, RM_OFFERS_SSM);
   document.getElementById('body-earners').innerHTML = buildTopEarnersSection(TOP_EARNERS_THIS_MONTH, TOP_EARNERS_ALL_TIME);
+  document.getElementById('reminderDateTime').min = nowLocalISO();
+  document.getElementById('reminderDateTimeMgr').min = nowLocalISO();
 }
 
 boot();
