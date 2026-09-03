@@ -1,0 +1,1047 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>RM CRM — Relationship Manager</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --primary: #1e1b4b;
+  --primary-mid: #312e81;
+  --primary-light: #4338ca;
+  --accent: #f97316;
+  --accent-light: #fed7aa;
+  --success: #16a34a;
+  --success-bg: #dcfce7;
+  --warning: #d97706;
+  --warning-bg: #fef3c7;
+  --danger: #dc2626;
+  --danger-bg: #fee2e2;
+  --info: #0369a1;
+  --info-bg: #e0f2fe;
+  --bg: #f1f5f9;
+  --card: #ffffff;
+  --border: #e2e8f0;
+  --text: #0f172a;
+  --text-muted: #64748b;
+  --text-light: #94a3b8;
+  --header-h: 56px;
+  --tab-h: 44px;
+  --banner-h: 36px;
+  --radius: 10px;
+  --radius-sm: 6px;
+  --shadow: 0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.06);
+  --shadow-md: 0 4px 12px rgba(0,0,0,.10);
+  --shadow-lg: 0 10px 30px rgba(0,0,0,.14);
+}
+html, body { height: 100%; font-family: 'Inter', sans-serif; font-size: 14px; color: var(--text); background: var(--bg); }
+a { color: inherit; text-decoration: none; }
+button { font-family: inherit; cursor: pointer; border: none; outline: none; background: none; }
+select { font-family: inherit; cursor: pointer; outline: none; }
+input, textarea { font-family: inherit; outline: none; }
+.hidden { display: none !important; }
+.mono { font-family: 'Fira Code', monospace; }
+
+/* ─── HEADER ─── */
+#header {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  height: var(--header-h);
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-mid) 60%, #4f46e5 100%);
+  display: flex; align-items: center; gap: 12px; padding: 0 16px;
+  box-shadow: 0 2px 8px rgba(0,0,0,.25);
+}
+.logo-wrap { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.logo-icon { width: 30px; height: 30px; background: var(--accent); border-radius: 8px; display: flex; align-items: center; justify-content: center; }
+.logo-icon svg { width: 18px; height: 18px; color: #fff; }
+.logo-text { font-size: 15px; font-weight: 700; color: #fff; letter-spacing: -.3px; }
+.logo-sub { font-size: 10px; font-weight: 500; color: rgba(255,255,255,.55); letter-spacing: 1.5px; text-transform: uppercase; }
+
+.search-wrap { flex: 1; max-width: 280px; position: relative; }
+.search-wrap svg { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); width: 14px; height: 14px; color: rgba(255,255,255,.45); pointer-events: none; }
+#globalSearch { width: 100%; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.15); border-radius: 8px; padding: 7px 10px 7px 30px; color: #fff; font-size: 13px; }
+#globalSearch::placeholder { color: rgba(255,255,255,.4); }
+
+.hdr-btn { display: flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 600; transition: all .2s; cursor: pointer; }
+.hdr-btn-outline { border: 1px solid rgba(255,255,255,.25); color: rgba(255,255,255,.85); }
+.hdr-btn-outline:hover { background: rgba(255,255,255,.12); }
+.hdr-btn svg { width: 14px; height: 14px; }
+
+.call-merge-wrap { display: flex; align-items: center; gap: 6px; padding: 5px 10px; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.15); border-radius: 8px; }
+.call-merge-wrap span.label { font-size: 10px; color: rgba(255,255,255,.5); }
+.status-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--success); flex-shrink: 0; }
+.status-dot.busy { background: var(--warning); }
+.status-dot.away { background: var(--text-muted); }
+#callMergeSelect { background: none; border: none; color: rgba(255,255,255,.85); font-size: 11px; font-weight: 500; padding: 0 12px 0 0; appearance: none; -webkit-appearance: none; cursor: pointer; }
+
+.hdr-spacer { flex: 1; }
+
+.icon-btn { position: relative; width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.12); cursor: pointer; transition: background .2s; flex-shrink: 0; }
+.icon-btn:hover { background: rgba(255,255,255,.16); }
+.icon-btn svg { width: 18px; height: 18px; color: rgba(255,255,255,.85); }
+.badge { position: absolute; top: -4px; right: -4px; min-width: 17px; height: 17px; background: var(--danger); border-radius: 9px; font-size: 10px; font-weight: 700; color: #fff; display: flex; align-items: center; justify-content: center; padding: 0 4px; border: 2px solid var(--primary); }
+
+.avatar-btn { width: 34px; height: 34px; border-radius: 50%; background: var(--accent); border: 2px solid rgba(255,255,255,.3); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: #fff; cursor: pointer; flex-shrink: 0; }
+
+/* Role selector pill */
+.role-selector { display: flex; align-items: center; gap: 6px; padding: 4px 10px; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2); border-radius: 8px; }
+.role-selector label { font-size: 10px; color: rgba(255,255,255,.5); }
+#rolePicker { background: none; border: none; color: rgba(255,255,255,.9); font-size: 12px; font-weight: 500; cursor: pointer; padding: 0 14px 0 0; appearance: none; -webkit-appearance: none; }
+
+/* ─── PROMO BANNER ─── */
+#promoBanner {
+  position: fixed; top: var(--header-h); left: 0; right: 0; z-index: 99;
+  height: var(--banner-h);
+  background: linear-gradient(90deg, #7c3aed 0%, #6d28d9 50%, #4f46e5 100%);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 500; color: rgba(255,255,255,.9); gap: 6px;
+  letter-spacing: .1px;
+}
+#promoBanner svg { width: 14px; height: 14px; flex-shrink: 0; }
+
+/* ─── TAB BAR ─── */
+#tabBar {
+  position: fixed; top: calc(var(--header-h) + var(--banner-h)); left: 0; right: 0; z-index: 98;
+  height: var(--tab-h);
+  background: var(--primary);
+  display: flex; align-items: stretch;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+}
+.tab-item { flex: 1; display: flex; align-items: center; justify-content: center; gap: 7px; font-size: 12px; font-weight: 600; color: rgba(255,255,255,.5); cursor: pointer; transition: all .2s; position: relative; letter-spacing: .2px; text-transform: uppercase; }
+.tab-item svg { width: 15px; height: 15px; }
+.tab-item.active { color: #fff; }
+.tab-item.active::after { content: ''; position: absolute; bottom: 0; left: 10%; right: 10%; height: 2px; background: var(--accent); border-radius: 2px 2px 0 0; }
+
+/* ─── MAIN CONTENT ─── */
+#main {
+  margin-top: calc(var(--header-h) + var(--banner-h) + var(--tab-h));
+  padding: 16px;
+  min-height: calc(100vh - var(--header-h) - var(--banner-h) - var(--tab-h));
+}
+
+/* ─── SECTION HEADER ─── */
+.section-label { font-size: 10px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+.section-label .pill { padding: 2px 7px; border-radius: 10px; font-size: 9px; letter-spacing: .5px; }
+.pill-orange { background: #fff3e0; color: var(--accent); }
+.pill-red { background: var(--danger-bg); color: var(--danger); }
+
+/* ─── METRIC CARDS ─── */
+.cards-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 12px; }
+.metric-card { background: var(--card); border-radius: var(--radius); padding: 14px; box-shadow: var(--shadow); border: 1px solid var(--border); cursor: pointer; transition: all .2s; position: relative; overflow: hidden; }
+.metric-card:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
+.metric-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--card-accent, var(--primary-light)); }
+.metric-card.accent-orange::before { background: var(--accent); }
+.metric-card.accent-green::before { background: var(--success); }
+.metric-card.accent-blue::before { background: var(--info); }
+.metric-card.accent-purple::before { background: #8b5cf6; }
+
+.card-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 10px; }
+.card-title { font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: .5px; }
+.card-icon { width: 30px; height: 30px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.card-icon svg { width: 16px; height: 16px; }
+.icon-orange { background: #fff3e0; color: var(--accent); }
+.icon-green { background: var(--success-bg); color: var(--success); }
+.icon-blue { background: var(--info-bg); color: var(--info); }
+.icon-purple { background: #ede9fe; color: #7c3aed; }
+.icon-red { background: var(--danger-bg); color: var(--danger); }
+
+.card-count { font-size: 28px; font-weight: 700; color: var(--text); line-height: 1; margin-bottom: 4px; font-variant-numeric: tabular-nums; }
+.card-count.green { color: var(--success); }
+.card-count.orange { color: var(--accent); }
+.card-count.red { color: var(--danger); }
+.card-sub { font-size: 11px; color: var(--text-muted); }
+.card-sub strong { color: var(--text); font-weight: 600; }
+.card-cta { display: flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 600; color: var(--primary-light); margin-top: 10px; }
+.card-cta svg { width: 12px; height: 12px; }
+
+/* Input card specific */
+.quality-bars { margin-top: 8px; }
+.quality-row { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+.quality-label { font-size: 10px; color: var(--text-muted); width: 22px; flex-shrink: 0; }
+.quality-bar-wrap { flex: 1; height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
+.quality-bar { height: 100%; border-radius: 3px; background: var(--primary-light); transition: width .4s; }
+.quality-bar.good { background: var(--success); }
+.quality-val { font-size: 10px; font-weight: 600; color: var(--text); width: 30px; text-align: right; font-variant-numeric: tabular-nums; }
+.best-tag { font-size: 10px; color: var(--text-muted); margin-top: 4px; }
+.best-tag strong { color: var(--success); }
+
+.escalation-list { margin-top: 6px; }
+.esc-item { display: flex; align-items: center; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid var(--border); font-size: 11px; }
+.esc-item:last-child { border-bottom: none; }
+.esc-count { font-weight: 700; font-variant-numeric: tabular-nums; }
+.esc-count.r { color: var(--danger); }
+.esc-count.o { color: var(--accent); }
+.esc-count.g { color: var(--success); }
+
+/* ─── SECTION CARD (collapsible) ─── */
+.section-card { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); border: 1px solid var(--border); margin-bottom: 12px; overflow: hidden; }
+.section-card-header { display: flex; align-items: center; gap: 10px; padding: 13px 16px; cursor: pointer; user-select: none; transition: background .15s; }
+.section-card-header:hover { background: #fafafa; }
+.sch-icon { width: 28px; height: 28px; border-radius: 7px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.sch-icon svg { width: 14px; height: 14px; }
+.sch-title { flex: 1; font-size: 13px; font-weight: 600; color: var(--text); }
+.sch-badge { padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; }
+.badge-green { background: var(--success-bg); color: var(--success); }
+.badge-orange { background: var(--warning-bg); color: var(--warning); }
+.badge-red { background: var(--danger-bg); color: var(--danger); }
+.chevron { width: 18px; height: 18px; color: var(--text-light); transition: transform .2s; flex-shrink: 0; }
+.chevron.open { transform: rotate(180deg); }
+.section-card-body { padding: 0 16px 16px; display: none; }
+.section-card-body.open { display: block; }
+
+/* ─── IBT section ─── */
+.ibt-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+.ibt-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; background: var(--bg); border-radius: var(--radius-sm); border: 1px solid var(--border); gap: 8px; }
+.ibt-label { font-size: 12px; color: var(--text); font-weight: 500; }
+.ibt-count { font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+/* ─── TOP PERFORMERS ─── */
+.perf-toggle { display: flex; gap: 0; margin-bottom: 12px; }
+.perf-toggle button { flex: 1; padding: 6px; font-size: 11px; font-weight: 600; background: var(--border); color: var(--text-muted); transition: all .15s; }
+.perf-toggle button:first-child { border-radius: 6px 0 0 6px; }
+.perf-toggle button:last-child { border-radius: 0 6px 6px 0; }
+.perf-toggle button.active { background: var(--primary); color: #fff; }
+.leaderboard { display: grid; gap: 8px; }
+.lb-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: var(--bg); border-radius: var(--radius-sm); border: 1px solid var(--border); }
+.lb-rank { width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; flex-shrink: 0; }
+.lb-rank.r1 { background: #fef3c7; color: #b45309; }
+.lb-rank.r2 { background: #f1f5f9; color: var(--text-muted); }
+.lb-rank.r3 { background: #fef3c7; color: var(--warning); }
+.lb-avatar { width: 30px; height: 30px; border-radius: 50%; background: var(--primary-mid); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; flex-shrink: 0; }
+.lb-name { flex: 1; font-size: 12px; font-weight: 600; }
+.lb-val { font-size: 13px; font-weight: 700; color: var(--primary-light); font-variant-numeric: tabular-nums; }
+
+/* ─── PERFORMANCE SUMMARY ─── */
+.summary-chips { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+.summary-chip { padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+.chip-good { background: var(--success-bg); color: var(--success); }
+.chip-track { background: var(--warning-bg); color: var(--warning); }
+.chip-focus { background: var(--danger-bg); color: var(--danger); }
+.ibg-banner { background: linear-gradient(90deg, #1e1b4b 0%, #312e81 100%); border-radius: var(--radius-sm); padding: 10px 14px; margin-bottom: 12px; color: #fff; }
+.ibg-label { font-size: 10px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: rgba(255,255,255,.6); margin-bottom: 4px; }
+.ibg-items { display: flex; gap: 16px; flex-wrap: wrap; }
+.ibg-item { font-size: 11px; color: rgba(255,255,255,.8); }
+.ibg-item strong { color: var(--accent); }
+
+.metrics-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.metrics-table th { padding: 7px 8px; text-align: left; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; color: var(--text-muted); border-bottom: 2px solid var(--border); }
+.metrics-table td { padding: 8px; border-bottom: 1px solid var(--border); }
+.metrics-table tr:last-child td { border-bottom: none; }
+.metrics-table tr:hover td { background: #fafafa; }
+.status-pill { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 600; }
+.sp-good { background: var(--success-bg); color: var(--success); }
+.sp-track { background: var(--warning-bg); color: var(--warning); }
+.sp-focus { background: var(--danger-bg); color: var(--danger); }
+
+/* ─── REMINDER FORM ─── */
+.reminder-form { display: grid; gap: 10px; }
+.form-field { display: flex; flex-direction: column; gap: 4px; }
+.form-label { font-size: 11px; font-weight: 600; color: var(--text-muted); }
+.form-input { padding: 8px 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 13px; color: var(--text); background: var(--bg); transition: border-color .15s; }
+.form-input:focus { border-color: var(--primary-light); background: #fff; }
+textarea.form-input { resize: vertical; min-height: 70px; }
+.btn-primary { background: var(--primary); color: #fff; padding: 9px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; transition: background .2s; }
+.btn-primary:hover { background: var(--primary-mid); }
+.btn-sm { padding: 6px 12px; font-size: 12px; }
+
+/* ─── INCENTIVES TAB ─── */
+.earn-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+.earn-card { background: var(--card); border-radius: var(--radius); padding: 16px; box-shadow: var(--shadow); border: 1px solid var(--border); position: relative; overflow: hidden; }
+.earn-card.orange { border-color: var(--accent); background: linear-gradient(135deg, #fff8f5 0%, #fff 100%); }
+.earn-card.orange::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--accent); }
+.earn-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .8px; color: var(--text-muted); margin-bottom: 6px; }
+.earn-amount { font-size: 26px; font-weight: 700; color: var(--text); line-height: 1; margin-bottom: 4px; font-variant-numeric: tabular-nums; }
+.earn-amount.orange { color: var(--accent); }
+.earn-sub { font-size: 11px; color: var(--text-muted); }
+.earn-expand-btn { margin-top: 10px; font-size: 11px; font-weight: 600; color: var(--primary-light); display: flex; align-items: center; gap: 4px; cursor: pointer; background: none; border: none; }
+.earn-expand-btn svg { width: 12px; height: 12px; }
+.breakdown-table { width: 100%; margin-top: 10px; font-size: 11px; border-collapse: collapse; }
+.breakdown-table th { font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; color: var(--text-muted); padding: 4px 6px; text-align: left; border-bottom: 1px solid var(--border); }
+.breakdown-table td { padding: 6px; border-bottom: 1px solid var(--border); }
+.breakdown-table tr:last-child td { font-weight: 600; background: #fafafa; }
+
+/* ─── L&D TAB ─── */
+.ticket-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 16px; }
+.ticket-card { background: var(--card); border-radius: var(--radius); padding: 14px; box-shadow: var(--shadow); border: 1px solid var(--border); cursor: pointer; transition: all .2s; position: relative; overflow: hidden; }
+.ticket-card:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
+.ticket-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; }
+.tc-blue::before { background: var(--info); }
+.tc-green::before { background: var(--success); }
+.tc-red::before { background: var(--danger); }
+.tc-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; color: var(--text-muted); margin-bottom: 6px; }
+.tc-count { font-size: 28px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.tc-blue .tc-count { color: var(--info); }
+.tc-green .tc-count { color: var(--success); }
+.tc-red .tc-count { color: var(--danger); }
+.tc-sub { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
+
+.imp-links { display: flex; flex-direction: column; gap: 6px; }
+.imp-link { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: var(--bg); border-radius: var(--radius-sm); border: 1px solid var(--border); cursor: pointer; transition: all .15s; }
+.imp-link:hover { background: #ede9fe; border-color: var(--primary-light); }
+.imp-link svg { width: 14px; height: 14px; color: var(--primary-light); flex-shrink: 0; }
+.imp-link-label { flex: 1; font-size: 12px; font-weight: 500; color: var(--text); }
+.imp-link-arr { width: 14px; height: 14px; color: var(--text-light); }
+
+.training-cats { display: flex; flex-direction: column; gap: 8px; }
+.training-cat { background: var(--bg); border-radius: var(--radius-sm); border: 1px solid var(--border); overflow: hidden; }
+.training-cat-header { display: flex; align-items: center; gap: 8px; padding: 10px 12px; cursor: pointer; }
+.training-cat-header:hover { background: #ede9fe; }
+.tch-icon { width: 24px; height: 24px; border-radius: 6px; background: var(--primary-mid); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.tch-icon svg { width: 13px; height: 13px; color: #fff; }
+.tch-title { flex: 1; font-size: 12px; font-weight: 600; color: var(--text); }
+.tch-count { font-size: 10px; color: var(--text-muted); }
+.training-cat-body { display: none; padding: 8px 12px; background: #fff; }
+.training-cat-body.open { display: block; }
+.lesson-item { display: flex; align-items: center; gap: 8px; padding: 7px 0; border-bottom: 1px solid var(--border); cursor: pointer; }
+.lesson-item:last-child { border-bottom: none; }
+.lesson-check { width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--border); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.lesson-check.done { background: var(--success); border-color: var(--success); }
+.lesson-check.done svg { width: 9px; height: 9px; color: #fff; }
+.lesson-name { flex: 1; font-size: 12px; color: var(--text); }
+.lesson-dur { font-size: 10px; color: var(--text-muted); }
+
+/* ─── MANAGER TABLE ─── */
+.mgr-table-wrap { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); border: 1px solid var(--border); overflow: hidden; }
+.mgr-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.mgr-table th { padding: 10px 12px; text-align: left; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; color: var(--text-muted); border-bottom: 2px solid var(--border); background: #f8fafc; white-space: nowrap; }
+.mgr-table td { padding: 10px 12px; border-bottom: 1px solid var(--border); cursor: pointer; }
+.mgr-table tr:last-child td { border-bottom: none; }
+.mgr-table tr:hover td { background: #f8f5ff; }
+.rm-name-cell { display: flex; align-items: center; gap: 8px; }
+.rm-avatar { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; color: #fff; flex-shrink: 0; }
+
+/* ─── SIDE DRAWER ─── */
+.overlay { position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 200; opacity: 0; pointer-events: none; transition: opacity .25s; }
+.overlay.open { opacity: 1; pointer-events: auto; }
+
+.drawer { position: fixed; top: 0; right: -100%; width: 420px; max-width: 100vw; height: 100vh; background: var(--card); z-index: 201; box-shadow: var(--shadow-lg); transition: right .3s cubic-bezier(.4,0,.2,1); overflow-y: auto; display: flex; flex-direction: column; }
+.drawer.open { right: 0; }
+.drawer-header { position: sticky; top: 0; background: var(--primary); padding: 14px 16px; display: flex; align-items: center; gap: 10px; flex-shrink: 0; z-index: 2; }
+.drawer-title { flex: 1; font-size: 14px; font-weight: 700; color: #fff; }
+.drawer-back { display: flex; align-items: center; gap: 5px; color: rgba(255,255,255,.7); font-size: 12px; cursor: pointer; }
+.drawer-back svg { width: 16px; height: 16px; }
+.drawer-close { width: 28px; height: 28px; border-radius: 6px; background: rgba(255,255,255,.1); display: flex; align-items: center; justify-content: center; cursor: pointer; }
+.drawer-close svg { width: 16px; height: 16px; color: rgba(255,255,255,.8); }
+.drawer-body { flex: 1; padding: 16px; }
+
+/* Lead detail in drawer */
+.lead-info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+.lead-info-item { display: flex; flex-direction: column; gap: 2px; }
+.li-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; color: var(--text-muted); }
+.li-val { font-size: 13px; font-weight: 500; color: var(--text); }
+.lead-status-tag { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 600; }
+.notes-section { margin-top: 12px; }
+.notes-section h4 { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; color: var(--text-muted); margin-bottom: 8px; }
+.note-item { padding: 8px 10px; background: var(--bg); border-radius: var(--radius-sm); border-left: 3px solid var(--primary-light); margin-bottom: 6px; }
+.note-text { font-size: 12px; color: var(--text); margin-bottom: 3px; }
+.note-time { font-size: 10px; color: var(--text-muted); }
+.lead-actions { display: flex; flex-direction: column; gap: 8px; margin-top: 14px; }
+.action-btn { display: flex; align-items: center; gap: 8px; padding: 10px 14px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 600; cursor: pointer; transition: all .15s; border: 1px solid var(--border); background: var(--bg); color: var(--text); }
+.action-btn:hover { background: #ede9fe; border-color: var(--primary-light); color: var(--primary); }
+.action-btn svg { width: 15px; height: 15px; }
+.action-btn.primary { background: var(--primary); color: #fff; border-color: var(--primary); }
+.action-btn.primary:hover { background: var(--primary-mid); }
+
+/* Pipeline lead table */
+.lead-table-wrap { overflow-x: auto; }
+.lead-table { width: 100%; border-collapse: collapse; font-size: 11px; white-space: nowrap; }
+.lead-table th { padding: 8px 10px; text-align: left; font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; color: var(--text-muted); border-bottom: 2px solid var(--border); background: #f8fafc; position: sticky; top: 0; }
+.lead-table td { padding: 8px 10px; border-bottom: 1px solid var(--border); cursor: pointer; }
+.lead-table tr:hover td { background: #f8f5ff; }
+.overdue-row td { background: #fff9f9; }
+.overdue-row td:first-child { border-left: 2px solid var(--danger); }
+.today-row td { background: #fffbf0; }
+.today-row td:first-child { border-left: 2px solid var(--warning); }
+
+/* ─── NOTIFICATION PANEL ─── */
+.notif-panel { position: fixed; top: var(--header-h); right: 12px; width: 320px; background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow-lg); border: 1px solid var(--border); z-index: 150; display: none; }
+.notif-panel.open { display: block; }
+.notif-panel-header { padding: 12px 14px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+.notif-panel-header h3 { font-size: 13px; font-weight: 700; color: var(--text); }
+.notif-subcard { }
+.notif-subcard-header { display: flex; align-items: center; gap: 8px; padding: 10px 14px; cursor: pointer; border-bottom: 1px solid var(--border); }
+.notif-subcard-header:hover { background: #fafafa; }
+.nsh-title { flex: 1; font-size: 12px; font-weight: 600; color: var(--text); }
+.nsh-badge { padding: 1px 7px; border-radius: 10px; font-size: 10px; font-weight: 700; }
+.notif-subcard-body { display: none; }
+.notif-subcard-body.open { display: block; }
+.notif-item { padding: 8px 14px; border-bottom: 1px solid var(--border); }
+.notif-item:last-child { border-bottom: none; }
+.notif-item .ni-title { font-size: 12px; font-weight: 500; color: var(--text); }
+.notif-item .ni-sub { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
+.notif-empty { padding: 14px; text-align: center; font-size: 12px; color: var(--text-muted); }
+
+/* ─── PROFILE DROPDOWN ─── */
+.profile-dropdown { position: fixed; top: calc(var(--header-h) + 4px); right: 12px; width: 200px; background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow-lg); border: 1px solid var(--border); z-index: 150; display: none; }
+.profile-dropdown.open { display: block; }
+.pd-header { padding: 12px 14px; border-bottom: 1px solid var(--border); }
+.pd-name { font-size: 13px; font-weight: 700; color: var(--text); }
+.pd-role { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .5px; }
+.pd-item { display: flex; align-items: center; gap: 10px; padding: 10px 14px; cursor: pointer; font-size: 13px; color: var(--text); transition: background .15s; }
+.pd-item:hover { background: var(--bg); }
+.pd-item svg { width: 15px; height: 15px; color: var(--text-muted); }
+.pd-item.danger { color: var(--danger); }
+.pd-item.danger svg { color: var(--danger); }
+
+/* ─── TICKET FORM MODAL ─── */
+.modal { position: fixed; inset: 0; z-index: 300; display: none; align-items: center; justify-content: center; padding: 16px; }
+.modal.open { display: flex; }
+.modal-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,.5); }
+.modal-card { position: relative; background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow-lg); width: 100%; max-width: 440px; z-index: 1; }
+.modal-header { padding: 16px 18px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+.modal-header h3 { font-size: 15px; font-weight: 700; color: var(--text); }
+.modal-body { padding: 18px; }
+.modal-footer { padding: 14px 18px; border-top: 1px solid var(--border); display: flex; gap: 8px; justify-content: flex-end; }
+.btn-secondary { padding: 8px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; background: var(--bg); color: var(--text); border: 1px solid var(--border); cursor: pointer; }
+
+/* ─── TOAST ─── */
+#toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--primary); color: #fff; padding: 10px 18px; border-radius: 8px; font-size: 13px; font-weight: 500; opacity: 0; transition: opacity .3s; z-index: 400; pointer-events: none; box-shadow: var(--shadow-md); }
+#toast.show { opacity: 1; }
+
+/* ─── OPPORTUNITY DETAIL SCREEN ─── */
+.opp-cards { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+.opp-card { display: flex; align-items: center; gap: 12px; padding: 12px 14px; background: var(--bg); border-radius: var(--radius-sm); border: 1px solid var(--border); cursor: pointer; transition: all .15s; }
+.opp-card:hover { border-color: var(--primary-light); background: #ede9fe; }
+.opp-card-info { flex: 1; }
+.opp-card-name { font-size: 12px; font-weight: 600; color: var(--text); }
+.opp-card-meta { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+.opp-card-val { font-size: 14px; font-weight: 700; color: var(--accent); font-variant-numeric: tabular-nums; }
+.opp-card-arr { width: 16px; height: 16px; color: var(--text-light); }
+
+/* ─── BACK BTN ─── */
+.back-btn { display: flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 600; color: var(--primary-light); cursor: pointer; margin-bottom: 12px; }
+.back-btn svg { width: 14px; height: 14px; }
+
+/* ─── UTILS ─── */
+.flex { display: flex; }
+.flex-1 { flex: 1; }
+.items-center { align-items: center; }
+.justify-between { justify-content: space-between; }
+.gap-2 { gap: 8px; }
+.gap-1 { gap: 4px; }
+.mb-1 { margin-bottom: 8px; }
+.mb-2 { margin-bottom: 16px; }
+.mt-1 { margin-top: 8px; }
+.mt-2 { margin-top: 16px; }
+.text-muted { color: var(--text-muted); }
+.text-sm { font-size: 12px; }
+.font-bold { font-weight: 700; }
+.text-right { text-align: right; }
+.divider { height: 1px; background: var(--border); margin: 12px 0; }
+.refresh-btn { display: flex; align-items: center; gap: 4px; font-size: 11px; color: var(--text-muted); cursor: pointer; }
+.refresh-btn svg { width: 12px; height: 12px; }
+.raise-ticket-btn { display: flex; align-items: center; gap: 6px; padding: 8px 14px; background: var(--accent); color: #fff; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; transition: background .2s; }
+.raise-ticket-btn:hover { background: #ea6c00; }
+.raise-ticket-btn svg { width: 14px; height: 14px; }
+.top-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.section-title { font-size: 13px; font-weight: 700; color: var(--text); }
+.view-all { font-size: 11px; color: var(--primary-light); font-weight: 600; cursor: pointer; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div id="header">
+  <div class="logo-wrap">
+    <div class="logo-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+    </div>
+    <div>
+      <div class="logo-text">RM CRM</div>
+      <div class="logo-sub">Relationship Manager</div>
+    </div>
+  </div>
+
+  <div class="search-wrap">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    <input id="globalSearch" type="text" placeholder="Search by ID, Phone, email.."/>
+  </div>
+
+  <button class="hdr-btn hdr-btn-outline" onclick="openAssignedLeads()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+    View assigned leads
+  </button>
+
+  <div class="call-merge-wrap">
+    <span class="label">For call merge</span>
+    <div class="status-dot" id="callDot"></div>
+    <select id="callMergeSelect" onchange="updateCallStatus(this.value)">
+      <option value="active">Active</option>
+      <option value="busy">Busy</option>
+      <option value="away">Away</option>
+    </select>
+  </div>
+
+  <div class="hdr-spacer"></div>
+
+  <div class="role-selector">
+    <label>Role:</label>
+    <select id="rolePicker" onchange="switchRole(this.value)">
+      <option value="rm">RM</option>
+      <option value="team_lead">Team Lead</option>
+      <option value="manager_rm">Manager RM</option>
+      <option value="senior_manager">Senior Manager</option>
+    </select>
+  </div>
+
+  <div class="icon-btn" onclick="toggleNotifPanel()" title="Notifications">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+    <div class="badge" id="notifBadge">3</div>
+  </div>
+
+  <div class="avatar-btn" onclick="toggleProfileDropdown()" title="Profile">AP</div>
+</div>
+
+<!-- PROMO BANNER -->
+<div id="promoBanner">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+  Focus on Correct Lead — Before Logging Off, Clear All the Tasks!
+</div>
+
+<!-- TAB BAR -->
+<div id="tabBar">
+  <div class="tab-item active" onclick="switchTab('tasks')" id="tab-tasks">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
+    Tasks & Performance
+  </div>
+  <div class="tab-item" onclick="switchTab('incentives')" id="tab-incentives">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+    Incentives & Earnings
+  </div>
+  <div class="tab-item" onclick="switchTab('ld')" id="tab-ld">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+    Learning & Development
+  </div>
+</div>
+
+<!-- MAIN -->
+<div id="main">
+
+  <!-- ===== TASKS TAB ===== -->
+  <div id="panel-tasks">
+
+    <!-- Manager Roll-up -->
+    <div id="mgrRollup" class="hidden">
+      <div class="top-bar mb-2">
+        <div class="section-title">Team Overview — RM Performance</div>
+        <div class="flex items-center gap-2">
+          <button class="btn-secondary btn-sm" onclick="">Export</button>
+          <button class="refresh-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-.13-2.36"/></svg> Refresh</button>
+        </div>
+      </div>
+      <div class="mgr-table-wrap mb-2">
+        <table class="mgr-table" id="mgrTable">
+          <thead>
+            <tr>
+              <th>RM Name</th>
+              <th>Boost STI</th>
+              <th>Boost Revenue</th>
+              <th>Boost Loan</th>
+              <th>Quality</th>
+              <th>Overdue</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="mgrTableBody"></tbody>
+        </table>
+      </div>
+      <div id="mgrDrilldown" class="hidden">
+        <button class="back-btn" onclick="closeMgrDrilldown()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+          Back to Team View
+        </button>
+        <div id="mgrDrilldownContent"></div>
+      </div>
+    </div>
+
+    <!-- RM Dashboard -->
+    <div id="rmDashboard">
+      <!-- Boost Output -->
+      <div class="section-label">
+        <span>Boost Output</span>
+        <span class="pill pill-orange" id="boostOutputLabel">Action Required</span>
+      </div>
+      <div class="cards-grid" id="boostOutputCards">
+        <!-- Boost STI -->
+        <div class="metric-card accent-orange" onclick="openPipeline('sti')">
+          <div class="card-header">
+            <div class="card-title">Boost STI</div>
+            <div class="card-icon icon-orange">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+            </div>
+          </div>
+          <div class="card-count orange" id="stiCount">7</div>
+          <div class="card-sub">Docs + App Ready + F2F pending</div>
+          <div class="card-cta">View Pipeline <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></div>
+        </div>
+        <!-- Boost Revenue -->
+        <div class="metric-card accent-green" onclick="openPipeline('revenue')">
+          <div class="card-header">
+            <div class="card-title">Boost Revenue</div>
+            <div class="card-icon icon-green">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+            </div>
+          </div>
+          <div class="card-count orange" id="revenueCount">4</div>
+          <div class="card-sub">Lock-ins pending — C2I · Prime</div>
+          <div class="card-cta">View Pipeline <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></div>
+        </div>
+        <!-- Boost Loan -->
+        <div class="metric-card accent-blue" onclick="openPipeline('loan')">
+          <div class="card-header">
+            <div class="card-title">Boost Loan</div>
+            <div class="card-icon icon-blue">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+            </div>
+          </div>
+          <div class="card-count red" id="loanCount">9</div>
+          <div class="card-sub">Loan VC + PF Log-in pending</div>
+          <div class="card-cta">View Pipeline <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></div>
+        </div>
+      </div>
+
+      <!-- Boost Input -->
+      <div class="section-label mt-2">
+        <span>Boost Input</span>
+        <span class="pill pill-orange">Volume + Quality</span>
+      </div>
+      <div class="cards-grid">
+        <!-- Quality -->
+        <div class="metric-card accent-purple">
+          <div class="card-header">
+            <div class="card-title">Quality Score</div>
+            <div class="card-icon icon-purple">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            </div>
+          </div>
+          <div class="quality-bars">
+            <div class="quality-row"><span class="quality-label">1st</span><div class="quality-bar-wrap"><div class="quality-bar" style="width:59%"></div></div><span class="quality-val">59%</span></div>
+            <div class="quality-row"><span class="quality-label">2nd</span><div class="quality-bar-wrap"><div class="quality-bar good" style="width:85%"></div></div><span class="quality-val">85%</span></div>
+          </div>
+          <div class="best-tag">Best: <strong>Rahul K.</strong> · 94%</div>
+        </div>
+        <!-- Potential Escalations -->
+        <div class="metric-card accent-orange">
+          <div class="card-header">
+            <div class="card-title">Potential Escalations</div>
+            <div class="card-icon icon-red">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            </div>
+          </div>
+          <div class="escalation-list">
+            <div class="esc-item"><span>Customer Support</span><span class="esc-count r">6</span></div>
+            <div class="esc-item"><span>Low ISL Feedback</span><span class="esc-count o">3</span></div>
+            <div class="esc-item"><span>Msgs Not Replied</span><span class="esc-count r">8</span></div>
+            <div class="esc-item"><span>IS Pending</span><span class="esc-count o">2</span></div>
+          </div>
+          <div class="mt-1"><a href="#" class="view-all" onclick="showToast('Opening all escalation groups...');return false;">View all groups →</a></div>
+        </div>
+        <!-- Own Tasks -->
+        <div class="metric-card accent-purple">
+          <div class="card-header">
+            <div class="card-title">Own Tasks</div>
+            <div class="card-icon icon-purple">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            </div>
+          </div>
+          <div class="card-count orange" id="ownTasksCount">5</div>
+          <div class="card-sub">5 pending reminders</div>
+          <div class="card-cta">View all <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></div>
+        </div>
+      </div>
+
+      <!-- Important Business Tasks -->
+      <div class="section-card mb-1">
+        <div class="section-card-header" onclick="toggleSection('ibt')">
+          <div class="sch-icon icon-orange"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--accent)"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
+          <div class="sch-title">Important Business Tasks</div>
+          <span class="sch-badge badge-orange">12 pending</span>
+          <svg class="chevron open" id="chevron-ibt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <div class="section-card-body open" id="body-ibt">
+          <div class="ibt-grid">
+            <div class="ibt-item"><span class="ibt-label">F2F Scheduled</span><span class="ibt-count orange">4</span></div>
+            <div class="ibt-item"><span class="ibt-label">App Ready Follow-up</span><span class="ibt-count orange">3</span></div>
+            <div class="ibt-item"><span class="ibt-label">Lock-in Confirmation</span><span class="ibt-count red">5</span></div>
+            <div class="ibt-item"><span class="ibt-label">Loan VC Booking</span><span class="ibt-count orange">2</span></div>
+            <div class="ibt-item"><span class="ibt-label">STI Docs Collection</span><span class="ibt-count green">0</span></div>
+            <div class="ibt-item"><span class="ibt-label">Query Resolutions</span><span class="ibt-count orange">3</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Top Performers -->
+      <div class="section-card">
+        <div class="section-card-header" onclick="toggleSection('topperf')">
+          <div class="sch-icon icon-orange"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--accent)"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></div>
+          <div class="sch-title">Top Performers</div>
+          <svg class="chevron" id="chevron-topperf" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <div class="section-card-body" id="body-topperf">
+          <div class="perf-toggle" id="perfToggle">
+            <button class="active" onclick="setPerfWindow('yesterday',this)">Yesterday</button>
+            <button onclick="setPerfWindow('month',this)">This Month</button>
+            <button onclick="setPerfWindow('3months',this)">Last 3 Months</button>
+          </div>
+          <div class="section-label">By Lock-in Count</div>
+          <div class="leaderboard" id="leaderboard">
+            <div class="lb-item"><div class="lb-rank r1">1</div><div class="lb-avatar">RK</div><div class="lb-name">Rahul Kumar</div><div class="lb-val">12</div></div>
+            <div class="lb-item"><div class="lb-rank r2">2</div><div class="lb-avatar" style="background:#6d28d9">PJ</div><div class="lb-name">Priya Joshi</div><div class="lb-val">10</div></div>
+            <div class="lb-item"><div class="lb-rank r3">3</div><div class="lb-avatar" style="background:#0369a1">AK</div><div class="lb-name">Amit Khurana</div><div class="lb-val">8</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Performance Summary -->
+      <div class="section-card">
+        <div class="section-card-header" onclick="toggleSection('perfsummary')">
+          <div class="sch-icon icon-blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--info)"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div>
+          <div class="sch-title">Performance Summary</div>
+          <svg class="chevron" id="chevron-perfsummary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <div class="section-card-body" id="body-perfsummary">
+          <div id="perfSummaryContent"></div>
+        </div>
+      </div>
+
+      <!-- Add a Reminder -->
+      <div class="section-card">
+        <div class="section-card-header" onclick="toggleSection('reminder')">
+          <div class="sch-icon icon-purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:#7c3aed"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+          <div class="sch-title">Add a Reminder for Yourself</div>
+          <svg class="chevron" id="chevron-reminder" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <div class="section-card-body" id="body-reminder">
+          <div class="reminder-form">
+            <div class="form-field">
+              <label class="form-label">Reminder Text *</label>
+              <textarea class="form-input" placeholder="What do you want to remember?" maxlength="200" id="reminderText"></textarea>
+            </div>
+            <div class="form-field">
+              <label class="form-label">Date & Time *</label>
+              <input class="form-input" type="datetime-local" id="reminderDateTime"/>
+            </div>
+            <div class="form-field">
+              <label class="form-label">Linked Lead (optional)</label>
+              <select class="form-input" id="reminderLead">
+                <option value="">— General reminder —</option>
+                <option value="l1">Ananya Sharma (RM-2041)</option>
+                <option value="l2">Karan Mehta (RM-2089)</option>
+                <option value="l3">Deepa Nair (RM-2103)</option>
+              </select>
+            </div>
+            <button class="btn-primary btn-sm" onclick="saveReminder()">Save Reminder</button>
+          </div>
+        </div>
+      </div>
+    </div><!-- /rmDashboard -->
+  </div><!-- /panel-tasks -->
+
+  <!-- ===== INCENTIVES TAB ===== -->
+  <div id="panel-incentives" class="hidden">
+    <div id="opportunityDetail" class="hidden">
+      <button class="back-btn" onclick="closeOppDetail()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+        Back to Incentives & Earnings
+      </button>
+      <div class="section-title mb-1">Total Pipeline Opportunity</div>
+      <div class="earn-card orange" style="margin-bottom:12px;">
+        <div class="earn-label">Total Pipeline Value</div>
+        <div class="earn-amount orange">₹2,84,000</div>
+        <div class="earn-sub">14 tasks across all stages</div>
+      </div>
+      <div class="opp-cards">
+        <div class="opp-card" onclick="openPipeline('sti')">
+          <div class="opp-card-info">
+            <div class="opp-card-name">Boost STI</div>
+            <div class="opp-card-meta">7 tasks</div>
+          </div>
+          <div class="opp-card-val">₹1,12,000</div>
+          <svg class="opp-card-arr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>
+        <div class="opp-card" onclick="openPipeline('revenue')">
+          <div class="opp-card-info">
+            <div class="opp-card-name">Boost Revenue</div>
+            <div class="opp-card-meta">4 tasks</div>
+          </div>
+          <div class="opp-card-val">₹96,000</div>
+          <svg class="opp-card-arr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>
+        <div class="opp-card" onclick="openPipeline('loan')">
+          <div class="opp-card-info">
+            <div class="opp-card-name">Boost Loan</div>
+            <div class="opp-card-meta">3 tasks</div>
+          </div>
+          <div class="opp-card-val">₹76,000</div>
+          <svg class="opp-card-arr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>
+      </div>
+    </div>
+
+    <div id="incentivesMain">
+      <div class="earn-cards">
+        <div class="earn-card">
+          <div class="earn-label">Earned So Far</div>
+          <div class="earn-amount">₹18,400</div>
+          <div class="earn-sub">September 2026 · Monthly</div>
+          <button class="earn-expand-btn" onclick="toggleBreakdown()">
+            View Breakdown
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+          <div id="earnBreakdown" class="hidden">
+            <table class="breakdown-table">
+              <thead><tr><th>Component · Period</th><th>Status</th><th>Earned</th></tr></thead>
+              <tbody>
+                <tr><td>Deposits | 2 deposits (100%)</td><td><span class="status-pill sp-good">Done</span></td><td>₹4,000</td></tr>
+                <tr><td>Lock-ins (C2I)</td><td><span class="status-pill sp-track">On Track</span></td><td>₹8,000</td></tr>
+                <tr><td>F2F Conversion</td><td><span class="status-pill sp-track">On Track</span></td><td>₹4,400</td></tr>
+                <tr><td>Quality Bonus</td><td><span class="status-pill sp-focus">Below</span></td><td>₹2,000</td></tr>
+                <tr><td><strong>Total</strong></td><td></td><td><strong>₹18,400</strong></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="earn-card orange" onclick="openOppDetail()" style="cursor:pointer">
+          <div class="earn-label">Opportunity Size</div>
+          <div class="earn-amount orange">₹2,84,000</div>
+          <div class="earn-sub">14 open tasks · Click to view breakdown</div>
+        </div>
+      </div>
+
+      <!-- On Going Offers -->
+      <div class="section-card">
+        <div class="section-card-header" onclick="toggleSection('offers')">
+          <div class="sch-icon icon-orange"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--accent)"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg></div>
+          <div class="sch-title">On Going Offers</div>
+          <span class="sch-badge badge-green">2 active</span>
+          <svg class="chevron" id="chevron-offers" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <div class="section-card-body" id="body-offers">
+          <div class="ibt-grid">
+            <div class="ibt-item"><span class="ibt-label">Referral Drive Sep'26</span><span class="ibt-count green">+₹2K</span></div>
+            <div class="ibt-item"><span class="ibt-label">Lock-in Sprint Bonus</span><span class="ibt-count orange">Ends Sep 15</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Top Earners -->
+      <div class="section-card">
+        <div class="section-card-header" onclick="toggleSection('earners')">
+          <div class="sch-icon icon-green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--success)"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></div>
+          <div class="sch-title">Top Earners</div>
+          <svg class="chevron" id="chevron-earners" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <div class="section-card-body" id="body-earners">
+          <div class="leaderboard">
+            <div class="lb-item"><div class="lb-rank r1">1</div><div class="lb-avatar">RK</div><div class="lb-name">Rahul Kumar</div><div class="lb-val">₹34,200</div></div>
+            <div class="lb-item"><div class="lb-rank r2">2</div><div class="lb-avatar" style="background:#6d28d9">PJ</div><div class="lb-name">Priya Joshi</div><div class="lb-val">₹28,500</div></div>
+            <div class="lb-item"><div class="lb-rank r3">3</div><div class="lb-avatar" style="background:#0369a1">AK</div><div class="lb-name">Amit Khurana</div><div class="lb-val">₹24,800</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Monthly Trend -->
+      <div class="section-card">
+        <div class="section-card-header" onclick="toggleSection('trend')">
+          <div class="sch-icon icon-blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--info)"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+          <div class="sch-title">Monthly Incentive Earned — FY 2026-27</div>
+          <svg class="chevron" id="chevron-trend" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <div class="section-card-body" id="body-trend">
+          <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:8px;text-align:center;">
+            <div><div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">Apr</div><div style="height:40px;background:var(--primary-light);border-radius:4px;opacity:.4"></div><div style="font-size:10px;margin-top:3px;font-weight:600">₹12K</div></div>
+            <div><div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">May</div><div style="height:55px;background:var(--primary-light);border-radius:4px;opacity:.5"></div><div style="font-size:10px;margin-top:3px;font-weight:600">₹16K</div></div>
+            <div><div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">Jun</div><div style="height:48px;background:var(--primary-light);border-radius:4px;opacity:.55"></div><div style="font-size:10px;margin-top:3px;font-weight:600">₹14K</div></div>
+            <div><div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">Jul</div><div style="height:62px;background:var(--primary-light);border-radius:4px;opacity:.65"></div><div style="font-size:10px;margin-top:3px;font-weight:600">₹18K</div></div>
+            <div><div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">Aug</div><div style="height:70px;background:var(--primary-light);border-radius:4px;opacity:.75"></div><div style="font-size:10px;margin-top:3px;font-weight:600">₹21K</div></div>
+            <div><div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">Sep</div><div style="height:52px;background:var(--accent);border-radius:4px;opacity:.9"></div><div style="font-size:10px;margin-top:3px;font-weight:700;color:var(--accent)">₹18K↑</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Performance Scorecard -->
+      <div class="section-card">
+        <div class="section-card-header" onclick="toggleSection('scorecard')">
+          <div class="sch-icon icon-blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--info)"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div>
+          <div class="sch-title">Performance Scorecard</div>
+          <svg class="chevron" id="chevron-scorecard" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <div class="section-card-body" id="body-scorecard">
+          <div id="perfScorecardContent"></div>
+        </div>
+      </div>
+    </div>
+  </div><!-- /panel-incentives -->
+
+  <!-- ===== L&D TAB ===== -->
+  <div id="panel-ld" class="hidden">
+    <div class="top-bar">
+      <div class="section-title">Learning & Development</div>
+      <button class="raise-ticket-btn" onclick="openTicketModal()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Raise New Ticket
+      </button>
+    </div>
+
+    <!-- My Tickets -->
+    <div class="section-label mt-1">My Tickets</div>
+    <div class="ticket-cards">
+      <div class="ticket-card tc-blue" onclick="showToast('Opening Total Raised tickets...')">
+        <div class="tc-label">Total Raised</div>
+        <div class="tc-count">8</div>
+        <div class="tc-sub">Tap to view</div>
+      </div>
+      <div class="ticket-card tc-green" onclick="showToast('Opening Resolved tickets...')">
+        <div class="tc-label">Resolved</div>
+        <div class="tc-count">5</div>
+        <div class="tc-sub">Tap to view</div>
+      </div>
+      <div class="ticket-card tc-red" onclick="showToast('Opening Not Resolved tickets...')">
+        <div class="tc-label">Not Resolved</div>
+        <div class="tc-count">3</div>
+        <div class="tc-sub">Tap to view</div>
+      </div>
+    </div>
+
+    <!-- IMP Sheet -->
+    <div class="section-card mb-1">
+      <div class="section-card-header" onclick="toggleSection('impsheet')">
+        <div class="sch-icon icon-blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--info)"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+        <div class="sch-title">IMP Sheet</div>
+        <svg class="chevron" id="chevron-impsheet" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="section-card-body" id="body-impsheet">
+        <div class="imp-links">
+          <div class="imp-link" onclick="showToast('Opening Raise SOP Request...')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><span class="imp-link-label">Raise SOP Request</span><svg class="imp-link-arr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></div>
+          <div class="imp-link" onclick="showToast('Opening Offer Follow Up...')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.99 9.8a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.9 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg><span class="imp-link-label">Offer Follow Up</span><svg class="imp-link-arr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></div>
+          <div class="imp-link" onclick="showToast('Opening Lead Transfer Request...')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg><span class="imp-link-label">Raise Lead Transfer Request</span><svg class="imp-link-arr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></div>
+          <div class="imp-link" onclick="showToast('Opening Info-Hub...')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><span class="imp-link-label">Info-Hub</span><svg class="imp-link-arr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></div>
+          <div class="imp-link" onclick="showToast('Opening LeapPay Payment Link...')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg><span class="imp-link-label">LeapPay Payment Link</span><svg class="imp-link-arr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></div>
+          <div class="imp-link" onclick="showToast('Opening Premium Payment Links...')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg><span class="imp-link-label">Premium Payment Links</span><svg class="imp-link-arr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Training Modules -->
+    <div class="section-card">
+      <div class="section-card-header" onclick="toggleSection('training')">
+        <div class="sch-icon" style="background:#fef3c7"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:#b45309"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg></div>
+        <div class="sch-title">Training Modules</div>
+        <svg class="chevron open" id="chevron-training" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="section-card-body open" id="body-training">
+        <div class="section-label" style="font-size:9px;margin-bottom:6px;color:var(--accent);">PLATFORM INTEGRATIONS</div>
+        <div class="training-cats" id="trainingCats"></div>
+      </div>
+    </div>
+  </div><!-- /panel-ld -->
+
+</div><!-- /main -->
+
+<!-- ─── NOTIFICATION PANEL ─── -->
+<div class="notif-panel" id="notifPanel">
+  <div class="notif-panel-header">
+    <h3>Notifications</h3>
+    <span class="sch-badge badge-orange" id="notifPanelBadge">3</span>
+  </div>
+  <div class="notif-subcard">
+    <div class="notif-subcard-header" onclick="toggleNotifSub('reminders')">
+      <span class="nsh-title">Own Reminders</span>
+      <span class="nsh-badge badge-orange" id="reminderBadge">2</span>
+      <svg class="chevron" id="chevron-notif-reminders" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+    <div class="notif-subcard-body" id="notifRemindersBody">
+      <div class="notif-item"><div class="ni-title">Follow-up with Ananya Sharma</div><div class="ni-sub">Due today · RM-2041</div></div>
+      <div class="notif-item"><div class="ni-title">Submit Loan VC paperwork</div><div class="ni-sub">Due today · General</div></div>
+    </div>
+  </div>
+  <div class="notif-subcard">
+    <div class="notif-subcard-header" onclick="toggleNotifSub('unhappy')">
+      <span class="nsh-title">Potential Escalations</span>
+      <span class="nsh-badge badge-red" id="unhappyBadge">1</span>
+      <svg class="chevron" id="chevron-notif-unhappy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+    <div class="notif-subcard-body" id="notifUnhappyBody">
+      <div class="notif-item"><div class="ni-title">Karan Mehta — ISL Rating: 5</div><div class="ni-sub">Below threshold · Needs follow-up</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── PROFILE DROPDOWN ─── -->
+<div class="profile-dropdown" id="profileDropdown">
+  <div class="pd-header">
+    <div class="pd-name" id="pdName">Arjun Patel</div>
+    <div class="pd-role" id="pdRole">Relationship Manager</div>
+  </div>
+  <div class="pd-item" onclick="openProfile()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    View Profile
+  </div>
+  <div class="pd-item danger" onclick="showToast('Logging out...')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+    Log Out
+  </div>
+</div>
+
+<!-- ─── OVERLAY + DRAWER (Leads) ─── -->
+<div class="overlay" id="overlay" onclick="closeDrawer()"></div>
+<div class="drawer" id="drawer">
+  <div class="drawer-header">
+    <button class="drawer-back" onclick="closeDrawer()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg> Back</button>
+    <div class="drawer-title" id="drawerTitle">Pipeline</div>
+    <div class="drawer-close" onclick="closeDrawer()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>
+  </div>
+  <div class="drawer-body" id="drawerBody"></div>
+</div>
+
+<!-- ─── TICKET MODAL ─── -->
+<div class="modal" id="ticketModal">
+  <div class="modal-backdrop" onclick="closeTicketModal()"></div>
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3>Raise New Ticket</h3>
+      <div class="drawer-close" onclick="closeTicketModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>
+    </div>
+    <div class="modal-body">
+      <div class="reminder-form">
+        <div class="form-field">
+          <label class="form-label">Category *</label>
+          <select class="form-input" id="ticketCategory">
+            <option value="">Select category</option>
+            <option>Technical Issue</option>
+            <option>Data Correction</option>
+            <option>Policy Question</option>
+            <option>Access Request</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label class="form-label">Subject *</label>
+          <input class="form-input" type="text" placeholder="Brief subject (max 100 chars)" maxlength="100" id="ticketSubject"/>
+        </div>
+        <div class="form-field">
+          <label class="form-label">Description *</label>
+          <textarea class="form-input" placeholder="Describe the issue in detail (max 1000 chars)" maxlength="1000" id="ticketDesc" style="min-height:100px"></textarea>
+        </div>
+        <div class="form-field">
+          <label class="form-label">Attachment (optional)</label>
+          <input class="form-input" type="file" id="ticketFile"/>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeTicketModal()">Cancel</button>
+      <button class="btn-primary" onclick="submitTicket()">Raise Ticket</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<script src="rm-app.js?v=1"></script>
+</body>
+</html>
