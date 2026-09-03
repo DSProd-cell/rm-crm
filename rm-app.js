@@ -365,7 +365,7 @@ function pipelineLeaves(type) {
 // ─── SEVERITY COLOR SYSTEM (red/amber/green, driven by count) ────────────────
 function severityColors(level) {
   if (level === 'green') return { g1:'#ECFDF5', g2:'#D1FAE5', border:'#C8E6C9', shadow:'#66BB6A55', label:'#2E7D32', count:'#2E7D32', sub:'#2E7D32', cta:'#2E7D32', ctaBg:'#D1FAE5' };
-  if (level === 'amber') return { g1:'#FFF8E1', g2:'#FFECB3', border:'#FFCC80', shadow:'#FFB74D55', label:'#E65100', count:'#E65100', sub:'#E65100', cta:'#E65100', ctaBg:'#FFECB3' };
+  if (level === 'amber') return { g1:'#FFF7ED', g2:'#FFEDD5', border:'#FED7AA', shadow:'#FDBA7455', label:'#EA580C', count:'#EA580C', sub:'#EA580C', cta:'#EA580C', ctaBg:'#FFEDD5' };
   return { g1:'#FEF2F2', g2:'#FEE2E2', border:'#FFCDD2', shadow:'#FCA5A555', label:'#C62828', count:'#C62828', sub:'#DC2626', cta:'#C62828', ctaBg:'#FEE2E2' };
 }
 function boostSeverity(count) {
@@ -756,40 +756,118 @@ function openAssignedLeads() {
 
 // ─── POTENTIAL ESCALATION DRAWER ("All About User") ──────────────────────────
 const ESCALATION_GROUPS = [
-  { key:'not_happy', icon:'😕', title:'Student Not Happy', count:0, subtitle:'students need attention', ok:true },
-  { key:'wa_summary', icon:'💬', title:'WA Summary', count:8, subtitle:'WhatsApp Group Activity', ok:false },
-  { key:'is_pending', icon:'⏱️', title:'IS Pending and Breached', count:2, subtitle:'students with pending breached tasks', ok:false },
-  { key:'missed_calls', icon:'📵', title:'Missed Calls', count:6, subtitle:'students with missed calls', ok:false },
+  { key:'not_happy', icon:'🚨', title:'Student Not Happy', count:0, subtitle:'students need attention',
+    definition:'Students who have shared negative feedback about their experience with us.',
+    closure:'Reach out to understand their concern and resolve it. Task closes once the student confirms they’re satisfied.' },
+  { key:'wa_summary', icon:'💬', title:'WA Summary', subtitle:'WhatsApp Group Activity', isWa:true },
+  { key:'is_pending', icon:'🚨', title:'IS Pending and Breached', count:2, subtitle:'students with pending breached tasks',
+    definition:'Students with an Important Service (IS) task that is pending and has breached its SLA.',
+    closure:'Resolve the pending IS task with the student. Task closes once it is marked complete.' },
+  { key:'missed_calls', icon:'🚨', title:'Missed Calls', count:6, subtitle:'students with missed calls', forceOk:true,
+    definition:'Students who called in but the call could not be attended.',
+    closure:'Call the student back at the earliest. Task closes once the callback is logged.' },
+];
+
+const WA_SUMMARY_GROUPS = [
+  { key:'waActive', icon:'✅', title:'Active Groups', count:5, ok:true,
+    definition:'Groups with recent, healthy conversation activity.',
+    closure:'No action needed — keep the conversation going.' },
+  { key:'waInactive', icon:'⚠️', title:'Inactive Groups', count:9,
+    definition:'These students haven’t interacted on our group-chat.',
+    closure:'Kickstart conversation with these students as per their state and ensure you’re always in touch with your students.' },
+  { key:'studentNotJoined', icon:'👤', title:'Students Not Joined Groups', count:4,
+    definition:'Students who haven’t joined their WhatsApp group yet.',
+    closure:'Nudge the student to join the group. Task closes once they join.' },
+  { key:'notReplied', icon:'💬', title:'Messages Not Replied', count:8,
+    definition:'Groups where the student’s last message hasn’t been replied to.',
+    closure:'Reply to the pending message. Task closes once a reply is sent.' },
+  { key:'notJoined', icon:'🚫', title:'Group Not Created / Counsellors Not Joined', count:3,
+    definition:'Students without a group yet, or where the counsellor hasn’t joined the group.',
+    closure:'Create the group or join it as the counsellor. Task closes once resolved.' },
 ];
 
 function openEscalationDrawer() {
   const html = `
-    <p class="text-sm text-text-muted mb-4">Students who need your immediate attention — review at a case level and take relevant actions.</p>
-    <div class="space-y-2.5" id="escGroupList">${buildEscalationGroups()}</div>`;
+    <p class="text-xs text-[#64748B] mb-4">Students who need your immediate attention, they have shared us an feedback now review at an case level and take relevant actions.</p>
+    <div class="flex flex-col gap-3" id="escGroupList">${buildEscalationGroups()}</div>`;
   openDrawer('All About User — Immediate Attention Required', html);
 }
 
+function escDefClosureHtml(g) {
+  return `<div class="flex flex-col border border-border rounded-lg overflow-hidden mb-2">
+    <div class="px-3 py-2.5" style="background:#EFF6FF">
+      <p class="text-[11px] font-semibold uppercase tracking-wide mb-1" style="color:#1D4ED8">ℹ️ Definition</p>
+      <p class="text-[12px] leading-relaxed" style="color:#2563EB">${g.definition}</p>
+    </div>
+    <div class="px-3 py-2.5" style="background:#F0FDF4">
+      <p class="text-[11px] font-semibold uppercase tracking-wide mb-1" style="color:#15803D">✅ Task Closure</p>
+      <p class="text-[12px] leading-relaxed" style="color:#16A34A">${g.closure}</p>
+    </div>
+  </div>`;
+}
+
+function escLeadRowHtml(l, waLink) {
+  return `<div class="p-3 space-y-2 border-b border-[#E2E8F0] last:border-b-0">
+    <div class="min-w-0">
+      <p class="text-[13px] font-semibold text-[#0F172A] leading-tight">${l.name}</p>
+      <p class="text-[11px] text-[#64748B] mt-0.5">${l.id}</p>
+    </div>
+    <div class="flex items-center gap-2">
+      ${waLink ? `<button class="flex-1 inline-flex items-center justify-center gap-1 px-2 py-1.5 rounded-lg text-[11px] font-semibold cursor-pointer transition-colors" style="background:#DCFCE7;border:1px solid #86EFAC;color:#15803D" onclick="showToast('Opening WhatsApp group for ${l.name}…','info')">Open WA Group</button>` : ''}
+      <button class="flex-1 inline-flex items-center justify-center gap-1 px-2 py-1.5 rounded-lg text-[11px] font-semibold cursor-pointer transition-colors" style="background:#EEF2FF;border:1px solid #C7D2FE;color:#4338CA" onclick="openLeadDetail('${l.pipeline}','${l.id}')">View Student</button>
+    </div>
+  </div>`;
+}
+
+function escRowHeaderHtml({ icon, iconSize, title, subtitle, ok, chevId, onclick, compact }) {
+  return `<div class="w-full flex items-center justify-between gap-4 ${compact ? 'px-[10px] py-2' : 'px-4 py-3.5'} cursor-pointer transition-colors" onclick="${onclick}">
+    <div class="flex items-center gap-3 min-w-0">
+      <div class="${compact ? 'w-7 h-7' : 'w-9 h-9'} rounded-lg flex items-center justify-center flex-shrink-0"><span style="font-size:${iconSize}px">${icon}</span></div>
+      <div class="text-left min-w-0">
+        <div class="${compact ? 'text-[13px]' : 'text-base'} font-semibold text-[#0F172A] truncate">${title}</div>
+        ${subtitle ? `<div class="text-xs text-[#64748B] mt-0.5">${subtitle}</div>` : ''}
+      </div>
+    </div>
+    <svg class="w-4 h-4 transition-transform flex-shrink-0" id="${chevId}" style="color:#64748B" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9" stroke-width="2"/></svg>
+  </div>`;
+}
+
 function buildEscalationGroups() {
-  return ESCALATION_GROUPS.map(g => `
-    <div>
-      <div class="esc-group-row ${g.ok ? 'ok' : 'warn'}" onclick="toggleEscalationGroup('${g.key}')">
-        <span class="text-lg flex-shrink-0">${g.icon}</span>
-        <div class="flex-1 min-w-0">
-          <div class="text-sm font-bold" style="color:${g.ok ? '#166534' : '#991B1B'}">${g.title}</div>
-          <div class="text-xs" style="color:${g.ok ? '#15803D' : '#B91C1C'}">${g.count} ${g.subtitle}</div>
-        </div>
-        <svg class="w-4 h-4 transition-transform" id="esc-chev-${g.key}" style="color:${g.ok ? '#166534' : '#991B1B'}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9" stroke-width="2"/></svg>
+  return ESCALATION_GROUPS.map(g => {
+    const ok = g.isWa ? !waSummaryHasIssues() : (g.forceOk || g.count === 0);
+    return `
+    <div class="esc-group-row ${ok ? 'ok' : 'warn'}">
+      ${escRowHeaderHtml({ icon:g.icon, iconSize:20, title:g.title, subtitle: g.isWa ? g.subtitle : `${g.count} ${g.subtitle}`, chevId:`esc-chev-${g.key}`, onclick:`toggleEscalationGroup('${g.key}')` })}
+      <div class="hidden bg-white px-4 pb-3.5" id="esc-body-${g.key}">
+        ${g.isWa ? buildWaSummaryGroups() : `
+          ${escDefClosureHtml(g)}
+          ${g.count === 0
+            ? `<div class="text-xs text-text-muted text-center py-3">Nothing here right now — you're all caught up ✅</div>`
+            : `<div class="border border-[#E2E8F0] rounded-lg overflow-hidden">${leadsForEscalation(g.key).map(l => escLeadRowHtml(l, false)).join('')}</div>`}
+        `}
       </div>
-      <div class="hidden px-2 py-3" id="esc-body-${g.key}">
+    </div>`;
+  }).join('');
+}
+
+function waSummaryHasIssues() {
+  return WA_SUMMARY_GROUPS.some(g => !g.ok && g.count > 0);
+}
+
+function buildWaSummaryGroups() {
+  return `<div class="flex flex-col gap-2 pt-3">${WA_SUMMARY_GROUPS.map(g => {
+    const ok = g.ok || g.count === 0;
+    return `
+    <div class="esc-group-row wa-sub ${ok ? 'ok' : 'warn'}">
+      ${escRowHeaderHtml({ icon:g.icon, iconSize:14, title:`${g.title} <span class="inline-flex items-center justify-center text-[10px] bg-white px-2 py-0.5 rounded-full font-bold text-[#0F172A] ml-1">${g.count}</span>`, chevId:`wa-chev-${g.key}`, onclick:`toggleWaGroup('${g.key}')`, compact:true })}
+      <div class="hidden bg-white px-[10px] pb-2.5" id="wa-body-${g.key}">
+        ${escDefClosureHtml(g)}
         ${g.count === 0
-          ? `<div class="text-xs text-text-muted text-center py-2">Nothing here right now — you're all caught up ✅</div>`
-          : leadsForEscalation(g.key).map(l => `
-            <div class="flex items-center justify-between py-2 border-b border-border last:border-b-0">
-              <div><div class="text-xs font-semibold">${l.name}</div><div class="text-[10px] text-text-muted font-mono">${l.id}</div></div>
-              <button class="text-[11px] font-semibold text-primary cursor-pointer" onclick="openLeadDetail('${l.pipeline}','${l.id}')">View Lead →</button>
-            </div>`).join('')}
+          ? `<div class="text-xs text-text-muted text-center py-3">Nothing here right now ✅</div>`
+          : `<div class="border border-[#E2E8F0] rounded-lg overflow-hidden">${leadsForWaGroup(g.key).map(l => escLeadRowHtml(l, true)).join('')}</div>`}
       </div>
-    </div>`).join('');
+    </div>`;
+  }).join('')}</div>`;
 }
 
 function leadsForEscalation(key) {
@@ -798,15 +876,33 @@ function leadsForEscalation(key) {
     ...MOCK_LEADS.revenue.map(l => ({ ...l, pipeline:'revenue' })),
     ...MOCK_LEADS.loan.map(l => ({ ...l, pipeline:'loan' })),
   ];
-  if (key === 'wa_summary') return all.filter(l => l.overdue).slice(0, 8);
   if (key === 'is_pending') return all.filter(l => l.dueToday).slice(0, 2);
   if (key === 'missed_calls') return all.filter(l => l.overdue || l.dueToday).slice(0, 6);
+  return [];
+}
+
+function leadsForWaGroup(key) {
+  const all = [
+    ...MOCK_LEADS.sti.map(l => ({ ...l, pipeline:'sti' })),
+    ...MOCK_LEADS.revenue.map(l => ({ ...l, pipeline:'revenue' })),
+    ...MOCK_LEADS.loan.map(l => ({ ...l, pipeline:'loan' })),
+  ];
+  if (key === 'waActive') return all.filter(l => !l.overdue).slice(0, 5);
+  if (key === 'waInactive') return all.filter(l => l.overdue).slice(0, 9);
+  if (key === 'studentNotJoined') return all.filter(l => l.dueToday).slice(0, 4);
+  if (key === 'notReplied') return all.filter(l => l.overdue).slice(0, 8);
+  if (key === 'notJoined') return all.slice(0, 3);
   return [];
 }
 
 function toggleEscalationGroup(key) {
   document.getElementById(`esc-body-${key}`).classList.toggle('hidden');
   document.getElementById(`esc-chev-${key}`).classList.toggle('rotate-180');
+}
+
+function toggleWaGroup(key) {
+  document.getElementById(`wa-body-${key}`).classList.toggle('hidden');
+  document.getElementById(`wa-chev-${key}`).classList.toggle('rotate-180');
 }
 
 // ─── OWN TASKS DRAWER ──────────────────────────────────────────────────────────
