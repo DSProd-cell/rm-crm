@@ -392,6 +392,28 @@ function qualitySeverity(pct) {
   if (pct >= 50) return severityColors('amber');
   return severityColors('red');
 }
+
+const QUALITY_SCORE_BUCKETS = [
+  { label:'2nd Call Reschedule & Join', pct:62 },
+  { label:'Boost Lock-in', pct:74 },
+  { label:'Loan VC Book & Join', pct:55 },
+  { label:'Prep Demo Booked, Enrollment Pending', pct:40 },
+];
+function qualityBarColor(pct) {
+  if (pct >= 75) return '#16A34A';
+  if (pct >= 50) return '#EA580C';
+  return '#DC2626';
+}
+function qualityScoreBarsHtml(buckets) {
+  return buckets.map(b => `
+    <div>
+      <div class="flex items-center justify-between gap-2 mb-0.5">
+        <span class="text-[10px] text-text-muted leading-tight">${b.label}</span>
+        <span class="text-[10px] font-semibold font-mono flex-shrink-0">${b.pct}%</span>
+      </div>
+      <div class="h-1.5 bg-border rounded-full overflow-hidden"><div class="h-full rounded-full" style="width:${b.pct}%;background:${qualityBarColor(b.pct)}"></div></div>
+    </div>`).join('');
+}
 function applySeverityToCard(cardId, sev) {
   const card = document.getElementById(cardId);
   if (!card) return;
@@ -1017,9 +1039,12 @@ function renderMgrDashboard() {
   applySeverityToCard('boostCardMgrEscalations', boostSeverityWide(TEAM_ESCALATIONS.reduce((s, e) => s + e.count, 0)));
   applySeverityToCard('boostCardMgrOwnTasks', boostSeverity(3));
 
-  document.getElementById('mgrQualityBars').innerHTML = `
-    <div class="flex items-center gap-2"><span class="text-[10px] text-text-muted w-6">1st</span><div class="flex-1 h-1.5 bg-border rounded-full overflow-hidden"><div class="h-full bg-primary rounded-full" style="width:${avgQuality - 8}%"></div></div><span class="text-[10px] font-semibold font-mono w-8 text-right">${avgQuality - 8}%</span></div>
-    <div class="flex items-center gap-2"><span class="text-[10px] text-text-muted w-6">2nd</span><div class="flex-1 h-1.5 bg-border rounded-full overflow-hidden"><div class="h-full bg-success rounded-full" style="width:${avgQuality + 9}%"></div></div><span class="text-[10px] font-semibold font-mono w-8 text-right">${avgQuality + 9}%</span></div>`;
+  document.getElementById('mgrQualityBars').innerHTML = qualityScoreBarsHtml([
+    { label:'2nd Call Reschedule & Join', pct:Math.max(0, Math.min(100, avgQuality - 6)) },
+    { label:'Boost Lock-in', pct:Math.max(0, Math.min(100, avgQuality + 6)) },
+    { label:'Loan VC Book & Join', pct:Math.max(0, Math.min(100, avgQuality - 11)) },
+    { label:'Prep Demo Booked, Enrollment Pending', pct:Math.max(0, Math.min(100, avgQuality - 22)) },
+  ]);
   document.getElementById('mgrBestTag').innerHTML = `Best: <strong class="text-success">${best.name}</strong> · ${best.quality}`;
 
   document.getElementById('mgrEscalationList').innerHTML = TEAM_ESCALATIONS.map(e => escRowHtml(e.label, e.count)).join('');
@@ -2345,7 +2370,9 @@ function renderRmBoostSeverity() {
   applyBoostCardSeverity('boostCardSti', 7);
   applyBoostCardSeverity('boostCardRevenue', 6);
   applyBoostCardSeverity('boostCardLoan', 9);
-  applySeverityToCard('boostCardQuality', qualitySeverity(Math.round((59 + 85) / 2)));
+  const avgQualityPct = Math.round(QUALITY_SCORE_BUCKETS.reduce((s, b) => s + b.pct, 0) / QUALITY_SCORE_BUCKETS.length);
+  applySeverityToCard('boostCardQuality', qualitySeverity(avgQualityPct));
+  document.getElementById('qualityScoreBars').innerHTML = qualityScoreBarsHtml(QUALITY_SCORE_BUCKETS);
   applySeverityToCard('boostCardEscalations', boostSeverityWide(RM_ESCALATIONS.reduce((s, e) => s + e.count, 0)));
   applySeverityToCard('boostCardOwnTasks', boostSeverity(5));
   document.getElementById('rmEscalationList').innerHTML = RM_ESCALATIONS.map(e => escRowHtml(e.label, e.count)).join('');
