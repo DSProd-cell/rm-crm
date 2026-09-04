@@ -91,7 +91,7 @@
       </select>
     </div>
 
-    <div class="relative w-9 h-9 rounded-full flex items-center justify-center text-white hover:bg-white/10 cursor-pointer transition-colors flex-shrink-0" onclick="toggleNotifPanel()" title="Notifications">
+    <div class="relative w-9 h-9 rounded-full flex items-center justify-center text-white hover:bg-white/10 cursor-pointer transition-colors flex-shrink-0" onclick="openNotifPanel()" title="Notifications">
       <svg class="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.73 21a2 2 0 01-3.46 0"/></svg>
       <span id="notifBadge" class="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-1 bg-danger text-white text-[9px] font-bold rounded-full flex items-center justify-center border-2 border-sidebar">3</span>
     </div>
@@ -726,34 +726,6 @@
   </main>
 </div><!-- /appShell -->
 
-<!-- ═══ NOTIFICATION PANEL ═══ -->
-<div class="hidden fixed top-16 right-3 w-80 bg-white rounded-xl border border-border shadow-xl z-[150]" id="notifPanel">
-  <div class="px-4 py-3 border-b border-border flex items-center justify-between">
-    <h3 class="text-sm font-bold">Notifications</h3>
-    <span class="text-[10px] px-2 py-0.5 bg-accent/10 text-accent rounded-full font-semibold" id="notifPanelBadge">3</span>
-  </div>
-  <div>
-    <button class="w-full flex items-center gap-2 px-4 py-2.5 border-b border-border hover:bg-surface transition-colors cursor-pointer" onclick="toggleNotifSub('reminders')">
-      <span class="flex-1 text-left text-xs font-semibold">Own Reminders</span>
-      <span class="text-[10px] px-2 py-0.5 bg-accent/10 text-accent rounded-full font-bold" id="reminderBadge">2</span>
-      <svg class="w-3.5 h-3.5 text-text-muted transition-transform" id="chevron-notif-reminders" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9" stroke-width="2"/></svg>
-    </button>
-    <div class="hidden" id="notifRemindersBody">
-      <div class="px-4 py-2.5 border-b border-border"><div class="text-xs font-medium">Follow-up with Ananya Sharma</div><div class="text-[10px] text-text-muted mt-0.5">Due today · RM-2041</div></div>
-      <div class="px-4 py-2.5 border-b border-border"><div class="text-xs font-medium">Submit Loan VC paperwork</div><div class="text-[10px] text-text-muted mt-0.5">Due today · General</div></div>
-    </div>
-  </div>
-  <div>
-    <button class="w-full flex items-center gap-2 px-4 py-2.5 hover:bg-surface transition-colors cursor-pointer" onclick="toggleNotifSub('unhappy')">
-      <span class="flex-1 text-left text-xs font-semibold">Potential Escalations</span>
-      <span class="text-[10px] px-2 py-0.5 bg-danger/10 text-danger rounded-full font-bold" id="unhappyBadge">1</span>
-      <svg class="w-3.5 h-3.5 text-text-muted transition-transform" id="chevron-notif-unhappy" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9" stroke-width="2"/></svg>
-    </button>
-    <div class="hidden" id="notifUnhappyBody">
-      <div class="px-4 py-2.5"><div class="text-xs font-medium">Karan Mehta — ISL Rating: 5</div><div class="text-[10px] text-text-muted mt-0.5">Below threshold · Needs follow-up</div></div>
-    </div>
-  </div>
-</div>
 
 <!-- ═══ PROFILE DROPDOWN ═══ -->
 <div class="hidden profile-dropdown fixed top-16 right-3 w-52 bg-white rounded-xl border border-border shadow-xl z-[150]" id="profileDropdown">
@@ -988,6 +960,6 @@
   </div>
 </div>
 
-<script src="rm-app.js?v=6"></script>
+<script src="rm-app.js?v=8"></script>
 </body>
 </html>

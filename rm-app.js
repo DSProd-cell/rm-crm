@@ -259,13 +259,6 @@ function toggleSection(id) {
   if (chevron) chevron.classList.toggle('rotate-180');
 }
 
-function toggleNotifSub(which) {
-  const bodyId = which === 'reminders' ? 'notifRemindersBody' : 'notifUnhappyBody';
-  const chevId = which === 'reminders' ? 'chevron-notif-reminders' : 'chevron-notif-unhappy';
-  document.getElementById(bodyId).classList.toggle('hidden');
-  document.getElementById(chevId).classList.toggle('rotate-180');
-}
-
 function toggleTrainingCat(key) {
   const body = document.getElementById(`tcat-body-${key}`);
   const chev = document.getElementById(`tcat-chev-${key}`);
@@ -274,26 +267,14 @@ function toggleTrainingCat(key) {
   if (chev) chev.classList.toggle('rotate-180');
 }
 
-// ─── NOTIFICATION PANEL / PROFILE ─────────────────────────────────────────────
-function toggleNotifPanel() {
-  const panel = document.getElementById('notifPanel');
-  state.notifOpen = !state.notifOpen;
-  panel.classList.toggle('hidden', !state.notifOpen);
-  if (state.profileOpen) { state.profileOpen = false; document.getElementById('profileDropdown').classList.add('hidden'); }
-}
-
+// ─── PROFILE DROPDOWN ──────────────────────────────────────────────────────────
 function toggleProfileDropdown() {
   const dd = document.getElementById('profileDropdown');
   state.profileOpen = !state.profileOpen;
   dd.classList.toggle('hidden', !state.profileOpen);
-  if (state.notifOpen) { state.notifOpen = false; document.getElementById('notifPanel').classList.add('hidden'); }
 }
 
 document.addEventListener('click', (e) => {
-  if (!e.target.closest('#notifPanel') && !e.target.closest('[onclick="toggleNotifPanel()"]')) {
-    document.getElementById('notifPanel')?.classList.add('hidden');
-    state.notifOpen = false;
-  }
   if (!e.target.closest('#profileDropdown') && !e.target.closest('[onclick="toggleProfileDropdown()"]')) {
     document.getElementById('profileDropdown')?.classList.add('hidden');
     state.profileOpen = false;
@@ -904,12 +885,12 @@ function escLeadRowHtml(l, waLink) {
   </div>`;
 }
 
-function escRowHeaderHtml({ icon, iconSize, title, subtitle, ok, chevId, onclick, compact }) {
+function escRowHeaderHtml({ icon, iconSize, title, subtitle, ok, chevId, onclick, compact, titleColor }) {
   return `<div class="w-full flex items-center justify-between gap-4 ${compact ? 'px-[10px] py-2' : 'px-4 py-3.5'} cursor-pointer transition-colors" onclick="${onclick}">
     <div class="flex items-center gap-3 min-w-0">
       <div class="${compact ? 'w-7 h-7' : 'w-9 h-9'} rounded-lg flex items-center justify-center flex-shrink-0"><span style="font-size:${iconSize}px">${icon}</span></div>
       <div class="text-left min-w-0">
-        <div class="${compact ? 'text-[13px]' : 'text-base'} font-semibold text-[#0F172A] truncate">${title}</div>
+        <div class="${compact ? 'text-[13px]' : 'text-base'} font-semibold truncate" style="color:${titleColor || '#0F172A'}">${title}</div>
         ${subtitle ? `<div class="text-xs text-[#64748B] mt-0.5">${subtitle}</div>` : ''}
       </div>
     </div>
@@ -990,6 +971,85 @@ function toggleWaGroup(key) {
   document.getElementById(`wa-chev-${key}`).classList.toggle('rotate-180');
 }
 
+// ─── NOTIFICATIONS PANEL ───────────────────────────────────────────────────────
+const NOTIF_GROUPS = [
+  { key:'own', icon:'📋', title:'Own Reminders' },
+  { key:'pending', icon:'🚨', title:'IS Pending and Breached', definition:'All students where shortlist hasn’t been shared yet is visible at this view.' },
+  { key:'cs', icon:'💬', title:'Customer Support' },
+];
+
+function notifCount(key) {
+  if (key === 'own') return OWN_TASKS_MOCK.length;
+  if (key === 'pending') return RM_ESCALATIONS.find(e => e.label === 'IS Pending and Breached')?.count || 0;
+  if (key === 'cs') return RM_ESCALATIONS.find(e => e.label === 'Customer Support')?.count || 0;
+  return 0;
+}
+
+function notifSubtitle(key, count) {
+  if (key === 'own') return `${count} pending reminders`;
+  if (key === 'pending') return `${count} students with pending breached tasks`;
+  if (key === 'cs') return `${count} students need attention`;
+  return '';
+}
+
+function openNotifPanel() {
+  const html = `<div class="flex flex-col gap-3">${buildNotifGroups()}</div>`;
+  openDrawer('Notifications', html);
+}
+
+function buildNotifGroups() {
+  return NOTIF_GROUPS.map(g => {
+    const count = notifCount(g.key);
+    const ok = count === 0;
+    return `<div class="esc-group-row ${ok ? 'ok' : 'amber'}">
+      ${escRowHeaderHtml({ icon:g.icon, iconSize:20, title:g.title, subtitle:notifSubtitle(g.key, count), chevId:`notif-chev-${g.key}`, onclick:`toggleNotifGroup('${g.key}')`, titleColor: ok ? '#0F172A' : '#C2410C' })}
+      <div class="hidden bg-white px-4 pb-3.5" id="notif-body-${g.key}">${buildNotifBody(g, count)}</div>
+    </div>`;
+  }).join('');
+}
+
+function buildNotifBody(g, count) {
+  if (g.key === 'own') {
+    if (!count) return `<div class="text-center py-6"><div class="text-sm font-semibold text-text-main">All caught up!</div><div class="text-xs text-text-muted mt-1">No reminder for you. Good work.</div></div>`;
+    return `<div class="pt-3">${OWN_TASKS_MOCK.map(t => ownReminderCardHtml(t)).join('')}</div>`;
+  }
+  if (g.key === 'pending') {
+    const def = `<div class="text-xs text-text-muted py-2.5">${g.definition}</div>`;
+    if (!count) return def + `<div class="text-center text-sm text-text-muted py-6">No students due today</div>`;
+    const students = leadsForEscalation('is_pending');
+    return def + students.map(l => `
+      <div class="student-card mb-3">
+        <div class="flex items-start justify-between gap-2">
+          <div><div class="font-semibold text-sm text-text-main">${l.name}</div><div class="text-xs text-text-muted font-mono">${l.id} · ${l.country}</div></div>
+          <span class="text-[10px] font-semibold px-2 py-1 rounded-full flex-shrink-0" style="background:#ECFDF5;color:#15803D">QnaGenerated</span>
+        </div>
+        <div class="flex gap-2 mt-2.5">
+          <button class="flex-1 text-xs font-semibold py-2 rounded-lg cursor-pointer" style="background:#EEF2FF;color:#4338CA;border:1px solid #C7D2FE" onclick="openLeadDetail('${l.pipeline}','${l.id}')">View Student</button>
+          <button class="flex-1 text-xs font-semibold py-2 rounded-lg cursor-pointer" style="background:#EEF2FF;color:#4338CA;border:1px solid #C7D2FE" onclick="openLeadDetail('${l.pipeline}','${l.id}')">View Task</button>
+        </div>
+      </div>`).join('');
+  }
+  if (g.key === 'cs') {
+    if (!count) return `<div class="text-center text-sm text-text-muted py-6">No students</div>`;
+    const students = leadsForEscalation('missed_calls');
+    return students.map(l => `
+      <div class="student-card mb-3">
+        <div class="font-semibold text-sm text-text-main">${l.name}</div>
+        <div class="text-xs text-text-muted font-mono mb-2.5">${l.id} · ${l.country}</div>
+        <div class="flex gap-2">
+          <button class="flex-1 text-xs font-semibold py-2 rounded-lg cursor-pointer" style="background:#EEF2FF;color:#4338CA;border:1px solid #C7D2FE" onclick="openLeadDetail('${l.pipeline}','${l.id}')">View Student</button>
+          <button class="flex-1 text-xs font-semibold py-2 rounded-lg cursor-pointer" style="background:#EEF2FF;color:#4338CA;border:1px solid #C7D2FE" onclick="openLeadDetail('${l.pipeline}','${l.id}')">View Task</button>
+        </div>
+      </div>`).join('');
+  }
+  return '';
+}
+
+function toggleNotifGroup(key) {
+  document.getElementById(`notif-body-${key}`).classList.toggle('hidden');
+  document.getElementById(`notif-chev-${key}`).classList.toggle('rotate-180');
+}
+
 // ─── OWN TASKS DRAWER ──────────────────────────────────────────────────────────
 const OWN_TASKS_MOCK = [
   { type:'call', label:'Call to User', target:'Ananya Sharma (RM-2041)', due:'2026-09-03 11:00', desc:'Confirm remaining docs for STI.' },
@@ -998,18 +1058,56 @@ const OWN_TASKS_MOCK = [
   { type:'custom', label:'Custom Task', target:'General', due:'2026-09-04 10:00', desc:'Prepare weekly summary for Team Lead.' },
   { type:'call', label:'Call to User', target:'Tanvir Ahmed (RM-2045)', due:'2026-09-04 12:00', desc:'Discuss C2I lock-in decision.' },
 ];
-const TASK_TYPE_ICON = { call:'📞', message:'💬', payment:'💳', custom:'📝' };
+const TASK_TYPE_META = {
+  call: { color:'#4F46E5', icon:'<path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 014.99 9.8a19.79 19.79 0 01-3.07-8.67A2 2 0 013.9 2h3a2 2 0 012 1.72c.13.96.36 1.9.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.9.34 1.85.57 2.81.7A2 2 0 0122 16.92z"/>' },
+  message: { color:'#7C3AED', icon:'<path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>' },
+  payment: { color:'#16A34A', icon:'<rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/>' },
+  custom: { color:'#EA580C', icon:'<path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>' },
+};
+
+function reminderUserIdOf(t) {
+  const m = /\(([^)]+)\)/.exec(t.target || '');
+  return m ? m[1] : (t.target || '');
+}
+
+function formatReminderDateTime(due) {
+  const d = new Date((due || '').replace(' ', 'T'));
+  if (isNaN(d)) return due;
+  const day = d.getDate();
+  const month = d.toLocaleDateString('en-US', { month:'short' });
+  let h = d.getHours();
+  const m = d.getMinutes();
+  const ampm = h >= 12 ? 'pm' : 'am';
+  h = h % 12; if (h === 0) h = 12;
+  const mm = m.toString().padStart(2, '0');
+  return `${day} ${month}, ${h}:${mm} ${ampm}`;
+}
+
+function ownReminderCardHtml(t) {
+  const meta = TASK_TYPE_META[t.type] || TASK_TYPE_META.custom;
+  return `<div class="relative bg-white border border-border rounded-xl pl-4 pr-3.5 py-3 mb-3 overflow-hidden">
+    <div class="absolute left-0 top-1.5 bottom-1.5 w-1 rounded-full" style="background:${meta.color}"></div>
+    <div class="flex items-start justify-between gap-2">
+      <div class="flex items-center gap-2 flex-wrap min-w-0">
+        <svg class="w-4 h-4 flex-shrink-0" style="color:${meta.color}" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">${meta.icon}</svg>
+        <span class="text-sm font-bold text-text-main">${t.label}</span>
+        <span class="text-xs font-semibold px-2.5 py-1 rounded-full" style="background:#EEF2FF;color:#4338CA">${t.label}</span>
+        <span class="text-xs px-2.5 py-1 rounded-full flex items-center gap-1 flex-shrink-0" style="background:#F1F5F9;color:#475569"><svg class="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="7" r="4"/><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/></svg>${reminderUserIdOf(t)}</span>
+      </div>
+      <button class="w-7 h-7 rounded-full border border-border flex items-center justify-center flex-shrink-0 cursor-pointer hover:bg-surface transition-colors" onclick="showToast('Reminder marked complete.','success')">
+        <svg class="w-3.5 h-3.5 text-text-muted" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+      </button>
+    </div>
+    <div class="text-sm text-text-muted mt-2">${t.desc}</div>
+    <div class="text-xs text-text-muted mt-2 flex items-center gap-1.5">
+      <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      ${formatReminderDateTime(t.due)}
+    </div>
+  </div>`;
+}
 
 function openOwnTasksDrawer() {
-  const html = `<div class="space-y-2.5">${OWN_TASKS_MOCK.map(t => `
-    <div class="bg-white border border-border rounded-xl p-3.5">
-      <div class="flex items-start justify-between gap-2 mb-1.5">
-        <span class="app-badge downloaded" style="background:#FFF7ED;color:#EA580C">${TASK_TYPE_ICON[t.type]} ${t.label}</span>
-        <span class="text-[10px] text-text-muted font-mono flex-shrink-0">${t.due}</span>
-      </div>
-      <div class="text-sm font-semibold">${t.target}</div>
-      <div class="text-xs text-text-muted mt-1">${t.desc}</div>
-    </div>`).join('')}</div>`;
+  const html = `<div>${OWN_TASKS_MOCK.map(t => ownReminderCardHtml(t)).join('')}</div>`;
   openDrawer('Own Tasks', html);
 }
 

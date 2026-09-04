@@ -1158,4 +1158,5 @@ body {
 .esc-group-row:hover { box-shadow: 0 2px 10px rgba(0,0,0,0.06); }
 .esc-group-row.ok { background: #ECFDF5; border-color: #A7F3D0; }
 .esc-group-row.warn { background: #FEF2F2; border-color: #FECACA; }
+.esc-group-row.amber { background: #FFF7ED; border-color: #FED7AA; }
 .esc-group-row.wa-sub { border-radius: 8px; }
