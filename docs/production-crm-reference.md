@@ -2,6 +2,17 @@
 
 Compiled from live exploration of `portal.leapscholar.com/crm` (counsellor account, Vandna Rani), read-only. This is the source-of-truth reference used to build the RM CRM clone. Anything marked **RM-specific** is our own addition/business logic supplied directly by the product owner, not something present in the counsellor CRM.
 
+## 0. Where Definition/Closure is shown — confirmed structure
+
+Two distinct patterns exist in production, and they are **not interchangeable**:
+
+1. **Pipeline task cards** (Boost STI, Boost Revenue, Boost Referrals, and the individual student rows inside Boost Deposit) — a **single "How to Close" box** per status badge, repeated on **every individual task card** (not just once at the top). It has one label ("How to Close"), the status badge, and one flowing paragraph that blends the creation context and the closure instruction together — never split into two separate labeled sections.
+2. **Grouped/accordion categories** (Boost Deposit's top-level groups like "Tasks - C to UC and UC to Deposit"; the Potential Escalation drawer's WA Summary and its 5 sub-groups; the Notifications panel's IS Pending and Breached) — a genuine two-box **"ℹ️ Definition" (blue) + "✅ Task Closure" (green)** pair, shown **once at the top of the category**, before the list of individual student rows below it (which do not repeat it).
+
+Our clone replicates both correctly: `TASK_GUIDANCE` (single merged string) feeds the pipeline card pattern; `escDefClosureHtml({definition, closure})` feeds the accordion pattern.
+
+**Severity color nuance confirmed live:** "IS Pending and Breached" renders **amber/orange** (`#FFF7ED` bg, `#C2410C` text) when its count is non-zero, in both the compact Potential Escalation home card and the drawer — unlike every other escalation category, which renders **red** at count > 0. Replicated via an `amberWarn` flag in our clone.
+
 ---
 
 ## 1. Boost Output pipelines
@@ -102,10 +113,11 @@ Confirmed structure, no Performance Scorecard section exists in production at al
 
 These do not exist in the counsellor CRM and were given to us as RM/Student Success Manager domain knowledge:
 
-- **Boost pipeline categories (RM app)**:
-  - Boost STI: F2F Done - Doc Not Collected / F2F Done - CF Not Done / F2F Not Done (CF = **College Finalised**, not "confirmation fee")
-  - Boost Revenue: Prime / IELTS / PTE / DET / DMAT
+- **Boost pipeline categories (RM app)** — sourced from an internal PRD (`RM_CRM_PRD_Requirement_Document.md`) with explicit task creation/closure logic per cohort, now the authoritative source (supersedes an earlier, less precise category set):
+  - Boost STI: AR Done & STI Not Done / CF Done & Docs Not Collected / F2F Done & CF Not Done / F2F Missed (CF = **College Finalised**, not "confirmation fee")
+  - Boost Revenue: Prime / C2I / dMAT — IELTS, PTE and DET are clubbed under one "C2I" bucket (an earlier iteration used separate pills per exam; corrected per explicit product clarification). Bucket logic: Prime fires when Servicing Type = Free Service; C2I fires when the student hasn't given their English exam and no MOI waiver applies; dMAT fires when Preferred Country = Germany. Both Prime and C2I only surface once 7 days have passed since the F2F date (or 14 days since the counsellor send date, if F2F hasn't happened yet) with no lock-in done.
   - Boost Loan: Loan VC Not Booked / Loan VC Not Attended
+  - Each category's `TASK_GUIDANCE` text in `rm-app.js` is a single merged paragraph (creation context + closure condition), matching how production actually renders per-card guidance (see §0) — not a literal restatement of the PRD's two-column table.
 - **Disposition** dropdown (separate action, not tied to notes): C2I, Prime, Loan VC Booking, F2F, Doc Collection, College Finalisation.
 - **Quality Score buckets**: 2nd Call Reschedule & Join, Boost Lock-in, Loan VC Book & Join, Prep Demo Booked/Enrollment Pending.
 - **Important Business Goal** metrics: CA > Lockin (14d), CA > F2F (14d).

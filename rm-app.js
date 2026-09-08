@@ -3,21 +3,21 @@
 // ─── MOCK DATA ───────────────────────────────────────────────────────────────
 const MOCK_LEADS = {
   sti: [
-    { id:'RM-2041', name:'Ananya Sharma', intake:'Jan 2027', country:'Canada', status:'F2F Done - Doc Not Collected', caDate:'2026-08-15', f2fDate:'2026-09-01', lockinDate:'2026-08-20', appReadyDate:null, stiDate:null, lastConnect:'2026-09-01 10:30', clName:'Priya CL', overdue:true, notes:['Docs partially submitted — missing bank statement','Called on Sep 1, will share remaining docs by Sep 5'] },
-    { id:'RM-2089', name:'Karan Mehta', intake:'Sep 2026', country:'Germany', status:'F2F Done - CF Not Done', caDate:'2026-08-20', f2fDate:null, lockinDate:'2026-08-25', appReadyDate:null, stiDate:null, lastConnect:'2026-09-02 14:00', clName:'Amit CL', overdue:false, dueToday:true, notes:['Agreed to join F2F on Sep 3'] },
-    { id:'RM-2103', name:'Deepa Nair', intake:'Jan 2027', country:'UK', status:'F2F Not Done', caDate:'2026-08-10', f2fDate:'2026-08-28', lockinDate:'2026-08-15', appReadyDate:null, stiDate:null, lastConnect:'2026-08-30 16:15', clName:'Rahul CL', overdue:true, notes:['Awaiting academic transcripts','Follow-up scheduled for Sep 4'] },
-    { id:'RM-2117', name:'Vikram Singh', intake:'Apr 2027', country:'Canada', status:'F2F Not Done', caDate:'2026-09-01', f2fDate:'2026-09-01', lockinDate:'2026-09-02', appReadyDate:null, stiDate:null, lastConnect:'2026-09-03 09:00', clName:'Priya CL', overdue:false, notes:['Enthusiastic, just needs app form filled'] },
-    { id:'RM-2134', name:'Simran Kaur', intake:'Jan 2027', country:'Germany', status:'F2F Done - Doc Not Collected', caDate:'2026-08-22', f2fDate:'2026-08-29', lockinDate:'2026-08-30', appReadyDate:null, stiDate:null, lastConnect:'2026-09-02 11:00', clName:'Amit CL', overdue:false, dueToday:true, notes:['Waiting for SOP draft review'] },
-    { id:'RM-2158', name:'Rohan Gupta', intake:'Sep 2026', country:'Australia', status:'F2F Done - CF Not Done', caDate:'2026-09-01', f2fDate:null, lockinDate:'2026-09-01', appReadyDate:null, stiDate:null, lastConnect:'2026-09-03 08:30', clName:'Rahul CL', overdue:false, notes:['Will schedule F2F this week'] },
-    { id:'RM-2171', name:'Aisha Khan', intake:'Apr 2027', country:'Canada', status:'F2F Not Done', caDate:'2026-08-18', f2fDate:'2026-08-25', lockinDate:'2026-08-28', appReadyDate:null, stiDate:null, lastConnect:'2026-08-31 15:00', clName:'Priya CL', overdue:true, notes:['Needs IELTS score before app ready'] },
+    { id:'RM-2041', name:'Ananya Sharma', intake:'Jan 2027', country:'Canada', status:'AR Done & STI Not Done', caDate:'2026-08-15', f2fDate:'2026-09-01', lockinDate:'2026-08-20', appReadyDate:'2026-08-25', stiDate:null, lastConnect:'2026-09-01 10:30', clName:'Priya CL', overdue:true, notes:['Docs partially submitted — missing bank statement','Called on Sep 1, will share remaining docs by Sep 5'] },
+    { id:'RM-2089', name:'Karan Mehta', intake:'Sep 2026', country:'Germany', status:'CF Done & Docs Not Collected', caDate:'2026-08-20', f2fDate:null, lockinDate:'2026-08-25', appReadyDate:null, stiDate:null, lastConnect:'2026-09-02 14:00', clName:'Amit CL', overdue:false, dueToday:true, notes:['Agreed to join F2F on Sep 3'] },
+    { id:'RM-2103', name:'Deepa Nair', intake:'Jan 2027', country:'UK', status:'F2F Done & CF Not Done', caDate:'2026-08-10', f2fDate:'2026-08-28', lockinDate:'2026-08-15', appReadyDate:null, stiDate:null, lastConnect:'2026-08-30 16:15', clName:'Rahul CL', overdue:true, notes:['Awaiting academic transcripts','Follow-up scheduled for Sep 4'] },
+    { id:'RM-2117', name:'Vikram Singh', intake:'Apr 2027', country:'Canada', status:'F2F Missed', caDate:'2026-09-01', f2fDate:'2026-09-01', lockinDate:'2026-09-02', appReadyDate:null, stiDate:null, lastConnect:'2026-09-03 09:00', clName:'Priya CL', overdue:false, notes:['Enthusiastic, just needs app form filled'] },
+    { id:'RM-2134', name:'Simran Kaur', intake:'Jan 2027', country:'Germany', status:'AR Done & STI Not Done', caDate:'2026-08-22', f2fDate:'2026-08-29', lockinDate:'2026-08-30', appReadyDate:'2026-09-01', stiDate:null, lastConnect:'2026-09-02 11:00', clName:'Amit CL', overdue:false, dueToday:true, notes:['Waiting for SOP draft review'] },
+    { id:'RM-2158', name:'Rohan Gupta', intake:'Sep 2026', country:'Australia', status:'CF Done & Docs Not Collected', caDate:'2026-09-01', f2fDate:null, lockinDate:'2026-09-01', appReadyDate:null, stiDate:null, lastConnect:'2026-09-03 08:30', clName:'Rahul CL', overdue:false, notes:['Will schedule F2F this week'] },
+    { id:'RM-2171', name:'Aisha Khan', intake:'Apr 2027', country:'Canada', status:'F2F Missed', caDate:'2026-08-18', f2fDate:'2026-08-25', lockinDate:'2026-08-28', appReadyDate:null, stiDate:null, lastConnect:'2026-08-31 15:00', clName:'Priya CL', overdue:true, notes:['Needs IELTS score before app ready'] },
   ],
   revenue: [
     { id:'RM-2045', name:'Tanvir Ahmed', intake:'Sep 2026', country:'Germany', status:'Prime', caDate:'2026-08-10', f2fDate:'2026-08-20', lockinDate:null, appReadyDate:null, stiDate:null, lastConnect:'2026-09-01 13:00', clName:'Priya CL', overdue:true, notes:['F2F done, deciding on lock-in','Scholarship query raised to counsellor'] },
-    { id:'RM-2062', name:'Meera Pillai', intake:'Jan 2027', country:'UK', status:'IELTS', caDate:'2026-08-25', f2fDate:'2026-09-01', lockinDate:null, appReadyDate:null, stiDate:null, lastConnect:'2026-09-02 10:00', clName:'Amit CL', overdue:false, dueToday:true, notes:['Interested, needs parent meeting'] },
+    { id:'RM-2062', name:'Meera Pillai', intake:'Jan 2027', country:'UK', status:'C2I', caDate:'2026-08-25', f2fDate:'2026-09-01', lockinDate:null, appReadyDate:null, stiDate:null, lastConnect:'2026-09-02 10:00', clName:'Amit CL', overdue:false, dueToday:true, notes:['Interested, needs parent meeting'] },
     { id:'RM-2076', name:'Saurav Das', intake:'Apr 2027', country:'Canada', status:'Prime', caDate:'2026-09-01', f2fDate:'2026-09-02', lockinDate:null, appReadyDate:null, stiDate:null, lastConnect:'2026-09-03 10:45', clName:'Rahul CL', overdue:false, notes:['Just did F2F today, very positive'] },
-    { id:'RM-2099', name:'Fatima Shaikh', intake:'Sep 2026', country:'Australia', status:'PTE', caDate:'2026-08-15', f2fDate:'2026-08-28', lockinDate:null, appReadyDate:null, stiDate:null, lastConnect:'2026-08-30 14:30', clName:'Priya CL', overdue:true, notes:['Comparing with another provider'] },
-    { id:'RM-2201', name:'Yash Kulkarni', intake:'Jan 2027', country:'Canada', status:'DET', caDate:'2026-08-27', f2fDate:'2026-09-01', lockinDate:null, appReadyDate:null, stiDate:null, lastConnect:'2026-09-02 12:15', clName:'Amit CL', overdue:false, dueToday:true, notes:['DET slot booked for next week'] },
-    { id:'RM-2214', name:'Ishita Rao', intake:'Sep 2026', country:'UK', status:'DMAT', caDate:'2026-08-19', f2fDate:'2026-08-30', lockinDate:null, appReadyDate:null, stiDate:null, lastConnect:'2026-09-01 15:20', clName:'Rahul CL', overdue:true, notes:['Awaiting DMAT confirmation from student'] },
+    { id:'RM-2099', name:'Fatima Shaikh', intake:'Sep 2026', country:'Australia', status:'C2I', caDate:'2026-08-15', f2fDate:'2026-08-28', lockinDate:null, appReadyDate:null, stiDate:null, lastConnect:'2026-08-30 14:30', clName:'Priya CL', overdue:true, notes:['Comparing with another provider'] },
+    { id:'RM-2201', name:'Yash Kulkarni', intake:'Jan 2027', country:'Canada', status:'C2I', caDate:'2026-08-27', f2fDate:'2026-09-01', lockinDate:null, appReadyDate:null, stiDate:null, lastConnect:'2026-09-02 12:15', clName:'Amit CL', overdue:false, dueToday:true, notes:['DET slot booked for next week'] },
+    { id:'RM-2214', name:'Ishita Rao', intake:'Sep 2026', country:'UK', status:'dMAT', caDate:'2026-08-19', f2fDate:'2026-08-30', lockinDate:null, appReadyDate:null, stiDate:null, lastConnect:'2026-09-01 15:20', clName:'Rahul CL', overdue:true, notes:['Awaiting dMAT confirmation from student'] },
   ],
   loan: [
     { id:'RM-2051', name:'Rahul Jain', intake:'Sep 2026', country:'Germany', status:'Loan VC Not Booked', caDate:'2026-08-05', f2fDate:'2026-08-12', lockinDate:'2026-08-15', appReadyDate:'2026-08-20', stiDate:null, lastConnect:'2026-08-28 11:00', clName:'Amit CL', overdue:true, notes:['Loan VC slot booked but cancelled','Reschedule pending'] },
@@ -44,22 +44,21 @@ const TEAM_ESCALATIONS = [
   { label:'Customer Support', count:22 },
   { label:'Low ISL Feedback', count:11 },
   { label:'Messages Not Replied', count:27 },
-  { label:'IS Pending and Breached', count:8 },
 ];
 
 const RM_ESCALATIONS = [
   { label:'Customer Support', count:6 },
   { label:'Low ISL Feedback', count:3 },
   { label:'Messages Not Replied', count:8 },
-  { label:'IS Pending and Breached', count:2 },
 ];
 
 function escRowHtml(label, count) {
   const on = count > 0;
-  const bg = on ? '#FEF2F2' : '#ECFDF5';
-  const border = on ? '#FECACA' : '#A7F3D0';
-  const text = on ? '#B91C1C' : '#047857';
-  const badgeBg = on ? '#FEE2E2' : '#D1FAE5';
+  const amber = on && label === 'IS Pending and Breached';
+  const bg = amber ? '#FFF7ED' : on ? '#FEF2F2' : '#ECFDF5';
+  const border = amber ? '#FED7AA' : on ? '#FECACA' : '#A7F3D0';
+  const text = amber ? '#C2410C' : on ? '#B91C1C' : '#047857';
+  const badgeBg = amber ? '#FFEDD5' : on ? '#FEE2E2' : '#D1FAE5';
   return `<div class="flex items-center justify-between px-[10px] py-2 rounded-lg" style="background:${bg};border:1px solid ${border}">
     <span class="text-[10px] font-semibold" style="color:${text}">${label}</span>
     <span class="text-[10px] font-bold px-2 py-0.5 rounded-full" style="background:${badgeBg};color:${text}">${count}</span>
@@ -343,8 +342,8 @@ function visibleTeam() {
 const PIPELINE_LABELS = { sti:'Boost STI', revenue:'Boost Revenue', loan:'Boost Loan' };
 
 const PIPELINE_LEAVES = {
-  sti: ['F2F Done - Doc Not Collected', 'F2F Done - CF Not Done', 'F2F Not Done'],
-  revenue: ['Prime', 'IELTS', 'PTE', 'DET', 'DMAT'],
+  sti: ['AR Done & STI Not Done', 'CF Done & Docs Not Collected', 'F2F Done & CF Not Done', 'F2F Missed'],
+  revenue: ['Prime', 'C2I', 'dMAT'],
   loan: ['Loan VC Not Booked', 'Loan VC Not Attended'],
 };
 function slugify(s) { return s.toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_|_$/g,''); }
@@ -430,17 +429,16 @@ function pillHtml(key, label, count, isActive, colorIdx) {
   return `<button class="filter-pill" style="${style}" onclick="setPipelineStage('${key}')">${label} <strong>${count}</strong></button>`;
 }
 
-const CLOSE_GUIDANCE = {
-  'F2F Done - Doc Not Collected': 'F2F is done but the required documents haven\'t been collected yet. Collect the pending documents from the student. Task closes once docs are received and logged.',
-  'F2F Done - CF Not Done': 'F2F and docs are done — get College Finalised (CF) confirmed with the student. Task closes once CF is marked done.',
-  'F2F Not Done': 'Schedule and complete the F2F (2nd discussion) with the student — walk-in or video call, basis their preference. Task closes once F2F is marked done.',
-  'Prime': 'F2F is done — walk the student through Leap Prime and get them to lock in. Task closes once Prime is done (or the student moves to STI stage / drops).',
-  'IELTS': 'Student is on the C2I track — get them to book/complete their IELTS. Task closes once C2I is done (or the student moves to STI stage / drops).',
-  'PTE': 'Student is on the C2I track — get them to book/complete their PTE. Task closes once C2I is done (or the student moves to STI stage / drops).',
-  'DET': 'Student is on the C2I track — get them to book/complete their DET. Task closes once C2I is done (or the student moves to STI stage / drops).',
-  'DMAT': 'Student is on the C2I track — get them to book/complete their DMAT. Task closes once C2I is done (or the student moves to STI stage / drops).',
-  'Loan VC Not Booked': 'STI is done for this student — book a Loan VC slot with them. Task closes once the VC is booked and confirmed.',
-  'Loan VC Not Attended': 'Loan VC was booked but the student did not attend. Follow up to reschedule and confirm attendance. Task closes once VC attendance is marked.',
+const TASK_GUIDANCE = {
+  'AR Done & STI Not Done': 'App Ready is done but the application hasn’t been filed yet. File the STI application for the student. Task closes once STI is done, or the Lead Stage moves to Lead Drop Off. Always update Follow-up date after confirmation with user.',
+  'CF Done & Docs Not Collected': 'College Finalised is done but the required documents haven’t been shared yet. Collect the pending documents from the student. Task closes once the App Ready date is captured, STI is done, or the Lead Stage moves to Lead Drop Off.',
+  'F2F Done & CF Not Done': 'F2F is done but the college hasn’t been finalised yet. Help the student finalise a college to apply to. Task closes once College Finalised (CF) is done, or the Lead Stage moves to Lead Drop Off.',
+  'F2F Missed': 'The 2nd discussion was missed or hasn’t been booked in time. Discuss with the user and align for a 2nd discussion basis their preference — book an Offline/Online session. Task closes once the 2nd discussion is rescheduled/booked for today or a future date, or the Lead Stage moves to College Finalised (CF) or Lead Drop Off. Always use 100ms, Jerry, Leap Group Chat for all communications with the student.',
+  'Prime': 'Servicing Type is Free Service — pitch the student on Leap Prime and get them to lock in. Appears once it\'s been 7 days since the F2F date, or 14 days since the CA Date, and lock-in still hasn\'t happened. Task closes once the Leap Prime payment is received, the STI date is marked, or the Lead Stage moves to Dropped Off.',
+  'C2I': 'The student hasn\'t given their English exam yet (IELTS, PTE and DET are clubbed under this one bucket) and no MOI waiver applies — pitch them on C2I and get them to book/complete their exam. Appears once it\'s been 7 days since the F2F date, or 14 days since the CA Date, and lock-in still hasn\'t happened. Task closes once the exam status is Already Given/Booked, they move to a paid IELTS/DET/PTE stage, or the Lead Stage moves to Dropped Off.',
+  'dMAT': 'Preferred Country is Germany — pitch the student on dMAT and get them to complete payment. Task closes once a payment entry exists for the dMAT reference, or the Lead Stage moves to Dropped Off.',
+  'Loan VC Not Booked': 'College Finalised or App Ready date has been captured for this student. Book a Financial Counselling (Loan VC) slot with them. Task closes once a Loan VC slot is booked, or the Lead Stage moves to Deposit Paid, Visa Request Raised, or Dropped Off.',
+  'Loan VC Not Attended': 'A Loan VC slot was booked but marked Absent, or the date has passed without attendance. Follow up with the student to reschedule and confirm attendance. Task closes once a new Loan VC meeting is booked for a future date, attendance is marked True, or the Lead Stage moves to Dropped Off.',
 };
 
 let pipelineFilterState = { type:null, stage:'all', todayOnly:false, search:'' };
@@ -474,27 +472,36 @@ function pipelineFilteredLeads() {
   });
 }
 
+function colorForStatus(type, status) {
+  const leaves = pipelineLeaves(type);
+  const idx = leaves.findIndex(lf => lf.label === status);
+  return STAGE_COLOR_CYCLE[(idx >= 0 ? idx : 0) % STAGE_COLOR_CYCLE.length];
+}
+
 function buildPipelineCards(filtered, type) {
   if (!filtered.length) return `<div class="text-center text-sm text-text-muted py-10">No leads match this filter.</div>`;
-  return filtered.map(l => `
+  return filtered.map(l => {
+    const c = colorForStatus(type, l.status);
+    return `
     <div class="student-card mb-3">
       <div class="font-semibold text-sm text-text-main">${l.name}</div>
       <div class="text-xs text-text-muted mb-2 font-mono">${l.id} · ${l.intake} · ${l.country}</div>
-      <span class="app-badge downloaded" style="background:#EFF6FF;color:#1D4ED8">${l.status}</span>
+      <span class="app-badge downloaded" style="background:${c.bg};color:${c.text}">${l.status}</span>
       ${l.overdue ? ' <span class="app-badge not-downloaded">Overdue</span>' : l.dueToday ? ' <span class="ai-badge pending">Due Today</span>' : ''}
       <div class="text-xs text-text-muted mt-2">Follow-up: ${l.caDate || '—'}</div>
       <div class="mt-2.5 p-2.5 rounded-lg" style="background:#F8FAFC;border:1px solid #E2E8F0">
         <div class="text-[10px] font-bold uppercase text-text-muted mb-1.5 tracking-wide">How to close</div>
         <div class="flex gap-2 items-start">
-          <span class="app-badge downloaded flex-shrink-0" style="background:#EFF6FF;color:#1D4ED8">${l.status}</span>
-          <div class="text-xs text-text-muted leading-relaxed">${CLOSE_GUIDANCE[l.status] || 'Follow up with the student and update the status once resolved.'}</div>
+          <span class="app-badge downloaded flex-shrink-0" style="background:${c.bg};color:${c.text}">${l.status}</span>
+          <div class="text-xs text-text-muted leading-relaxed">${TASK_GUIDANCE[l.status] || 'Follow up with the student and update the status once resolved.'}</div>
         </div>
       </div>
       <div class="flex gap-2 mt-3">
         <button class="flex-1 text-xs font-semibold py-2 rounded-lg cursor-pointer transition-colors" style="background:#EEF2FF;color:#4338CA;border:1px solid #C7D2FE" onclick="openLeadDetail('${type}','${l.id}')">View student</button>
         <button class="flex-1 text-xs font-semibold py-2 rounded-lg cursor-pointer transition-colors" style="background:#EEF2FF;color:#4338CA;border:1px solid #C7D2FE" onclick="openLeadDetail('${type}','${l.id}')">View Task</button>
       </div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 }
 
 function renderPipelineDrawerBody() {
@@ -708,7 +715,7 @@ function openLeadDetail(pipelineType, leadId) {
         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 11l3 3L22 4"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
         Disposition
       </button>
-      <button class="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-semibold cursor-pointer border border-border text-primary hover:bg-surface transition-colors" onclick="showQueryForm('${lead.id}','${escHtml(lead.name)}')">
+      <button class="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-semibold cursor-pointer border border-border text-primary hover:bg-surface transition-colors" onclick="showQueryForm('${pipelineType}','${lead.id}','${escHtml(lead.name)}')">
         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
         Raise Query for Counsellor
       </button>
@@ -768,7 +775,7 @@ function submitDisposition(leadId) {
   showToast(`Disposition "${sel.value}" saved.`, 'success');
 }
 
-function showQueryForm(leadId, leadName) {
+function showQueryForm(pipeline, leadId, leadName) {
   const body = document.getElementById('leadDetailContent');
   body.insertAdjacentHTML('beforeend', `
     <div id="queryFormWrap" class="mt-3.5 pt-3.5 border-t border-border">
@@ -778,15 +785,20 @@ function showQueryForm(leadId, leadName) {
         <textarea class="w-full px-3 py-2 border border-border rounded-lg text-sm" id="queryText" placeholder="Describe the counsellor's query (max 500 chars)" maxlength="500"></textarea>
       </div>
       <div class="flex gap-2">
-        <button class="px-3.5 py-1.5 bg-accent text-white text-xs font-semibold rounded-lg cursor-pointer" onclick="submitQuery('${leadId}')">Submit Query</button>
+        <button class="px-3.5 py-1.5 bg-accent text-white text-xs font-semibold rounded-lg cursor-pointer" onclick="submitQuery('${pipeline}','${leadId}','${escHtml(leadName)}')">Submit Query</button>
         <button class="px-3.5 py-1.5 border border-border text-xs font-semibold rounded-lg cursor-pointer" onclick="document.getElementById('queryFormWrap').remove()">Cancel</button>
       </div>
     </div>`);
 }
 
-function submitQuery(leadId) {
+function submitQuery(pipeline, leadId, leadName) {
   const q = document.getElementById('queryText');
   if (!q.value.trim()) { showToast('Query cannot be empty.', 'error'); return; }
+  QUERIES_MOCK.unshift({
+    id: `Q-${++queryIdCounter}`, pipeline, leadId, leadName,
+    thread: [{ from:'rm', text:q.value.trim(), date:'Today' }],
+    unread: false,
+  });
   document.getElementById('queryFormWrap').remove();
   showToast('Query sent to counsellor. They have 7 days to respond.', 'success');
 }
@@ -823,15 +835,14 @@ function openAssignedLeads() {
 // ─── POTENTIAL ESCALATION DRAWER ("All About User") ──────────────────────────
 const ESCALATION_GROUPS = [
   { key:'not_happy', icon:'🚨', title:'Student Not Happy', count:0, subtitle:'students need attention',
-    definition:'Students who have shared negative feedback about their experience with us.',
-    closure:'Reach out to understand their concern and resolve it. Task closes once the student confirms they’re satisfied.' },
-  { key:'wa_summary', icon:'💬', title:'WA Summary', subtitle:'WhatsApp Group Activity', isWa:true },
-  { key:'is_pending', icon:'🚨', title:'IS Pending and Breached', count:2, subtitle:'students with pending breached tasks',
-    definition:'Students with an Important Service (IS) task that is pending and has breached its SLA.',
-    closure:'Resolve the pending IS task with the student. Task closes once it is marked complete.' },
+    definition:'A student has shared negative feedback or is not happy with their experience.',
+    closure:'Closes when the RM reaches out, resolves the concern, and the student confirms they are satisfied.' },
+  { key:'wa_summary', icon:'💬', title:'WA Summary', subtitle:'WhatsApp Group Activity', isWa:true,
+    definition:'A student has a WhatsApp group-related issue. This group contains: Active Groups, Inactive Groups, Students Not Joined Groups, Messages Not Replied, and Student/Student Success Manager Not Joined.',
+    closure:'Closes when the respective WhatsApp group issue is resolved — each sub-group below closes independently.' },
   { key:'missed_calls', icon:'🚨', title:'Missed Calls', count:6, subtitle:'students with missed calls', forceOk:true,
-    definition:'Students who called in but the call could not be attended.',
-    closure:'Call the student back at the earliest. Task closes once the callback is logged.' },
+    definition:'The student called the RM but the call could not be attended.',
+    closure:'Closes when the RM calls the student back and logs the callback.' },
 ];
 
 const WA_SUMMARY_GROUPS = [
@@ -847,9 +858,9 @@ const WA_SUMMARY_GROUPS = [
   { key:'notReplied', icon:'💬', title:'Messages Not Replied', count:8,
     definition:'Groups where the student’s last message hasn’t been replied to.',
     closure:'Reply to the pending message. Task closes once a reply is sent.' },
-  { key:'notJoined', icon:'🚫', title:'Group Not Created / Counsellors Not Joined', count:3,
-    definition:'Students without a group yet, or where the counsellor hasn’t joined the group.',
-    closure:'Create the group or join it as the counsellor. Task closes once resolved.' },
+  { key:'notJoined', icon:'🚫', title:'Student/Student Success Manager Not Joined', count:3,
+    definition:'Students without a group yet, or where the student or the Student Success Manager hasn’t joined the group.',
+    closure:'Create the group, or get the student/Student Success Manager to join it. Task closes once resolved.' },
 ];
 
 function openEscalationDrawer() {
@@ -902,10 +913,10 @@ function buildEscalationGroups() {
   return ESCALATION_GROUPS.map(g => {
     const ok = g.isWa ? !waSummaryHasIssues() : (g.forceOk || g.count === 0);
     return `
-    <div class="esc-group-row ${ok ? 'ok' : 'warn'}">
-      ${escRowHeaderHtml({ icon:g.icon, iconSize:20, title:g.title, subtitle: g.isWa ? g.subtitle : `${g.count} ${g.subtitle}`, chevId:`esc-chev-${g.key}`, onclick:`toggleEscalationGroup('${g.key}')` })}
+    <div class="esc-group-row ${ok ? 'ok' : (g.amberWarn ? 'amber' : 'warn')}">
+      ${escRowHeaderHtml({ icon:g.icon, iconSize:20, title:g.title, subtitle: g.isWa ? g.subtitle : `${g.count} ${g.subtitle}`, chevId:`esc-chev-${g.key}`, onclick:`toggleEscalationGroup('${g.key}')`, titleColor: ok ? '#0F172A' : (g.amberWarn ? '#C2410C' : '#0F172A') })}
       <div class="hidden bg-white px-4 pb-3.5" id="esc-body-${g.key}">
-        ${g.isWa ? buildWaSummaryGroups() : `
+        ${g.isWa ? escDefClosureHtml(g) + buildWaSummaryGroups() : `
           ${escDefClosureHtml(g)}
           ${g.count === 0
             ? `<div class="text-xs text-text-muted text-center py-3">Nothing here right now — you're all caught up ✅</div>`
@@ -942,7 +953,6 @@ function leadsForEscalation(key) {
     ...MOCK_LEADS.revenue.map(l => ({ ...l, pipeline:'revenue' })),
     ...MOCK_LEADS.loan.map(l => ({ ...l, pipeline:'loan' })),
   ];
-  if (key === 'is_pending') return all.filter(l => l.dueToday).slice(0, 2);
   if (key === 'missed_calls') return all.filter(l => l.overdue || l.dueToday).slice(0, 6);
   return [];
 }
@@ -971,24 +981,143 @@ function toggleWaGroup(key) {
   document.getElementById(`wa-chev-${key}`).classList.toggle('rotate-180');
 }
 
+// ─── COUNSELLOR QUERIES ─────────────────────────────────────────────────────────
+let queryIdCounter = 1063;
+const QUERIES_MOCK = [
+  { id:'Q-1042', pipeline:'sti', leadId:'RM-2041', leadName:'Ananya Sharma',
+    thread:[
+      { from:'rm', text:'Student is asking if the scholarship can still be applied post CF — can you confirm eligibility?', date:'2026-09-05 11:20' },
+      { from:'counsellor', text:'Yes, the scholarship can still be applied within 7 days of CF. Please have the student submit the form.', date:'2026-09-05 15:40' },
+    ], unread:true },
+  { id:'Q-1051', pipeline:'sti', leadId:'RM-2089', leadName:'Karan Mehta',
+    thread:[
+      { from:'rm', text:'Student wants to switch preferred country from Germany to UK — is this possible post F2F?', date:'2026-09-06 10:05' },
+    ], unread:false },
+  { id:'Q-1063', pipeline:'revenue', leadId:'RM-2045', leadName:'Tanvir Ahmed',
+    thread:[
+      { from:'counsellor', text:'Student has raised a concern about the Prime pricing shared — can you clarify what was discussed on the call?', date:'2026-09-07 09:15' },
+    ], unread:true },
+];
+
+function queryUnreadCount() { return QUERIES_MOCK.filter(q => q.unread).length; }
+
+function queryThreadCardHtml(q) {
+  return `<div class="border border-border rounded-xl p-3 mb-3 ${q.unread ? '' : 'bg-white'}" style="${q.unread ? 'background:#FFF7ED' : ''}">
+    <div class="flex items-center justify-between gap-2 mb-2">
+      <div class="min-w-0">
+        <div class="text-sm font-semibold text-text-main truncate">${q.leadName}</div>
+        <div class="text-[10px] text-text-muted font-mono">${q.leadId}</div>
+      </div>
+      ${q.unread ? `<span class="text-[10px] font-bold px-2 py-0.5 rounded-full flex-shrink-0" style="background:#FFEDD5;color:#C2410C">NEW REPLY</span>` : ''}
+    </div>
+    <div class="space-y-2 mb-2.5">
+      ${q.thread.map(m => `
+        <div class="flex ${m.from === 'rm' ? 'justify-end' : 'justify-start'}">
+          <div class="max-w-[85%] rounded-lg px-3 py-2 text-xs" style="background:${m.from === 'rm' ? '#EEF2FF' : '#F1F5F9'};color:${m.from === 'rm' ? '#4338CA' : '#334155'}">
+            <div class="font-semibold mb-0.5">${m.from === 'rm' ? 'You' : 'Counsellor'}</div>
+            <div>${m.text}</div>
+            <div class="text-[10px] opacity-70 mt-1">${m.date}</div>
+          </div>
+        </div>`).join('')}
+    </div>
+    <div class="flex gap-2 mb-2">
+      <button class="flex-1 text-xs font-semibold py-1.5 rounded-lg cursor-pointer" style="background:#EEF2FF;color:#4338CA;border:1px solid #C7D2FE" onclick="openLeadDetail('${q.pipeline}','${q.leadId}')">View Task</button>
+    </div>
+    <div class="flex gap-2">
+      <input class="flex-1 min-w-0 px-2.5 py-1.5 border border-border rounded-lg text-xs" placeholder="Reply to counsellor…" id="queryReply-${q.id}"/>
+      <button class="px-3 py-1.5 bg-accent text-white text-xs font-semibold rounded-lg cursor-pointer flex-shrink-0" onclick="replyToQuery('${q.id}')">Send</button>
+    </div>
+  </div>`;
+}
+
+function buildQueriesBody() {
+  if (!QUERIES_MOCK.length) return `<div class="text-center text-sm text-text-muted py-6">No queries yet.</div>`;
+  return QUERIES_MOCK.map(q => queryThreadCardHtml(q)).join('');
+}
+
+function replyToQuery(id) {
+  const input = document.getElementById(`queryReply-${id}`);
+  if (!input || !input.value.trim()) { showToast('Reply cannot be empty.', 'error'); return; }
+  const q = QUERIES_MOCK.find(x => x.id === id);
+  if (!q) return;
+  q.thread.push({ from:'rm', text:input.value.trim(), date:'Today' });
+  q.unread = false;
+  showToast('Reply sent to counsellor.', 'success');
+  openNotifPanel();
+}
+
+function allLeadsWithTasks() {
+  return [
+    ...MOCK_LEADS.sti.map(l => ({ ...l, pipeline:'sti' })),
+    ...MOCK_LEADS.revenue.map(l => ({ ...l, pipeline:'revenue' })),
+    ...MOCK_LEADS.loan.map(l => ({ ...l, pipeline:'loan' })),
+  ];
+}
+
+function leadOptionsHtml() {
+  const leads = allLeadsWithTasks();
+  return `<option value="">— Select Lead ID —</option>` + leads.map(l => `<option value="${l.pipeline}|${l.id}">${l.id} — ${escHtml(l.name)}</option>`).join('');
+}
+
+function populateQueryLeadSelects() {
+  ['rmQueryLeadId', 'mgrQueryLeadId'].forEach(id => {
+    const sel = document.getElementById(id);
+    if (sel) sel.innerHTML = leadOptionsHtml();
+  });
+}
+
+function findLeadByCompoundId(compound) {
+  const [pipeline, id] = compound.split('|');
+  const lead = (MOCK_LEADS[pipeline] || []).find(l => l.id === id);
+  return lead ? { ...lead, pipeline } : null;
+}
+
+function onQueryLeadChange(selectId, infoId) {
+  const sel = document.getElementById(selectId);
+  const info = document.getElementById(infoId);
+  const lead = sel.value ? findLeadByCompoundId(sel.value) : null;
+  if (!lead) { info.classList.add('hidden'); info.textContent = ''; return; }
+  info.classList.remove('hidden');
+  info.innerHTML = `<strong>Counsellor:</strong> ${escHtml(lead.clName)} — this query will be routed to them.`;
+}
+
+function submitStandaloneQuery(selectId, textId) {
+  const sel = document.getElementById(selectId);
+  const textEl = document.getElementById(textId);
+  if (!sel.value) { showToast('Please select a Lead ID.', 'error'); return; }
+  if (!textEl.value.trim()) { showToast('Query cannot be empty.', 'error'); return; }
+  const lead = findLeadByCompoundId(sel.value);
+  if (!lead) { showToast('Selected lead no longer has an active task.', 'error'); return; }
+  QUERIES_MOCK.unshift({
+    id: `Q-${++queryIdCounter}`, pipeline: lead.pipeline, leadId: lead.id, leadName: lead.name,
+    thread: [{ from:'rm', text:textEl.value.trim(), date:'Today' }],
+    unread: false,
+  });
+  sel.value = '';
+  textEl.value = '';
+  const infoId = selectId === 'rmQueryLeadId' ? 'rmQueryCounsellorInfo' : 'mgrQueryCounsellorInfo';
+  document.getElementById(infoId).classList.add('hidden');
+  showToast(`Query sent to ${lead.clName}. They have 7 days to respond.`, 'success');
+}
+
 // ─── NOTIFICATIONS PANEL ───────────────────────────────────────────────────────
 const NOTIF_GROUPS = [
   { key:'own', icon:'📋', title:'Own Reminders' },
-  { key:'pending', icon:'🚨', title:'IS Pending and Breached', definition:'All students where shortlist hasn’t been shared yet is visible at this view.' },
   { key:'cs', icon:'💬', title:'Customer Support' },
+  { key:'queries', icon:'📨', title:'Counsellor Queries' },
 ];
 
 function notifCount(key) {
   if (key === 'own') return OWN_TASKS_MOCK.length;
-  if (key === 'pending') return RM_ESCALATIONS.find(e => e.label === 'IS Pending and Breached')?.count || 0;
   if (key === 'cs') return RM_ESCALATIONS.find(e => e.label === 'Customer Support')?.count || 0;
+  if (key === 'queries') return queryUnreadCount();
   return 0;
 }
 
 function notifSubtitle(key, count) {
   if (key === 'own') return `${count} pending reminders`;
-  if (key === 'pending') return `${count} students with pending breached tasks`;
   if (key === 'cs') return `${count} students need attention`;
+  if (key === 'queries') return count ? `${count} awaiting your response` : `${QUERIES_MOCK.length} query threads · all caught up`;
   return '';
 }
 
@@ -1011,23 +1140,7 @@ function buildNotifGroups() {
 function buildNotifBody(g, count) {
   if (g.key === 'own') {
     if (!count) return `<div class="text-center py-6"><div class="text-sm font-semibold text-text-main">All caught up!</div><div class="text-xs text-text-muted mt-1">No reminder for you. Good work.</div></div>`;
-    return `<div class="pt-3">${OWN_TASKS_MOCK.map(t => ownReminderCardHtml(t)).join('')}</div>`;
-  }
-  if (g.key === 'pending') {
-    const def = `<div class="text-xs text-text-muted py-2.5">${g.definition}</div>`;
-    if (!count) return def + `<div class="text-center text-sm text-text-muted py-6">No students due today</div>`;
-    const students = leadsForEscalation('is_pending');
-    return def + students.map(l => `
-      <div class="student-card mb-3">
-        <div class="flex items-start justify-between gap-2">
-          <div><div class="font-semibold text-sm text-text-main">${l.name}</div><div class="text-xs text-text-muted font-mono">${l.id} · ${l.country}</div></div>
-          <span class="text-[10px] font-semibold px-2 py-1 rounded-full flex-shrink-0" style="background:#ECFDF5;color:#15803D">QnaGenerated</span>
-        </div>
-        <div class="flex gap-2 mt-2.5">
-          <button class="flex-1 text-xs font-semibold py-2 rounded-lg cursor-pointer" style="background:#EEF2FF;color:#4338CA;border:1px solid #C7D2FE" onclick="openLeadDetail('${l.pipeline}','${l.id}')">View Student</button>
-          <button class="flex-1 text-xs font-semibold py-2 rounded-lg cursor-pointer" style="background:#EEF2FF;color:#4338CA;border:1px solid #C7D2FE" onclick="openLeadDetail('${l.pipeline}','${l.id}')">View Task</button>
-        </div>
-      </div>`).join('');
+    return `<div class="pt-3">${OWN_TASKS_MOCK.map((t,i) => ownReminderCardHtml(t,i)).join('')}</div>`;
   }
   if (g.key === 'cs') {
     if (!count) return `<div class="text-center text-sm text-text-muted py-6">No students</div>`;
@@ -1041,6 +1154,9 @@ function buildNotifBody(g, count) {
           <button class="flex-1 text-xs font-semibold py-2 rounded-lg cursor-pointer" style="background:#EEF2FF;color:#4338CA;border:1px solid #C7D2FE" onclick="openLeadDetail('${l.pipeline}','${l.id}')">View Task</button>
         </div>
       </div>`).join('');
+  }
+  if (g.key === 'queries') {
+    return `<div class="pt-3">${buildQueriesBody()}</div>`;
   }
   return '';
 }
@@ -1083,8 +1199,29 @@ function formatReminderDateTime(due) {
   return `${day} ${month}, ${h}:${mm} ${ampm}`;
 }
 
-function ownReminderCardHtml(t) {
+const REMINDER_TYPE_GUIDANCE = {
+  call: {
+    definition: 'You create this reminder by selecting Call to User, entering the User ID, a future Date & Time, and the purpose/disposition of the call.',
+    closure: 'Closes when you complete the reminder and log the call/action.',
+  },
+  message: {
+    definition: 'You create this reminder by selecting Send Message, entering the User ID, a future Date & Time, and the message details.',
+    closure: 'Closes when you complete the reminder and log the action.',
+  },
+  payment: {
+    definition: 'You create this reminder by selecting Payment Follow Up, entering the User ID, a future Date & Time, and the relevant payment details.',
+    closure: 'Closes when you complete the payment follow-up and log the action.',
+  },
+  custom: {
+    definition: 'You create this reminder by selecting Custom Task, entering the User ID, a future Date & Time, and the task details.',
+    closure: 'Closes when you complete the task and mark the reminder as done.',
+  },
+};
+
+function ownReminderCardHtml(t, i) {
   const meta = TASK_TYPE_META[t.type] || TASK_TYPE_META.custom;
+  const guidance = REMINDER_TYPE_GUIDANCE[t.type];
+  const gid = `reminderGuide-${i}`;
   return `<div class="relative bg-white border border-border rounded-xl pl-4 pr-3.5 py-3 mb-3 overflow-hidden">
     <div class="absolute left-0 top-1.5 bottom-1.5 w-1 rounded-full" style="background:${meta.color}"></div>
     <div class="flex items-start justify-between gap-2">
@@ -1103,11 +1240,14 @@ function ownReminderCardHtml(t) {
       <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
       ${formatReminderDateTime(t.due)}
     </div>
+    ${guidance ? `
+    <button class="text-xs font-semibold text-primary cursor-pointer mt-2" onclick="document.getElementById('${gid}').classList.toggle('hidden')">ⓘ Definition &amp; Task Closure</button>
+    <div class="hidden mt-2" id="${gid}">${escDefClosureHtml(guidance)}</div>` : ''}
   </div>`;
 }
 
 function openOwnTasksDrawer() {
-  const html = `<div>${OWN_TASKS_MOCK.map(t => ownReminderCardHtml(t)).join('')}</div>`;
+  const html = `<div>${OWN_TASKS_MOCK.map((t,i) => ownReminderCardHtml(t,i)).join('')}</div>`;
   openDrawer('Own Tasks', html);
 }
 
@@ -1116,7 +1256,7 @@ const MY_TICKETS_MOCK = [
   { id:'TKT-329', category:'Issues in CRM', status:'Resolved', tat:'805.76m', date:'27 Aug 2026', desc:'The STI for a student is submitted today but why is it not reflecting in today\'s output report or even in month\'s achievements?' },
   { id:'TKT-269', category:'Issues Dashboard and Analytics', status:'Resolved', tat:'3679.59m', date:'21 Aug 2026', desc:'Please clarify whether the data shown is correct — my STI count for the month looks off.' },
   { id:'TKT-165', category:'Issues in CRM', status:'Resolved', tat:'858.46m', date:'05 Aug 2026', desc:'Next month\'s intake is also included in this month, kindly correct — this is the second time it\'s happening.' },
-  { id:'TKT-142', category:'Incentive / Payout Query', status:'Open', tat:'—', date:'02 Sep 2026', desc:'My lock-in payout for last week doesn\'t match the incentive breakdown shown on the Incentives tab.' },
+  { id:'TKT-142', category:'Incentive Clarity', status:'Open', tat:'—', date:'02 Sep 2026', desc:'My lock-in payout for last week doesn\'t match the incentive breakdown shown on the Incentives tab.' },
   { id:'TKT-109', category:'Issues in CRM', status:'Open', tat:'—', date:'29 Jul 2026', desc:'Lead is still showing at declined stage — kindly move the stage to the correct pipeline.' },
 ];
 
@@ -1521,7 +1661,7 @@ function buildAdvancedFilterPanel(uid) {
   return `
     <div class="hidden mb-4 p-4 bg-surface rounded-lg border border-border" id="advFilterPanel${uid}">
       <div class="text-[10px] font-bold uppercase tracking-wide text-text-muted mb-2.5">Advanced Filters</div>
-      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 mb-3">
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mb-3">
         <div><label class="block text-[10px] font-semibold text-text-muted mb-1">Intake</label>
           <select class="w-full px-2 py-1.5 border border-border rounded-lg text-xs bg-white"><option>All Intake</option><option>Sep 2026</option><option>Jan 2027</option><option>Apr 2027</option></select></div>
         <div><label class="block text-[10px] font-semibold text-text-muted mb-1">Country</label>
@@ -1530,8 +1670,8 @@ function buildAdvancedFilterPanel(uid) {
           <select class="w-full px-2 py-1.5 border border-border rounded-lg text-xs bg-white"><option>All User Servicing Type</option><option>Free Service</option><option>Paid Service</option></select></div>
         <div><label class="block text-[10px] font-semibold text-text-muted mb-1">Counsellors</label>
           <select class="w-full px-2 py-1.5 border border-border rounded-lg text-xs bg-white"><option>All Counsellors</option><option>Priya CL</option><option>Amit CL</option><option>Rahul CL</option></select></div>
-        <div><label class="block text-[10px] font-semibold text-text-muted mb-1">CA Date Range</label>
-          <div class="flex items-center gap-1"><input type="date" class="w-full px-2 py-1.5 border border-border rounded-lg text-xs"/><span class="text-text-muted text-xs flex-shrink-0">→</span><input type="date" class="w-full px-2 py-1.5 border border-border rounded-lg text-xs"/></div></div>
+        <div class="col-span-2 sm:col-span-4"><label class="block text-[10px] font-semibold text-text-muted mb-1">CA Date Range</label>
+          <div class="flex items-center gap-2"><input type="date" class="flex-1 min-w-0 px-2 py-1.5 border border-border rounded-lg text-xs"/><span class="text-text-muted text-xs flex-shrink-0">→</span><input type="date" class="flex-1 min-w-0 px-2 py-1.5 border border-border rounded-lg text-xs"/></div></div>
       </div>
       <div class="flex justify-end gap-2">
         <button class="px-3 py-1.5 border border-border rounded-lg text-xs font-semibold hover:bg-white cursor-pointer" onclick="showToast('Filters reset.','info')">Reset</button>
@@ -2548,6 +2688,7 @@ function boot() {
   document.getElementById('body-earners').innerHTML = buildTopEarnersSection(TOP_EARNERS_THIS_MONTH, TOP_EARNERS_ALL_TIME);
   document.getElementById('reminderDateTime').min = nowLocalISO();
   document.getElementById('reminderDateTimeMgr').min = nowLocalISO();
+  populateQueryLeadSelects();
 }
 
 boot();
