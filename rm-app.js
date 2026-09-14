@@ -33,11 +33,22 @@ const MOCK_LEADS = {
 };
 
 const MGR_TEAM = [
-  { id:'R01', name:'Arjun Patel', initials:'AP', color:'#f97316', sti:7, revenue:4, loan:9, quality:'72%', overdue:5, status:'On Track' },
-  { id:'R02', name:'Sneha Rao', initials:'SR', color:'#0369a1', sti:2, revenue:6, loan:3, quality:'88%', overdue:1, status:'Good' },
-  { id:'R03', name:'Vikram D.', initials:'VD', color:'#7c3aed', sti:10, revenue:2, loan:12, quality:'54%', overdue:9, status:'Focus' },
-  { id:'R04', name:'Meera Nair', initials:'MN', color:'#16a34a', sti:4, revenue:3, loan:5, quality:'81%', overdue:2, status:'Good' },
-  { id:'R05', name:'Tanvir Ali', initials:'TA', color:'#dc2626', sti:8, revenue:1, loan:7, quality:'63%', overdue:6, status:'On Track' },
+  { id:'R01', name:'Arjun Patel', initials:'AP', color:'#f97316', sti:7, revenue:4, loan:9, quality:'72%', overdue:5, status:'On Track', tl:'TL01', stisSubmitted:7, caToStiPct:40, deposits:4, lockinPct:26 },
+  { id:'R02', name:'Sneha Rao', initials:'SR', color:'#0369a1', sti:2, revenue:6, loan:3, quality:'88%', overdue:1, status:'Good', tl:'TL01', stisSubmitted:9, caToStiPct:46, deposits:6, lockinPct:33 },
+  { id:'R05', name:'Tanvir Ali', initials:'TA', color:'#dc2626', sti:8, revenue:1, loan:7, quality:'63%', overdue:6, status:'On Track', tl:'TL01', stisSubmitted:5, caToStiPct:29, deposits:3, lockinPct:19 },
+  { id:'R03', name:'Vikram D.', initials:'VD', color:'#7c3aed', sti:10, revenue:2, loan:12, quality:'54%', overdue:9, status:'Focus', tl:'TL02', stisSubmitted:4, caToStiPct:22, deposits:2, lockinPct:14 },
+  { id:'R04', name:'Meera Nair', initials:'MN', color:'#16a34a', sti:4, revenue:3, loan:5, quality:'81%', overdue:2, status:'Good', tl:'TL02', stisSubmitted:8, caToStiPct:38, deposits:5, lockinPct:30 },
+  { id:'R08', name:'Naina Joshi', initials:'NJ', color:'#be185d', sti:11, revenue:1, loan:10, quality:'48%', overdue:8, status:'Focus', tl:'TL02', stisSubmitted:3, caToStiPct:18, deposits:1, lockinPct:11 },
+  { id:'R06', name:'Ritu Kapoor', initials:'RK', color:'#0891b2', sti:5, revenue:5, loan:4, quality:'76%', overdue:3, status:'Good', tl:'TL03', stisSubmitted:6, caToStiPct:33, deposits:3, lockinPct:24 },
+  { id:'R07', name:'Aditya Verma', initials:'AV', color:'#65a30d', sti:3, revenue:7, loan:2, quality:'91%', overdue:1, status:'Good', tl:'TL03', stisSubmitted:10, caToStiPct:50, deposits:7, lockinPct:37 },
+  { id:'R09', name:'Farhan Sheikh', initials:'FS', color:'#ca8a04', sti:6, revenue:4, loan:6, quality:'70%', overdue:4, status:'On Track', tl:'TL03', stisSubmitted:7, caToStiPct:36, deposits:4, lockinPct:27 },
+];
+
+// RM → TL → SM hierarchy: every RM reports to exactly one of these 3 TLs, all 3 report to the SM (Shubham Sharma)
+const TEAM_LEADS_MOCK = [
+  { id:'TL01', name:'Mansi', initials:'MA', color:'#0369a1' },
+  { id:'TL02', name:'Noushad', initials:'NO', color:'#7c3aed' },
+  { id:'TL03', name:'Tanveer', initials:'TV', color:'#16a34a' },
 ];
 
 const TEAM_ESCALATIONS = [
@@ -161,6 +172,9 @@ const state = {
   currentPipeline: null,
   mgrDrilldownRm: null,
   hierRmSelected: new Set(),
+  hierTlSelected: new Set(),
+  mgrPerfPeriod: 'yesterday',
+  mgrPerfScope: 'rm',
 };
 
 // ─── HELPERS ─────────────────────────────────────────────────────────────────
@@ -233,10 +247,17 @@ function switchRole(role) {
     hierRow.classList.toggle('hidden', !isMgr);
     hierRow.classList.toggle('flex', isMgr);
 
+    const tlFilterWrap = document.getElementById('tlFilterWrap');
+    if (tlFilterWrap) tlFilterWrap.classList.toggle('hidden', role !== 'senior_manager');
+
     if (isMgr) {
       closeMgrDrilldown();
       state.hierRmSelected = new Set();
-      buildHierFilterList();
+      state.hierTlSelected = new Set();
+      state.mgrPerfPeriod = 'yesterday';
+      state.mgrPerfScope = 'rm';
+      buildHierFilterList('rm');
+      if (role === 'senior_manager') buildHierFilterList('tl');
       updateHierFilterLabels();
       renderMgrDashboard();
       renderMgrIncentives();
@@ -281,6 +302,12 @@ document.addEventListener('click', (e) => {
   if (!e.target.closest('#rmFilterWrap')) {
     document.getElementById('rmFilterDropdown')?.classList.add('hidden');
   }
+  if (!e.target.closest('#tlFilterWrap')) {
+    document.getElementById('tlFilterDropdown')?.classList.add('hidden');
+  }
+  if (!e.target.closest('[id^="advHier_"]')) {
+    document.querySelectorAll('[id^="advHierDd_"]').forEach(dd => dd.classList.add('hidden'));
+  }
 });
 
 // ─── CALL STATUS ──────────────────────────────────────────────────────────────
@@ -293,49 +320,84 @@ function updateCallStatus(val) {
 }
 
 // ─── HIERARCHY FILTER ROW ─────────────────────────────────────────────────────
-function buildHierFilterList() {
-  const list = document.getElementById('rmFilterList');
+const HIER_FILTER_CONFIG = {
+  rm: { listId:'rmFilterList', dropdownId:'rmFilterDropdown', labelId:'rmFilterLabel' },
+  tl: { listId:'tlFilterList', dropdownId:'tlFilterDropdown', labelId:'tlFilterLabel' },
+};
+
+function hierSelectedSet(type) {
+  return type === 'tl' ? state.hierTlSelected : state.hierRmSelected;
+}
+
+// RMs scoped to the signed-in Team Lead / Senior Manager, before any filter is applied
+function mgrScopedTeam() {
+  if (state.role === 'team_lead') return MGR_TEAM.filter(rm => rm.tl === 'TL01');
+  return MGR_TEAM;
+}
+
+function buildHierFilterList(type) {
+  type = type || 'rm';
+  const cfg = HIER_FILTER_CONFIG[type];
+  const list = document.getElementById(cfg.listId);
   if (!list) return;
-  list.innerHTML = MGR_TEAM.map(rm => `
+  const items = type === 'tl' ? TEAM_LEADS_MOCK : mgrScopedTeam();
+  const selected = hierSelectedSet(type);
+  list.innerHTML = items.map(it => `
     <div class="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-surface cursor-pointer">
-      <input type="checkbox" id="hierChk_${rm.id}" class="w-3.5 h-3.5 accent-accent cursor-pointer flex-shrink-0" onchange="onHierCheckChange('${rm.id}',this.checked)"/>
-      <label for="hierChk_${rm.id}" class="text-xs text-text-main cursor-pointer leading-tight flex-1">${rm.name}</label>
+      <input type="checkbox" id="hierChk_${type}_${it.id}" class="w-3.5 h-3.5 accent-accent cursor-pointer flex-shrink-0" ${selected.has(it.id) ? 'checked' : ''} onchange="onHierCheckChange('${type}','${it.id}',this.checked)"/>
+      <label for="hierChk_${type}_${it.id}" class="text-xs text-text-main cursor-pointer leading-tight flex-1">${it.name}</label>
     </div>`).join('');
 }
 
-function onHierCheckChange(id, checked) {
-  if (checked) state.hierRmSelected.add(id);
-  else state.hierRmSelected.delete(id);
+function onHierCheckChange(type, id, checked) {
+  const set = hierSelectedSet(type);
+  if (checked) set.add(id);
+  else set.delete(id);
 }
 
 function toggleHierDropdown(type, e) {
   e.stopPropagation();
-  document.getElementById('rmFilterDropdown').classList.toggle('hidden');
+  document.getElementById(HIER_FILTER_CONFIG[type].dropdownId).classList.toggle('hidden');
+}
+
+function refreshMgrFilteredViews() {
+  renderMgrDashboard();
 }
 
 function applyHierFilter(type) {
-  document.getElementById('rmFilterDropdown').classList.add('hidden');
-  updateHierFilterLabels();
-  renderMgrTable();
+  document.getElementById(HIER_FILTER_CONFIG[type].dropdownId).classList.add('hidden');
+  refreshMgrFilteredViews();
 }
 
 function clearHierFilter(type) {
-  state.hierRmSelected = new Set();
-  document.querySelectorAll('#rmFilterList input[type="checkbox"]').forEach(cb => cb.checked = false);
-  updateHierFilterLabels();
-  document.getElementById('rmFilterDropdown').classList.add('hidden');
-  renderMgrTable();
+  hierSelectedSet(type).clear();
+  document.querySelectorAll(`#${HIER_FILTER_CONFIG[type].listId} input[type="checkbox"]`).forEach(cb => cb.checked = false);
+  document.getElementById(HIER_FILTER_CONFIG[type].dropdownId).classList.add('hidden');
+  refreshMgrFilteredViews();
 }
 
 function updateHierFilterLabels() {
-  const n = state.hierRmSelected.size;
-  document.getElementById('rmFilterLabel').textContent = n === 0 ? 'RM: All' : `RM: ${n} selected`;
-  document.getElementById('hierViewAllLabel').textContent = n === 0 ? 'Viewing All' : `Viewing ${n} of ${MGR_TEAM.length} RMs`;
+  const rmN = state.hierRmSelected.size;
+  document.getElementById('rmFilterLabel').textContent = rmN === 0 ? 'RM: All' : `RM: ${rmN} selected`;
+  const tlLabelEl = document.getElementById('tlFilterLabel');
+  if (tlLabelEl) {
+    const tlN = state.hierTlSelected.size;
+    tlLabelEl.textContent = tlN === 0 ? 'TL: All' : `TL: ${tlN} selected`;
+  }
+  const total = mgrScopedTeam().length;
+  const n = visibleTeam().length;
+  document.getElementById('hierViewAllLabel').textContent = (n === total) ? 'Viewing All' : `Viewing ${n} of ${total} RMs`;
 }
 
 function visibleTeam() {
-  if (state.hierRmSelected.size === 0) return MGR_TEAM;
-  return MGR_TEAM.filter(rm => state.hierRmSelected.has(rm.id));
+  let team = mgrScopedTeam();
+  if (state.role === 'senior_manager' && state.hierTlSelected.size > 0) {
+    team = team.filter(rm => state.hierTlSelected.has(rm.tl));
+  }
+  if (state.hierRmSelected.size > 0) {
+    team = team.filter(rm => state.hierRmSelected.has(rm.id));
+  }
+  return team;
 }
 
 // ─── PIPELINE DRAWER ─────────────────────────────────────────────────────────
@@ -838,7 +900,7 @@ const ESCALATION_GROUPS = [
     definition:'A student has shared negative feedback or is not happy with their experience.',
     closure:'Closes when the RM reaches out, resolves the concern, and the student confirms they are satisfied.' },
   { key:'wa_summary', icon:'💬', title:'WA Summary', subtitle:'WhatsApp Group Activity', isWa:true,
-    definition:'A student has a WhatsApp group-related issue. This group contains: Active Groups, Inactive Groups, Students Not Joined Groups, Messages Not Replied, and Student/Student Success Manager Not Joined.',
+    definition:'A student has a WhatsApp group-related issue. This group contains: Active Groups, Inactive Groups, Students Not Joined Groups, Messages Not Replied, and Student Success Manager Not Joined.',
     closure:'Closes when the respective WhatsApp group issue is resolved — each sub-group below closes independently.' },
   { key:'missed_calls', icon:'🚨', title:'Missed Calls', count:6, subtitle:'students with missed calls', forceOk:true,
     definition:'The student called the RM but the call could not be attended.',
@@ -858,9 +920,9 @@ const WA_SUMMARY_GROUPS = [
   { key:'notReplied', icon:'💬', title:'Messages Not Replied', count:8,
     definition:'Groups where the student’s last message hasn’t been replied to.',
     closure:'Reply to the pending message. Task closes once a reply is sent.' },
-  { key:'notJoined', icon:'🚫', title:'Student/Student Success Manager Not Joined', count:3,
-    definition:'Students without a group yet, or where the student or the Student Success Manager hasn’t joined the group.',
-    closure:'Create the group, or get the student/Student Success Manager to join it. Task closes once resolved.' },
+  { key:'notJoined', icon:'🚫', title:'Student Success Manager Not Joined', count:3,
+    definition:'The Student Success Manager (RM) hasn’t joined the student’s WhatsApp group yet.',
+    closure:'Join the WhatsApp group. Task closes once you’ve joined.' },
 ];
 
 function openEscalationDrawer() {
@@ -883,7 +945,7 @@ function escDefClosureHtml(g) {
   </div>`;
 }
 
-function escLeadRowHtml(l, waLink) {
+function escLeadRowHtml(l, waLink, showTaskBtn) {
   return `<div class="p-3 space-y-2 border-b border-[#E2E8F0] last:border-b-0">
     <div class="min-w-0">
       <p class="text-[13px] font-semibold text-[#0F172A] leading-tight">${l.name}</p>
@@ -892,6 +954,7 @@ function escLeadRowHtml(l, waLink) {
     <div class="flex items-center gap-2">
       ${waLink ? `<button class="flex-1 inline-flex items-center justify-center gap-1 px-2 py-1.5 rounded-lg text-[11px] font-semibold cursor-pointer transition-colors" style="background:#DCFCE7;border:1px solid #86EFAC;color:#15803D" onclick="showToast('Opening WhatsApp group for ${l.name}…','info')">Open WA Group</button>` : ''}
       <button class="flex-1 inline-flex items-center justify-center gap-1 px-2 py-1.5 rounded-lg text-[11px] font-semibold cursor-pointer transition-colors" style="background:#EEF2FF;border:1px solid #C7D2FE;color:#4338CA" onclick="openLeadDetail('${l.pipeline}','${l.id}')">View Student</button>
+      ${showTaskBtn ? `<button class="flex-1 inline-flex items-center justify-center gap-1 px-2 py-1.5 rounded-lg text-[11px] font-semibold cursor-pointer transition-colors" style="background:#EEF2FF;border:1px solid #C7D2FE;color:#4338CA" onclick="openLeadDetail('${l.pipeline}','${l.id}')">View Task</button>` : ''}
     </div>
   </div>`;
 }
@@ -920,7 +983,7 @@ function buildEscalationGroups() {
           ${escDefClosureHtml(g)}
           ${g.count === 0
             ? `<div class="text-xs text-text-muted text-center py-3">Nothing here right now — you're all caught up ✅</div>`
-            : `<div class="border border-[#E2E8F0] rounded-lg overflow-hidden">${leadsForEscalation(g.key).map(l => escLeadRowHtml(l, false)).join('')}</div>`}
+            : `<div class="border border-[#E2E8F0] rounded-lg overflow-hidden">${leadsForEscalation(g.key).map(l => escLeadRowHtml(l, false, g.key === 'missed_calls')).join('')}</div>`}
         `}
       </div>
     </div>`;
@@ -1291,36 +1354,21 @@ function selectReminderType(type, btn, suffix) {
   }
 }
 
-// ─── MANAGER TABLE ────────────────────────────────────────────────────────────
-function renderMgrTable() {
-  const tbody = document.getElementById('mgrTableBody');
-  const team = visibleTeam();
-  tbody.innerHTML = team.map(rm => `
-    <tr class="cursor-pointer hover:bg-surface border-b border-border" onclick="openMgrDrilldown('${rm.id}')">
-      <td class="px-4 py-2.5"><div class="flex items-center gap-2"><div class="w-7 h-7 rounded-full flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0" style="background:${rm.color}">${rm.initials}</div><strong class="text-sm">${rm.name}</strong></div></td>
-      <td class="px-4 py-2.5"><span class="font-mono font-bold text-xs px-2 py-0.5 rounded-full ${rm.sti > 5 ? 'bg-red-100 text-danger' : rm.sti > 0 ? 'bg-orange-100 text-accent' : 'bg-emerald-100 text-success'}">${rm.sti}</span></td>
-      <td class="px-4 py-2.5"><span class="font-mono font-bold text-xs px-2 py-0.5 rounded-full ${rm.revenue > 5 ? 'bg-red-100 text-danger' : rm.revenue > 0 ? 'bg-orange-100 text-accent' : 'bg-emerald-100 text-success'}">${rm.revenue}</span></td>
-      <td class="px-4 py-2.5"><span class="font-mono font-bold text-xs px-2 py-0.5 rounded-full ${rm.loan > 5 ? 'bg-red-100 text-danger' : rm.loan > 0 ? 'bg-orange-100 text-accent' : 'bg-emerald-100 text-success'}">${rm.loan}</span></td>
-      <td class="px-4 py-2.5 text-sm font-mono">${rm.quality}</td>
-      <td class="px-4 py-2.5"><span class="font-mono font-bold text-xs px-2 py-0.5 rounded-full ${rm.overdue > 5 ? 'bg-red-100 text-danger' : rm.overdue > 0 ? 'bg-orange-100 text-accent' : 'bg-emerald-100 text-success'}">${rm.overdue}</span></td>
-      <td class="px-4 py-2.5">${statusChip(rm.status)}</td>
-    </tr>`).join('');
-}
-
 // ─── MANAGER DASHBOARD (Team Lead / Senior Manager) ───────────────────────────
 function renderMgrDashboard() {
   const roleLabels = { team_lead:'Team Lead Dashboard', senior_manager:'Senior Manager Dashboard' };
   document.getElementById('mgrTitle').textContent = roleLabels[state.role] || 'Team Dashboard';
-  document.getElementById('mgrSubtitle').textContent = `${MGR_TEAM.length} RMs reporting to you`;
+  const team = visibleTeam();
+  document.getElementById('mgrSubtitle').textContent = `${team.length} RMs reporting to you`;
 
-  const totalSti = MGR_TEAM.reduce((s, r) => s + r.sti, 0);
-  const totalRevenue = MGR_TEAM.reduce((s, r) => s + r.revenue, 0);
-  const totalLoan = MGR_TEAM.reduce((s, r) => s + r.loan, 0);
-  const avgQuality = Math.round(MGR_TEAM.reduce((s, r) => s + parseInt(r.quality), 0) / MGR_TEAM.length);
-  const best = [...MGR_TEAM].sort((a, b) => parseInt(b.quality) - parseInt(a.quality))[0];
+  const totalSti = team.reduce((s, r) => s + r.sti, 0);
+  const totalRevenue = team.reduce((s, r) => s + r.revenue, 0);
+  const totalLoan = team.reduce((s, r) => s + r.loan, 0);
+  const avgQuality = team.length ? Math.round(team.reduce((s, r) => s + parseInt(r.quality), 0) / team.length) : 0;
+  const best = team.length ? [...team].sort((a, b) => parseInt(b.quality) - parseInt(a.quality))[0] : null;
 
   document.getElementById('mgrStiCount').textContent = totalSti;
-  document.getElementById('mgrStiSub').textContent = `Across ${MGR_TEAM.length} RMs — Docs + App Ready + F2F`;
+  document.getElementById('mgrStiSub').textContent = `Across ${team.length} RMs — Docs + App Ready + F2F`;
   document.getElementById('mgrRevenueCount').textContent = totalRevenue;
   document.getElementById('mgrLoanCount').textContent = totalLoan;
 
@@ -1337,24 +1385,89 @@ function renderMgrDashboard() {
     { label:'Loan VC Book & Join', pct:Math.max(0, Math.min(100, avgQuality - 11)) },
     { label:'Prep Demo Booked, Enrollment Pending', pct:Math.max(0, Math.min(100, avgQuality - 22)) },
   ]);
-  document.getElementById('mgrBestTag').innerHTML = `Best: <strong class="text-success">${best.name}</strong> · ${best.quality}`;
+  document.getElementById('mgrBestTag').innerHTML = best ? `Best: <strong class="text-success">${best.name}</strong> · ${best.quality}` : 'No RMs match the current filter.';
 
   document.getElementById('mgrEscalationList').innerHTML = TEAM_ESCALATIONS.map(e => escRowHtml(e.label, e.count)).join('');
 
-  renderMgrTable();
+  updateHierFilterLabels();
   renderMgrTopPerformers();
   document.getElementById('mgrPerfSummaryContent').innerHTML = buildTeamPerfSummary();
 }
 
+// ─── TOP PERFORMERS (Team Lead / Senior Manager) — RM vs TL rankings ──────────
+const MGR_PERIOD_MULT = { yesterday:1, month:6, '3months':16 };
+const MGR_PCT_PERIOD_DELTA = { yesterday:0, month:4, '3months':9 };
+
+function setMgrPerfWindow(period, btn) {
+  state.mgrPerfPeriod = period;
+  document.querySelectorAll('#mgrPerfToggle .period-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderMgrTopPerformers();
+}
+
+function setMgrPerfScope(scope, btn) {
+  state.mgrPerfScope = scope;
+  document.querySelectorAll('#mgrScopeToggle .period-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderMgrTopPerformers();
+}
+
+const MGR_RANK_COLORS = ['#F97316', '#94A3B8', '#C2410C'];
+
+function topPerfRows(metric) {
+  const period = state.mgrPerfPeriod || 'yesterday';
+  const isPct = metric === 'caToStiPct' || metric === 'lockinPct';
+  const mult = MGR_PERIOD_MULT[period];
+  const delta = MGR_PCT_PERIOD_DELTA[period];
+
+  let entries;
+  if (state.mgrPerfScope === 'tl') {
+    const tlPool = (state.role === 'senior_manager' && state.hierTlSelected.size > 0)
+      ? TEAM_LEADS_MOCK.filter(t => state.hierTlSelected.has(t.id))
+      : TEAM_LEADS_MOCK;
+    entries = tlPool.map(tl => {
+      const rms = MGR_TEAM.filter(rm => rm.tl === tl.id);
+      const value = isPct
+        ? Math.min(100, Math.round(rms.reduce((s, r) => s + r[metric], 0) / (rms.length || 1)) + delta)
+        : Math.round(rms.reduce((s, r) => s + r[metric], 0) * mult);
+      return { name:tl.name, value, onclick:'' };
+    });
+  } else {
+    entries = visibleTeam().map(rm => ({
+      name: rm.name,
+      value: isPct ? Math.min(100, rm[metric] + delta) : Math.round(rm[metric] * mult),
+      onclick: `openMgrDrilldown('${rm.id}')`,
+    }));
+  }
+  return entries.sort((a, b) => b.value - a.value).slice(0, 3);
+}
+
+function topPerformersCategoryBox(title, metric, formatFn) {
+  const rows = topPerfRows(metric);
+  return `<div class="rounded-xl border border-border overflow-hidden">
+    <div class="px-4 py-2.5 bg-surface text-[10px] font-bold uppercase tracking-wide text-text-muted">${title}</div>
+    <div class="divide-y divide-border">
+      ${rows.length ? rows.map((r, i) => `
+        <div class="flex items-center gap-3 px-4 py-3 ${r.onclick ? 'cursor-pointer hover:bg-surface/60 transition-colors' : ''}" ${r.onclick ? `onclick="${r.onclick}"` : ''}>
+          <div class="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0" style="background:${MGR_RANK_COLORS[i]}">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M8 21h8M12 17v4"/><path d="M7 4h10v5a5 5 0 01-10 0V4z"/><path d="M7 5H4.5a2.5 2.5 0 002.5 2.5M17 5h2.5A2.5 2.5 0 0117 7.5"/></svg>
+          </div>
+          <span class="flex-1 text-sm font-medium text-text-main truncate">${r.name}</span>
+          <span class="text-sm font-bold text-text-main">${formatFn(r.value)}</span>
+        </div>`).join('') : `<div class="text-center text-xs text-text-muted py-4">No data for this selection.</div>`}
+    </div>
+  </div>`;
+}
+
 function renderMgrTopPerformers() {
-  const sorted = [...MGR_TEAM].sort((a, b) => b.revenue - a.revenue);
-  document.getElementById('mgrLeaderboard').innerHTML = sorted.map((r, i) => `
-    <div class="flex items-center gap-3 bg-surface rounded-xl border border-border px-3 py-2.5">
-      ${rankBadge(i)}
-      <div class="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0" style="background:${r.color}">${r.initials}</div>
-      <span class="flex-1 text-sm font-medium">${r.name}</span>
-      <span class="font-mono text-sm font-bold text-primary">${r.revenue} lock-ins</span>
-    </div>`).join('');
+  const grid = document.getElementById('mgrTopPerfGrid');
+  if (!grid) return;
+  grid.innerHTML = [
+    topPerformersCategoryBox('STIs Submitted', 'stisSubmitted', v => v),
+    topPerformersCategoryBox('CA → STI (30D, Min CA 20)', 'caToStiPct', v => `${v}%`),
+    topPerformersCategoryBox('Deposits', 'deposits', v => v),
+    topPerformersCategoryBox('Lock-ins (Min CA 20)', 'lockinPct', v => `${v}%`),
+  ].join('');
 }
 
 function buildTeamPerfSummary() {
@@ -1372,7 +1485,7 @@ function buildTeamPerfSummary() {
         Advanced Filter
       </button>
     </div>
-    ${buildAdvancedFilterPanel(uid)}
+    ${buildAdvancedFilterPanel(uid, state.role === 'senior_manager' ? 'rm_tl' : 'rm')}
     ${buildOverallSummaryRow(good, track, focus, goals)}
     ${buildVolumeMetricsTable(uid, TEAM_PERF_METRICS.volume)}
     ${buildConversionFunnel(uid, TEAM_PERF_METRICS.conversion)}`;
@@ -1657,7 +1770,48 @@ function toggleAdvancedFilter(uid) {
   document.getElementById(`advFilterPanel${uid}`).classList.toggle('hidden');
 }
 
-function buildAdvancedFilterPanel(uid) {
+function hierDropdownFieldHtml(type, label, uid) {
+  const items = type === 'tl' ? TEAM_LEADS_MOCK : mgrScopedTeam();
+  const selected = hierSelectedSet(type);
+  const wrapId = `advHier_${type}_${uid}`;
+  const ddId = `advHierDd_${type}_${uid}`;
+  const labelId = `advHierLabel_${type}_${uid}`;
+  const btnLabel = selected.size === 0 ? `All ${label}s` : `${label}: ${selected.size} selected`;
+  return `
+        <div><label class="block text-[10px] font-semibold text-text-muted mb-1">${label}</label>
+          <div class="relative" id="${wrapId}">
+            <button type="button" onclick="toggleAdvHierDropdown('${ddId}',event)" class="w-full flex items-center justify-between gap-1.5 px-2 py-1.5 border border-border rounded-lg text-xs bg-white cursor-pointer">
+              <span id="${labelId}" class="truncate">${btnLabel}</span>
+              <svg class="w-3 h-3 flex-shrink-0 text-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9" stroke-width="2"/></svg>
+            </button>
+            <div id="${ddId}" class="hidden absolute top-full left-0 mt-1 w-48 bg-white rounded-xl border border-border shadow-xl z-[60] overflow-hidden">
+              <div class="max-h-44 overflow-y-auto p-2 space-y-1">
+                ${items.map(it => `
+                  <div class="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-surface cursor-pointer">
+                    <input type="checkbox" class="w-3.5 h-3.5 accent-accent cursor-pointer flex-shrink-0" ${selected.has(it.id) ? 'checked' : ''} onchange="onAdvHierCheck('${type}','${it.id}',this.checked,'${labelId}','${label}')"/>
+                    <label class="text-xs text-text-main cursor-pointer leading-tight flex-1">${escHtml(it.name)}</label>
+                  </div>`).join('')}
+              </div>
+            </div>
+          </div>
+        </div>`;
+}
+
+function toggleAdvHierDropdown(ddId, e) {
+  e.stopPropagation();
+  document.querySelectorAll('[id^="advHierDd_"]').forEach(dd => { if (dd.id !== ddId) dd.classList.add('hidden'); });
+  document.getElementById(ddId).classList.toggle('hidden');
+}
+
+function onAdvHierCheck(type, id, checked, labelId, label) {
+  onHierCheckChange(type, id, checked);
+  const n = hierSelectedSet(type).size;
+  const el = document.getElementById(labelId);
+  if (el) el.textContent = n === 0 ? `All ${label}s` : `${label}: ${n} selected`;
+}
+
+function buildAdvancedFilterPanel(uid, hierScope) {
+  const hierFieldsHtml = !hierScope ? '' : `${hierDropdownFieldHtml('rm', 'RM', uid)}${hierScope === 'rm_tl' ? hierDropdownFieldHtml('tl', 'TL', uid) : ''}`;
   return `
     <div class="hidden mb-4 p-4 bg-surface rounded-lg border border-border" id="advFilterPanel${uid}">
       <div class="text-[10px] font-bold uppercase tracking-wide text-text-muted mb-2.5">Advanced Filters</div>
@@ -1671,13 +1825,27 @@ function buildAdvancedFilterPanel(uid) {
         <div><label class="block text-[10px] font-semibold text-text-muted mb-1">Counsellors</label>
           <select class="w-full px-2 py-1.5 border border-border rounded-lg text-xs bg-white"><option>All Counsellors</option><option>Priya CL</option><option>Amit CL</option><option>Rahul CL</option></select></div>
         <div class="col-span-2 sm:col-span-4"><label class="block text-[10px] font-semibold text-text-muted mb-1">CA Date Range</label>
-          <div class="flex items-center gap-2"><input type="date" class="flex-1 min-w-0 px-2 py-1.5 border border-border rounded-lg text-xs"/><span class="text-text-muted text-xs flex-shrink-0">→</span><input type="date" class="flex-1 min-w-0 px-2 py-1.5 border border-border rounded-lg text-xs"/></div></div>
+          <div class="flex items-center gap-2"><input type="date" class="flex-1 min-w-0 px-2 py-1.5 border border-border rounded-lg text-xs"/><span class="text-text-muted text-xs flex-shrink-0">→</span><input type="date" class="flex-1 min-w-0 px-2 py-1.5 border border-border rounded-lg text-xs"/></div></div>${hierFieldsHtml}
       </div>
       <div class="flex justify-end gap-2">
-        <button class="px-3 py-1.5 border border-border rounded-lg text-xs font-semibold hover:bg-white cursor-pointer" onclick="showToast('Filters reset.','info')">Reset</button>
-        <button class="px-3 py-1.5 bg-accent hover:bg-accent-dark text-white rounded-lg text-xs font-semibold cursor-pointer" onclick="showToast('Filters applied.','success')">Apply</button>
+        <button class="px-3 py-1.5 border border-border rounded-lg text-xs font-semibold hover:bg-white cursor-pointer" onclick="resetAdvFilter(${hierScope ? `'${hierScope}'` : 'null'})">Reset</button>
+        <button class="px-3 py-1.5 bg-accent hover:bg-accent-dark text-white rounded-lg text-xs font-semibold cursor-pointer" onclick="applyAdvFilter(${hierScope ? `'${hierScope}'` : 'null'})">Apply</button>
       </div>
     </div>`;
+}
+
+function applyAdvFilter(hierScope) {
+  if (hierScope) refreshMgrFilteredViews();
+  showToast('Filters applied.', 'success');
+}
+
+function resetAdvFilter(hierScope) {
+  if (hierScope) {
+    state.hierRmSelected.clear();
+    state.hierTlSelected.clear();
+    refreshMgrFilteredViews();
+  }
+  showToast('Filters reset.', 'info');
 }
 
 function buildBusinessGoalPanel(goals) {
@@ -2013,8 +2181,8 @@ function openProfile() {
     <div class="grid grid-cols-2 gap-3">
       <div><div class="text-[10px] font-bold uppercase text-text-muted mb-0.5">Joining Date</div><div class="text-sm font-medium">Jan 12, 2025</div></div>
       <div><div class="text-[10px] font-bold uppercase text-text-muted mb-0.5">Customer Rating</div><div class="text-sm font-medium">4.2 / 5</div></div>
-      <div><div class="text-[10px] font-bold uppercase text-text-muted mb-0.5">Team Lead</div><div class="text-sm font-medium">Rahul Sharma</div></div>
-      <div><div class="text-[10px] font-bold uppercase text-text-muted mb-0.5">Senior Manager</div><div class="text-sm font-medium">Anjali Menon</div></div>
+      <div><div class="text-[10px] font-bold uppercase text-text-muted mb-0.5">Team Lead</div><div class="text-sm font-medium">Mansi</div></div>
+      <div><div class="text-[10px] font-bold uppercase text-text-muted mb-0.5">Senior Manager</div><div class="text-sm font-medium">Shubham Sharma</div></div>
     </div>`;
   openDrawer('My Profile', html);
 }
@@ -2023,8 +2191,8 @@ function openProfile() {
 let botOpen = false;
 let botMoodResolved = false;
 const RM_FIRST_NAME = 'Arjun';
-const TL_NAME = 'Rahul Sharma';
-const SM_NAME = 'Anjali Menon';
+const TL_NAME = 'Mansi';
+const SM_NAME = 'Shubham Sharma';
 const HR_LABEL = 'HR Team';
 const DS_LABEL = 'Escalation Desk';
 const TODAY_DATE = '2026-09-01';
@@ -2172,12 +2340,19 @@ function showBotInput(visible) {
   document.getElementById('botInputRow').classList.toggle('hidden', !visible);
 }
 
+// ── Role-aware display name ──
+function botDisplayName() {
+  if (state.role === 'senior_manager') return SM_NAME.split(' ')[0];
+  if (state.role === 'team_lead') return TL_NAME.split(' ')[0];
+  return RM_FIRST_NAME;
+}
+
 // ── Greeting / mood-check ──
 function initBotGreeting() {
   document.getElementById('botMessages').innerHTML = '';
   const hour = new Date().getHours();
   const timeGreeting = hour < 12 ? 'Good Morning' : hour < 17 ? 'Good Afternoon' : 'Good Evening';
-  appendBotMsg(`${timeGreeting}, ${RM_FIRST_NAME}! 👋`);
+  appendBotMsg(`${timeGreeting}, ${botDisplayName()}! 👋`);
   botMoodResolved = false;
   showBotInput(true);
   const input = document.getElementById('chatInput');
@@ -2192,7 +2367,7 @@ function sendChatMsg() {
   input.value = '';
   appendUserMsg(msg);
   if (/^(hi|hello|hey)\b/i.test(msg)) {
-    botSay(`Hi, ${RM_FIRST_NAME}! 😊 How is your day going?`).then(() => {
+    botSay(`Hi, ${botDisplayName()}! 😊 How is your day going?`).then(() => {
       botButtons([
         { label: 'Good', action: onMoodGood },
         { label: 'Not okay', action: onMoodNotOkay },
@@ -2211,7 +2386,8 @@ async function onMoodGood() {
 }
 
 async function onMoodNotOkay() {
-  await botSay(`Oh no, ${RM_FIRST_NAME} — sorry to hear this. Want me to connect you with SM, HR, or DS? Let's get this sorted and make sure you feel better before you start working again.`);
+  const connectWho = state.role === 'senior_manager' ? 'HR or DS' : 'SM, HR, or DS';
+  await botSay(`Oh no, ${botDisplayName()} — sorry to hear this. Want me to connect you with ${connectWho}? Let's get this sorted and make sure you feel better before you start working again.`);
   botButtons([
     { label: 'Yes', action: flowConnect },
     { label: 'No', action: onMoodGood },
@@ -2228,6 +2404,13 @@ const BUCKETS = {
 };
 
 function showMainMenu() {
+  if (state.role === 'senior_manager') {
+    botButtons([
+      { label: '📢 Send Broadcast Messages', action: flowBroadcast },
+      { label: '❓ Questions from RMs and TLs', action: flowQuestionsFromRmsTl },
+    ]);
+    return;
+  }
   botButtons([
     { label: '📋 My Day & Tasks', action: () => showBucket('day') },
     { label: '🏆 Performance & Leaderboard', action: () => showBucket('perf') },
@@ -2465,11 +2648,101 @@ async function flowRaiseTicket() {
 
 async function flowConnect() {
   await botSay('Please let me know with whom you want to connect.');
-  botButtons([
-    { label: 'SM', action: () => showConnectForm('SM', SM_NAME) },
-    { label: 'HR', action: () => showConnectForm('HR', HR_LABEL) },
-    { label: 'DS', action: () => showConnectForm('DS', DS_LABEL) },
-  ]);
+  const btns = [];
+  if (state.role !== 'senior_manager') btns.push({ label: 'SM', action: () => showConnectForm('SM', SM_NAME) });
+  btns.push({ label: 'HR', action: () => showConnectForm('HR', HR_LABEL) });
+  btns.push({ label: 'DS', action: () => showConnectForm('DS', DS_LABEL) });
+  botButtons(btns);
+}
+
+// ── Senior Manager only: Broadcast Messages ──
+const SM_BROADCAST_AUDIENCES = [
+  { key:'rm', label:'RMs', desc:'All Student Success Managers' },
+  { key:'tl', label:'TLs', desc:'All Team Leads' },
+  { key:'all', label:'Entire Org (RM + TL)', desc:'Every RM and Team Lead' },
+];
+
+async function flowBroadcast() {
+  await botSay('Who would you like to send this broadcast to?');
+  botButtons(SM_BROADCAST_AUDIENCES.map(a => ({ label: a.label, action: () => showBroadcastForm(a) })));
+}
+
+function showBroadcastForm(audience) {
+  const container = document.getElementById('botMessages');
+  const uid = 'broadcastForm_' + Date.now();
+  const wrap = document.createElement('div');
+  wrap.innerHTML = `<div class="bot-msg-bubble" style="max-width:100%">
+    <div class="text-[10px] font-bold uppercase tracking-wide text-text-muted mb-2">Broadcast to ${escHtml(audience.desc)}</div>
+    <textarea class="w-full px-2.5 py-2 border border-border rounded-lg text-xs mb-2" rows="3" maxlength="500" placeholder="Type your broadcast message…" id="${uid}_msg"></textarea>
+    <button class="w-full py-1.5 bg-accent text-white text-xs font-semibold rounded-lg cursor-pointer opacity-50" id="${uid}_submit" disabled>Send Broadcast</button>
+  </div>`;
+  container.appendChild(wrap);
+  container.scrollTop = container.scrollHeight;
+  const msgInput = wrap.querySelector(`#${uid}_msg`);
+  const submitBtn = wrap.querySelector(`#${uid}_submit`);
+  msgInput.addEventListener('input', () => {
+    const ok = msgInput.value.trim().length > 0;
+    submitBtn.disabled = !ok;
+    submitBtn.classList.toggle('opacity-50', !ok);
+  });
+  submitBtn.addEventListener('click', async () => {
+    if (submitBtn.disabled) return;
+    wrap.remove();
+    botUserPill(`Broadcast to ${audience.label}`);
+    const countLabel = audience.key === 'rm' ? `${MGR_TEAM.length} RMs`
+      : audience.key === 'tl' ? `${TEAM_LEADS_MOCK.length} TLs`
+      : `${MGR_TEAM.length} RMs + ${TEAM_LEADS_MOCK.length} TLs`;
+    await botSay(`📢 Broadcast sent to ${countLabel}!`);
+    showToast(`Broadcast sent to ${audience.desc}.`, 'success');
+  });
+}
+
+// ── Senior Manager only: Questions from RMs and TLs ──
+const SM_INBOX_MOCK = [
+  { id:'Q-901', from:'Arjun Patel', role:'RM', text:"Can I get sign-off to override the STI docs deadline for RM-2041? Bank statement is delayed on the student's end.", date:'2026-09-12 10:15', answered:false },
+  { id:'Q-902', from:'Mansi', role:'TL', text:'Requesting approval to redistribute 2 overdue Loan VC leads from Vikram D. to Meera Nair this week.', date:'2026-09-12 14:40', answered:false },
+  { id:'Q-903', from:'Noushad', role:'TL', text:'Can we get an extra training slot on Objection Handling for 2 new RMs joining next week?', date:'2026-09-11 09:00', answered:true },
+];
+
+async function flowQuestionsFromRmsTl() {
+  const pending = SM_INBOX_MOCK.filter(q => !q.answered);
+  if (!pending.length) {
+    await botSay('✅ No open questions from RMs or TLs right now.');
+    return;
+  }
+  await botSay(`📥 You have ${pending.length} open question(s):`);
+  pending.forEach(q => {
+    appendBotMsg(`<div class="text-[10px] font-bold uppercase tracking-wide text-text-muted mb-1">${escHtml(q.from)} · ${q.role} · ${q.date}</div><div class="text-sm">${escHtml(q.text)}</div>`);
+  });
+  botButtons(pending.map(q => ({ label: `Reply to ${q.from.split(' ')[0]}`, action: () => showSmReplyForm(q) })));
+}
+
+function showSmReplyForm(q) {
+  const container = document.getElementById('botMessages');
+  const uid = 'smReply_' + Date.now();
+  const wrap = document.createElement('div');
+  wrap.innerHTML = `<div class="bot-msg-bubble" style="max-width:100%">
+    <div class="text-[10px] font-bold uppercase tracking-wide text-text-muted mb-2">Reply to ${escHtml(q.from)}</div>
+    <textarea class="w-full px-2.5 py-2 border border-border rounded-lg text-xs mb-2" rows="2" placeholder="Type your reply…" id="${uid}_msg"></textarea>
+    <button class="w-full py-1.5 bg-accent text-white text-xs font-semibold rounded-lg cursor-pointer opacity-50" id="${uid}_submit" disabled>Send Reply</button>
+  </div>`;
+  container.appendChild(wrap);
+  container.scrollTop = container.scrollHeight;
+  const msgInput = wrap.querySelector(`#${uid}_msg`);
+  const submitBtn = wrap.querySelector(`#${uid}_submit`);
+  msgInput.addEventListener('input', () => {
+    const ok = msgInput.value.trim().length > 0;
+    submitBtn.disabled = !ok;
+    submitBtn.classList.toggle('opacity-50', !ok);
+  });
+  submitBtn.addEventListener('click', async () => {
+    if (submitBtn.disabled) return;
+    wrap.remove();
+    q.answered = true;
+    botUserPill(`Reply to ${q.from}`);
+    await botSay(`✅ Your reply has been sent to ${q.from}.`);
+    showToast(`Reply sent to ${q.from}.`, 'success');
+  });
 }
 
 function showConnectForm(type, recipientName) {

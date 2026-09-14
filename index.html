@@ -137,6 +137,20 @@
           </div>
         </div>
       </div>
+      <div id="tlFilterWrap" class="relative hidden">
+        <button onclick="toggleHierDropdown('tl',event)" class="flex items-center gap-1.5 text-xs px-3 py-1.5 bg-white border border-border text-text-main rounded-lg hover:bg-surface transition-colors whitespace-nowrap cursor-pointer">
+          <svg class="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4" stroke-width="2"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M23 21v-2a4 4 0 00-3-3.87"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 3.13a4 4 0 010 7.75"/></svg>
+          <span id="tlFilterLabel">TL: All</span>
+          <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9" stroke-width="2"/></svg>
+        </button>
+        <div id="tlFilterDropdown" class="hidden absolute top-full left-0 mt-1 w-52 bg-white rounded-xl border border-border shadow-xl z-[60] overflow-hidden">
+          <div id="tlFilterList" class="max-h-44 overflow-y-auto p-2 space-y-1"></div>
+          <div class="px-3 py-2 border-t border-border flex gap-2 bg-surface/50">
+            <button onclick="applyHierFilter('tl')" class="flex-1 text-xs bg-accent text-white rounded-lg py-1.5 font-semibold cursor-pointer hover:bg-accent-dark">Apply</button>
+            <button onclick="clearHierFilter('tl')" class="text-xs text-text-muted hover:text-danger px-2 cursor-pointer">Clear</button>
+          </div>
+        </div>
+      </div>
       <span id="hierViewAllLabel" class="text-[10px] text-text-muted italic">Viewing All</span>
     </div>
 
@@ -167,23 +181,23 @@
             <span class="text-[10px] px-2 py-0.5 bg-accent/10 text-accent rounded-full font-semibold">Action Required</span>
           </div>
           <div class="grid grid-cols-2 lg:grid-cols-3 gap-3.5 mb-6" id="mgrOutputCards">
-            <div class="boost-card" id="boostCardMgrSti" onclick="document.getElementById('mgrTableWrap').scrollIntoView({behavior:'smooth'})">
+            <div class="boost-card" id="boostCardMgrSti" onclick="openPipeline('sti')">
               <div class="boost-label">🎯 Boost STI</div>
               <div class="boost-count" id="mgrStiCount">0</div>
               <div class="boost-sub" id="mgrStiSub">Across your team</div>
-              <span class="boost-cta">View Team Table →</span>
+              <span class="boost-cta">View Tasks →</span>
             </div>
-            <div class="boost-card" id="boostCardMgrRevenue" onclick="document.getElementById('mgrTableWrap').scrollIntoView({behavior:'smooth'})">
+            <div class="boost-card" id="boostCardMgrRevenue" onclick="openPipeline('revenue')">
               <div class="boost-label">💰 Boost Revenue</div>
               <div class="boost-count" id="mgrRevenueCount">0</div>
               <div class="boost-sub">Prime + C2I test pending</div>
-              <span class="boost-cta">View Team Table →</span>
+              <span class="boost-cta">View Tasks →</span>
             </div>
-            <div class="boost-card" id="boostCardMgrLoan" onclick="document.getElementById('mgrTableWrap').scrollIntoView({behavior:'smooth'})">
+            <div class="boost-card" id="boostCardMgrLoan" onclick="openPipeline('loan')">
               <div class="boost-label">💳 Boost Loan</div>
               <div class="boost-count" id="mgrLoanCount">0</div>
               <div class="boost-sub">VC not booked / not attended</div>
-              <span class="boost-cta">View Team Table →</span>
+              <span class="boost-cta">View Tasks →</span>
             </div>
           </div>
 
@@ -215,49 +229,35 @@
             </div>
           </div>
 
-          <!-- Team Overview table -->
-          <section class="bg-white rounded-xl border border-border overflow-hidden mb-4" id="mgrTableWrap">
-            <div class="flex items-center justify-between px-5 py-4 border-b border-border">
-              <h2 class="font-semibold text-text-main flex items-center gap-2">
-                <svg class="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4" stroke-width="2"/></svg>
-                Team Overview — RM Performance
-              </h2>
-              <span class="text-xs text-text-muted">Tap a row to drill down</span>
-            </div>
-            <div class="overflow-x-auto">
-              <table class="w-full text-sm" id="mgrTable">
-                <thead>
-                  <tr class="bg-surface text-[10px] font-semibold uppercase tracking-wide text-text-muted">
-                    <th class="px-4 py-2.5 text-left">RM Name</th>
-                    <th class="px-4 py-2.5 text-left">Boost STI</th>
-                    <th class="px-4 py-2.5 text-left">Boost Revenue</th>
-                    <th class="px-4 py-2.5 text-left">Boost Loan</th>
-                    <th class="px-4 py-2.5 text-left">Quality</th>
-                    <th class="px-4 py-2.5 text-left">Overdue</th>
-                    <th class="px-4 py-2.5 text-left">Status</th>
-                  </tr>
-                </thead>
-                <tbody id="mgrTableBody"></tbody>
-              </table>
-            </div>
-          </section>
-
           <!-- Top Performers -->
           <section class="bg-white rounded-xl border border-border overflow-hidden mb-4">
             <button onclick="toggleSection('mgrtopperf')" class="w-full flex items-center justify-between px-5 py-4 hover:bg-surface/60 transition-colors cursor-pointer">
-              <h2 class="font-semibold text-text-main flex items-center gap-2">🏆 Top Performers on Your Team</h2>
+              <h2 class="font-semibold text-text-main flex items-center gap-2">🏆 Top Performers</h2>
               <svg class="w-4 h-4 text-text-muted transition-transform" id="chevron-mgrtopperf" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9" stroke-width="2"/></svg>
             </button>
             <div id="body-mgrtopperf" class="hidden px-5 pb-5">
-              <div class="text-[10px] font-bold uppercase tracking-wide text-text-muted mb-2">By Lock-in Count</div>
-              <div class="space-y-2" id="mgrLeaderboard"></div>
+              <div class="flex items-center justify-between flex-wrap gap-2.5 mb-3.5">
+                <div class="flex gap-0 rounded-lg overflow-hidden border border-border w-fit" id="mgrPerfToggle">
+                  <button class="period-btn text-xs px-3 py-1.5 active" onclick="setMgrPerfWindow('yesterday',this)">Yesterday</button>
+                  <button class="period-btn text-xs px-3 py-1.5" onclick="setMgrPerfWindow('month',this)">This Month</button>
+                  <button class="period-btn text-xs px-3 py-1.5" onclick="setMgrPerfWindow('3months',this)">Last 3 Months</button>
+                </div>
+                <div class="flex items-center gap-2">
+                  <span class="text-[11px] font-semibold text-text-muted">Show rankings for:</span>
+                  <div class="flex gap-0 rounded-lg overflow-hidden border border-border w-fit" id="mgrScopeToggle">
+                    <button class="period-btn text-xs px-3 py-1.5 active" onclick="setMgrPerfScope('rm',this)">RM</button>
+                    <button class="period-btn text-xs px-3 py-1.5" onclick="setMgrPerfScope('tl',this)">TL</button>
+                  </div>
+                </div>
+              </div>
+              <div class="flex flex-col gap-3" id="mgrTopPerfGrid"></div>
             </div>
           </section>
 
           <!-- Team Performance Summary -->
-          <section class="bg-white rounded-xl border border-border overflow-hidden mb-4">
+          <section class="bg-white rounded-xl border border-border overflow-hidden mb-4" id="mgrPerfSummaryWrap">
             <button onclick="toggleSection('mgrperfsummary')" class="w-full flex items-center justify-between px-5 py-4 hover:bg-surface/60 transition-colors cursor-pointer">
-              <h2 class="font-semibold text-text-main flex items-center gap-2">📈 Team Performance Summary</h2>
+              <h2 class="font-semibold text-text-main flex items-center gap-2">📈 Performance Summary</h2>
               <svg class="w-4 h-4 text-text-muted transition-transform" id="chevron-mgrperfsummary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9" stroke-width="2"/></svg>
             </button>
             <div id="body-mgrperfsummary" class="hidden px-5 pb-5">
@@ -1016,6 +1016,6 @@
   </div>
 </div>
 
-<script src="rm-app.js?v=16"></script>
+<script src="rm-app.js?v=22"></script>
 </body>
 </html>
