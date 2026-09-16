@@ -11,6 +11,164 @@ body {
   background: linear-gradient(135deg, #0C1A2E 0%, #1E293B 50%, #0C1A2E 100%);
 }
 
+.hide-scrollbar::-webkit-scrollbar { display: none; }
+.hide-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
+
+/* ── Lead Detail — production visual match (measured live via getComputedStyle) ── */
+#leadDetailPage {
+  font-family: 'Roboto', Arial, Helvetica, sans-serif;
+}
+#leadDetailHeaderBar { background: #E8E8E8; }
+#leadDetailPage #leadDetailContent {
+  background: #E8E8E8;
+}
+#leadDetailPage #leadDetailSidebar {
+  background: #fff;
+}
+#leadDetailTabBar { background: #fff; }
+
+.lead-outer-tab {
+  padding: 14px 20px 12px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #000;
+  white-space: nowrap;
+  cursor: pointer;
+  border-bottom: 4px solid transparent;
+  background: transparent;
+}
+.lead-outer-tab.active { color: #443EFF; font-weight: 700; border-bottom-color: #3F47F5; }
+
+.lead-tab {
+  padding: 14px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #000;
+  white-space: nowrap;
+  cursor: pointer;
+  border-bottom: 4px solid transparent;
+  flex-shrink: 0;
+  background: transparent;
+}
+.lead-tab:hover { background: #F8FAFC; }
+.lead-tab.active { color: #443EFF; font-weight: 700; border-bottom-color: #3F47F5; }
+
+.pl-card {
+  background: #fff;
+  border: 1px solid #C6CBD2;
+  border-radius: 16px;
+  box-shadow: 0 2px 4px -1px rgba(28,33,51,.1);
+  padding: 16px;
+}
+.pl-subcard {
+  background: #fff;
+  border: 1px solid #E2E8F0;
+  border-radius: 8px;
+  padding: 12px 14px;
+}
+.pl-tile {
+  background: #F3F3FF;
+  border: 1px solid #E3E2FF;
+  border-radius: 4px;
+  padding: 12px;
+}
+.pl-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 70px;
+  height: 22px;
+  padding: 0 10px;
+  border-radius: 48px;
+  font-size: 10px;
+  font-weight: 600;
+  border: 1px solid transparent;
+}
+.pl-badge-completed { background: #F0FAF3; color: #3A9E59; border-color: #A9E4BE; }
+.pl-edit-link { color: #443EFF; font-size: 14px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; }
+.pl-icon { flex-shrink: 0; color: #656E7F; }
+.pl-btn-outline {
+  font-size: 12px;
+  font-weight: 400;
+  padding: 6px 16px;
+  border-radius: 4px;
+  border: 1px solid #CDCDCD;
+  background: #fff;
+  color: #443EFF;
+  cursor: pointer;
+  transition: background-color .15s;
+}
+.pl-btn-outline:hover { background: #F8F8FF; }
+.pl-btn-primary {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: none;
+  background: #443EFF;
+  color: #fff;
+  cursor: pointer;
+  height: 36px;
+}
+.pl-btn-primary:hover { background: #3630D6; }
+.pl-btn-secondary {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid #E2E8F0;
+  background: #F5F5F7;
+  color: #94A3B8;
+  height: 36px;
+}
+.pl-btn-pill-outline {
+  display: inline-flex;
+  align-items: center;
+  height: 39px;
+  padding: 0 16px;
+  border: 1px solid #443EFF;
+  color: #443EFF;
+  font-weight: 700;
+  font-size: 12px;
+  border-radius: 6.5px;
+  background: #fff;
+  cursor: pointer;
+}
+#leadDetailPage select,
+#leadDetailPage input[type="text"],
+#leadDetailPage input[type="date"],
+#leadDetailPage input[type="datetime-local"],
+#leadDetailPage textarea {
+  border-radius: 4px !important;
+  border: 1px solid #CCC !important;
+}
+#leadDetailPage select { height: 46px; }
+
+.vas-day-pill {
+  min-width: 64px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1.5px solid #E2E8F0;
+  text-align: center;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+  color: #0F172A;
+  flex-shrink: 0;
+}
+.vas-day-pill.active { border-color: #443EFF; background: #EEF0FF; color: #443EFF; }
+.vas-slot-pill {
+  padding: 10px 8px;
+  border-radius: 10px;
+  border: 1.5px solid #E2E8F0;
+  text-align: center;
+  cursor: pointer;
+}
+.vas-slot-pill .vas-slot-time { font-size: 13px; font-weight: 700; color: #0F172A; }
+.vas-slot-pill .vas-slot-tag { font-size: 9px; font-weight: 700; color: #16A34A; text-transform: uppercase; margin-top: 2px; }
+.vas-slot-pill.active { border-color: #443EFF; background: #EEF0FF; }
+.vas-slot-pill.active .vas-slot-time { color: #443EFF; }
+
 /* ── Horizontal Tab Bar ── */
 .htab {
   padding: 0 20px;
