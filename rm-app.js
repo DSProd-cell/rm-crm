@@ -1499,8 +1499,8 @@ function openVasModal(pipelineType, leadId) {
     leadId, pipelineType, selected: new Set(), applicationByService: {}, day: 0, slot: null,
     aadhaarFront: saved.aadhaarFront || '', aadhaarBack: saved.aadhaarBack || '', panFront: saved.panFront || '',
     accommodationType: saved.accommodationType || '',
-    paymentType: '', amount: '', currency: '', payer: '',
-    departureDate: '', destinationCountry: lead.country || '',
+    paymentType: '', paymentTypeOther: '', amount: '', currency: '', currencyOther: '', payer: '',
+    departureDate: '', destinationCountry: lead.country || '', notes: '',
   };
   vasWizardStep = 1;
   renderVasWizard();
@@ -1522,7 +1522,10 @@ function vasNeedsConfigStep() {
 // Flight/SIM/Forex need Destination Country. Everything else in Step 2 stays optional.
 function vasStep2Valid() {
   if (vasState.selected.has('remittance')) {
-    return !!(vasState.paymentType && vasState.amount && vasState.currency && vasState.payer);
+    const paymentTypeOk = vasState.paymentType === 'Others' ? !!vasState.paymentTypeOther : !!vasState.paymentType;
+    const currencyOk = vasState.currency === 'Other' ? !!vasState.currencyOther : !!vasState.currency;
+    return !!(paymentTypeOk && vasState.amount && currencyOk && vasState.payer
+      && vasState.aadhaarFront && vasState.aadhaarBack && vasState.panFront);
   }
   if (vasState.selected.has('flight') || vasState.selected.has('sim') || vasState.selected.has('forex')) {
     return !!vasState.destinationCountry;
@@ -1600,6 +1603,7 @@ function renderVasDetailStep(lead) {
   if (entry.accommodationType) rows += row('Accommodation Type', escHtml(entry.accommodationType));
   if (entry.destinationCountry) rows += row('Destination Country', escHtml(entry.destinationCountry));
   if (entry.departureDate) rows += row('Departure Date', escHtml(entry.departureDate));
+  if (entry.notes) rows += row('Note', escHtml(entry.notes));
   if (entry.confirmedAt) rows += row('Marked On', escHtml(entry.confirmedAt));
 
   const loanBlock = entry.loan ? `
@@ -1730,7 +1734,7 @@ function vasFromStep1Next() {
 function vasFileUploadHtml(fieldKey, label, currentFileName) {
   return `
     <div>
-      <label class="text-[10px] font-semibold uppercase tracking-wide text-[#94A3B8] mb-2 block">${label} <span class="normal-case font-normal">(optional)</span></label>
+      <label class="text-[10px] font-semibold uppercase tracking-wide text-[#94A3B8] mb-2 block">${label}</label>
       ${currentFileName
         ? `<div class="flex items-center justify-between border border-gray-200 rounded-lg px-3 py-2.5 text-sm">
              <span class="flex items-center gap-1.5 text-[#0F172A] truncate min-w-0"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="flex-shrink-0"><path d="M20 6 9 17l-5-5"/></svg><span class="truncate">${escHtml(currentFileName)}</span></span>
@@ -1775,13 +1779,16 @@ function renderVasStep2(lead) {
 
   let fields = '';
   if (needApp.length) {
-    // Post-STI, the university is already settled — show it as auto-fetched, same as Passport/Offer
-    // Letter elsewhere. Pre-STI, it's still a work in progress, so leave it as a skippable pick.
-    if (leadIsSTIDone(lead) && linkedApp) {
+    // Post-STI, the university is already known (auto-fetched from the system) — but a student can
+    // have more than one application, so it's still a dropdown, just without a "not linked" escape
+    // hatch. Pre-STI, applications are still a work in progress, so leave it fully skippable.
+    if (leadIsSTIDone(lead) && apps.length) {
       fields += `
         <div>
           <label class="text-[10px] font-semibold uppercase tracking-wide text-[#94A3B8] mb-2 block">University <span class="normal-case font-normal">(auto-fetched)</span></label>
-          <div class="text-sm font-semibold text-[#0F172A]">${escHtml(linkedApp.university)} — ${escHtml(linkedApp.course)}</div>
+          <select class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-[#0F172A] bg-white" onchange="onVasAppSelectChange(this.value)">
+            ${apps.map(a => `<option value="${a.id}" ${a.id === existingApp ? 'selected' : ''}>${a.university} — ${a.course}</option>`).join('')}
+          </select>
         </div>`;
     } else {
       fields += `
@@ -1800,10 +1807,12 @@ function renderVasStep2(lead) {
     fields += `
       <div class="${fields ? 'border-t border-gray-50 pt-3' : ''}">
         <label class="text-[10px] font-semibold uppercase tracking-wide text-[#94A3B8] mb-2 block">Payment Type</label>
-        <select class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm bg-white text-[#0F172A]" onchange="vasState.paymentType=this.value;updateVasStep2NextBtn()">
+        <select class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm bg-white text-[#0F172A]" onchange="vasState.paymentType=this.value;renderVasStep2(currentLeadDetail().lead)">
           <option value="" ${!vasState.paymentType ? 'selected' : ''}>Select…</option>
           ${['Application Fee', 'Deposit', 'Tuition Fee', 'Accommodation', 'Fund Transfer', 'Others'].map(o => `<option value="${o}" ${vasState.paymentType === o ? 'selected' : ''}>${o}</option>`).join('')}
         </select>
+        ${vasState.paymentType === 'Others' ? `
+        <input type="text" class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-[#0F172A] mt-2" placeholder="Please specify the payment type" value="${escHtml(vasState.paymentTypeOther || '')}" oninput="vasState.paymentTypeOther=this.value;updateVasStep2NextBtn()"/>` : ''}
       </div>
       <div class="pt-3 flex gap-3">
         <div class="flex-1">
@@ -1812,10 +1821,12 @@ function renderVasStep2(lead) {
         </div>
         <div class="flex-1">
           <label class="text-[10px] font-semibold uppercase tracking-wide text-[#94A3B8] mb-2 block">Currency</label>
-          <select class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm bg-white text-[#0F172A]" onchange="vasState.currency=this.value;updateVasStep2NextBtn()">
+          <select class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm bg-white text-[#0F172A]" onchange="vasState.currency=this.value;renderVasStep2(currentLeadDetail().lead)">
             <option value="" ${!vasState.currency ? 'selected' : ''}>Select…</option>
-            ${['INR', 'USD', 'GBP', 'EUR', 'CAD', 'AUD'].map(c => `<option value="${c}" ${vasState.currency === c ? 'selected' : ''}>${c}</option>`).join('')}
+            ${['GBP', 'EUR', 'USD', 'AED', 'CAD', 'NZD', 'AUD', 'Other'].map(c => `<option value="${c}" ${vasState.currency === c ? 'selected' : ''}>${c}</option>`).join('')}
           </select>
+          ${vasState.currency === 'Other' ? `
+          <input type="text" class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-[#0F172A] mt-2" placeholder="Please specify the currency" value="${escHtml(vasState.currencyOther || '')}" oninput="vasState.currencyOther=this.value;updateVasStep2NextBtn()"/>` : ''}
         </div>
       </div>
       <div class="pt-3">
@@ -1890,6 +1901,13 @@ function renderVasStep2(lead) {
         ${eduFinancingModalBlockHtml(vasState.pipelineType, lead)}
       </div>`;
   }
+
+  // Common to every service.
+  fields += `
+    <div class="${fields ? 'border-t border-gray-50 pt-3' : ''}">
+      <label class="text-[10px] font-semibold uppercase tracking-wide text-[#94A3B8] mb-2 block">Add Note <span class="normal-case font-normal">(optional)</span></label>
+      <textarea class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-[#0F172A]" rows="2" placeholder="Any additional context for this request" oninput="vasState.notes=this.value">${escHtml(vasState.notes || '')}</textarea>
+    </div>`;
 
   document.getElementById('vasModalBody').innerHTML = `
     <div class="space-y-3 py-4">
@@ -2006,12 +2024,13 @@ function confirmVasInterest(leadId) {
     aadhaarBack: vasState.aadhaarBack || '',
     panFront: vasState.panFront || '',
     accommodationType: vasState.accommodationType || '',
-    paymentType: vasState.paymentType || '',
+    paymentType: vasState.paymentType === 'Others' ? (vasState.paymentTypeOther || 'Others') : (vasState.paymentType || ''),
     amount: vasState.amount || '',
-    currency: vasState.currency || '',
+    currency: vasState.currency === 'Other' ? (vasState.currencyOther || 'Other') : (vasState.currency || ''),
     payer: vasState.payer || '',
     departureDate: vasState.departureDate || '',
     destinationCountry: vasState.destinationCountry || '',
+    notes: vasState.notes || '',
     loan: vasState.selected.has('loan') ? { ...eduFinancingState(leadId) } : null,
     confirmedAt: new Date().toLocaleDateString('en-GB'),
   });
