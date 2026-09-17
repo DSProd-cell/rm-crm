@@ -1495,9 +1495,13 @@ function openVasModal(pipelineType, leadId) {
   if (!lead) return;
 
   const saved = VAS_KYC_MOCK[leadId] || {};
+  // "Passport (auto-fetched)" means the system already has one on file — always show it first,
+  // regardless of current Bearer/Non-Bearer status, so the counsellor can view before replacing.
+  const defaultPassportFile = `Passport_${lead.id}.pdf`;
   vasState = {
     leadId, pipelineType, selected: new Set(), applicationByService: {}, day: 0, slot: null,
     aadhaarFront: saved.aadhaarFront || '', aadhaarBack: saved.aadhaarBack || '', panFront: saved.panFront || '',
+    passportFile: saved.passportFile !== undefined ? saved.passportFile : defaultPassportFile,
     accommodationType: saved.accommodationType || '',
     paymentType: '', paymentTypeOther: '', amount: '', currency: '', currencyOther: '', payer: '',
     departureDate: '', destinationCountry: lead.country || '', notes: '',
@@ -1591,15 +1595,32 @@ function renderVasDetailStep(lead) {
       <span class="text-sm font-semibold text-[#0F172A]">${value}</span>
     </div>`;
 
+  const rowFile = (label, filename) => `
+    <div class="flex items-center justify-between py-2 border-b border-gray-50">
+      <span class="text-sm text-[#64748B]">${label}</span>
+      <span class="flex items-center gap-3">
+        <span class="text-sm font-semibold text-[#0F172A] truncate max-w-[160px]">${escHtml(filename)}</span>
+        <button type="button" class="text-sm font-semibold cursor-pointer flex-shrink-0" style="color:#443EFF" onclick="vasPreviewDoc(null,'${escHtml(filename)}')">View</button>
+      </span>
+    </div>`;
+
   let rows = '';
   if (entry.application && entry.application !== '—') rows += row('Linked Application', escHtml(entry.application));
   rows += row('Slot', escHtml(entry.slot));
   if (entry.paymentType) rows += row('Payment Type', escHtml(entry.paymentType));
   if (entry.amount) rows += row('Amount', escHtml(`${entry.currency || ''} ${entry.amount}`.trim()));
   if (entry.payer) rows += row('Payer', escHtml(entry.payer));
-  if (entry.aadhaarFront) rows += row('Aadhaar Card — Front', escHtml(entry.aadhaarFront));
-  if (entry.aadhaarBack) rows += row('Aadhaar Card — Back', escHtml(entry.aadhaarBack));
-  if (entry.panFront) rows += row('PAN Card — Front', escHtml(entry.panFront));
+  if (entry.aadhaarFront) rows += rowFile('Aadhaar Card — Front', entry.aadhaarFront);
+  if (entry.aadhaarBack) rows += rowFile('Aadhaar Card — Back', entry.aadhaarBack);
+  if (entry.panFront) rows += rowFile('PAN Card — Front', entry.panFront);
+  if (entry.passportFile) rows += rowFile('Passport', entry.passportFile);
+  if (entry.offerLetterAvailable) {
+    rows += `
+    <div class="flex items-center justify-between py-2 border-b border-gray-50">
+      <span class="text-sm text-[#64748B]">Offer Letter</span>
+      <button type="button" class="text-sm font-semibold cursor-pointer" style="color:#443EFF" onclick="vasPreviewDoc(null,'Offer Letter.pdf')">View</button>
+    </div>`;
+  }
   if (entry.accommodationType) rows += row('Accommodation Type', escHtml(entry.accommodationType));
   if (entry.destinationCountry) rows += row('Destination Country', escHtml(entry.destinationCountry));
   if (entry.departureDate) rows += row('Departure Date', escHtml(entry.departureDate));
@@ -1731,14 +1752,20 @@ function vasFromStep1Next() {
 }
 
 // Mock document upload (Remittance needs Aadhaar Front/Back + PAN Front as files, not typed numbers).
-function vasFileUploadHtml(fieldKey, label, currentFileName) {
+// `existing:true` marks a file the system already had on file (e.g. auto-fetched Passport) —
+// shown with View + Replace instead of View + Remove, since there's always something on file to fall back to.
+function vasFileUploadHtml(fieldKey, label, currentFileName, existing) {
   return `
     <div>
       <label class="text-[10px] font-semibold uppercase tracking-wide text-[#94A3B8] mb-2 block">${label}</label>
       ${currentFileName
         ? `<div class="flex items-center justify-between border border-gray-200 rounded-lg px-3 py-2.5 text-sm">
              <span class="flex items-center gap-1.5 text-[#0F172A] truncate min-w-0"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="flex-shrink-0"><path d="M20 6 9 17l-5-5"/></svg><span class="truncate">${escHtml(currentFileName)}</span></span>
-             <button type="button" class="text-xs font-semibold cursor-pointer flex-shrink-0 ml-2" style="color:#EF4444" onclick="vasRemoveFile('${fieldKey}')">Remove</button>
+             <span class="flex items-center gap-3 flex-shrink-0 ml-2">
+               <button type="button" class="text-xs font-semibold cursor-pointer" style="color:#443EFF" onclick="vasPreviewDoc('${fieldKey}','${escHtml(currentFileName)}')">View</button>
+               <label class="text-xs font-semibold cursor-pointer" style="color:#443EFF">Replace<input type="file" class="hidden" onchange="vasFileSelected('${fieldKey}', this)"/></label>
+               ${existing ? '' : `<button type="button" class="text-xs font-semibold cursor-pointer" style="color:#EF4444" onclick="vasRemoveFile('${fieldKey}')">Remove</button>`}
+             </span>
            </div>`
         : `<label class="flex items-center justify-center gap-2 border border-dashed border-gray-300 rounded-lg px-3 py-2.5 text-sm font-semibold cursor-pointer hover:bg-[#FAF9FF] transition-colors" style="color:#443EFF">
              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a5 5 0 01-7.07-7.07l9.19-9.19a3.5 3.5 0 014.95 4.95l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/></svg>
@@ -1752,12 +1779,60 @@ function vasFileSelected(fieldKey, input) {
   const file = input.files && input.files[0];
   if (!file) return;
   vasState[fieldKey] = file.name;
+  vasState[fieldKey + 'Obj'] = file;
   renderVasStep2(currentLeadDetail().lead);
 }
 
 function vasRemoveFile(fieldKey) {
   vasState[fieldKey] = '';
+  vasState[fieldKey + 'Obj'] = null;
   renderVasStep2(currentLeadDetail().lead);
+}
+
+// In-modal document preview. Renders the real file (image/PDF) if it was picked this session
+// (we hold the actual File object); otherwise — auto-fetched docs, offer letters, and anything
+// reopened from history, where only a filename was ever recorded — shows a placeholder card
+// instead of a toast, since there's no live file storage in this demo.
+function vasPreviewDoc(fieldKey, filename) {
+  if (!filename) return;
+  const file = fieldKey ? vasState[fieldKey + 'Obj'] : null;
+  let mediaHtml;
+  if (file) {
+    const url = URL.createObjectURL(file);
+    mediaHtml = file.type.startsWith('image/')
+      ? `<img src="${url}" style="max-width:100%;max-height:65vh;object-fit:contain;border-radius:8px"/>`
+      : `<iframe src="${url}" style="width:100%;height:65vh;border:none;border-radius:8px"></iframe>`;
+  } else {
+    mediaHtml = `
+      <div class="text-center py-10">
+        <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="1.5" class="mx-auto mb-3"><path stroke-linecap="round" stroke-linejoin="round" d="M14 3v4a1 1 0 001 1h4"/><path stroke-linecap="round" stroke-linejoin="round" d="M17 21H7a2 2 0 01-2-2V5a2 2 0 012-2h7l5 5v11a2 2 0 01-2 2z"/></svg>
+        <p class="text-xs text-[#94A3B8] max-w-[260px] mx-auto">No live file storage in this demo — this stands in for the actual document on file.</p>
+      </div>`;
+  }
+  closeVasDocPreview();
+  const mount = document.createElement('div');
+  mount.id = 'vasDocPreviewMount';
+  mount.innerHTML = `
+    <div class="fixed inset-0 z-[310] flex items-center justify-center p-4">
+      <div class="absolute inset-0 modal-overlay" onclick="closeVasDocPreview()"></div>
+      <div class="relative bg-white rounded-xl shadow-2xl w-full z-10 flex flex-col overflow-hidden" style="max-width:480px;width:100%;max-height:80vh">
+        <div class="flex items-center justify-between px-5 py-3 border-b border-gray-100 flex-shrink-0">
+          <span class="text-sm font-bold text-[#0F172A] truncate">${escHtml(filename)}</span>
+          <button class="w-7 h-7 rounded-lg bg-surface flex items-center justify-center cursor-pointer flex-shrink-0" onclick="closeVasDocPreview()">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18" stroke-width="2"/><line x1="6" y1="6" x2="18" y2="18" stroke-width="2"/></svg>
+          </button>
+        </div>
+        <div class="flex-1 overflow-y-auto p-4 flex items-center justify-center" style="background:#F8FAFC;min-height:280px">
+          ${mediaHtml}
+        </div>
+      </div>
+    </div>`;
+  document.body.appendChild(mount);
+}
+
+function closeVasDocPreview() {
+  const mount = document.getElementById('vasDocPreviewMount');
+  if (mount) mount.remove();
 }
 
 const VAS_ACCOMMODATION_TYPE_INFO = {
@@ -1846,17 +1921,14 @@ function renderVasStep2(lead) {
       <div class="pt-3">
         ${vasFileUploadHtml('panFront', 'PAN Card — Front', vasState.panFront)}
       </div>
-      <div class="pt-3 flex gap-4">
-        <div class="flex-1">
-          <label class="text-[10px] font-semibold uppercase tracking-wide text-[#94A3B8] mb-2 block">Passport <span class="normal-case font-normal">(auto-fetched)</span></label>
-          <div class="text-sm font-semibold text-[#0F172A]">${studentProfileMock(lead).passportStatus}</div>
-        </div>
-        <div class="flex-1">
-          <label class="text-[10px] font-semibold uppercase tracking-wide text-[#94A3B8] mb-2 block">Offer Letter <span class="normal-case font-normal">(auto-fetched)</span></label>
-          ${linkedApp && linkedApp.hasOffer
-            ? `<button class="text-sm font-semibold cursor-pointer" style="color:#443EFF" onclick="showToast('Opening offer letter…','info')">View Offer Letter</button>`
-            : `<div class="text-sm text-[#94A3B8]">${linkedApp ? 'No offer yet' : 'Link an application to check'}</div>`}
-        </div>
+      <div class="pt-3 border-t border-gray-50">
+        ${vasFileUploadHtml('passportFile', 'Passport (auto-fetched)', vasState.passportFile, true)}
+      </div>
+      <div class="pt-3">
+        <label class="text-[10px] font-semibold uppercase tracking-wide text-[#94A3B8] mb-2 block">Offer Letter <span class="normal-case font-normal">(auto-fetched)</span></label>
+        ${linkedApp && linkedApp.hasOffer
+          ? `<button class="text-sm font-semibold cursor-pointer" style="color:#443EFF" onclick="vasPreviewDoc(null,'${escHtml(linkedApp.university)} — Offer Letter.pdf')">View Offer Letter</button>`
+          : `<div class="text-sm text-[#94A3B8]">${linkedApp ? 'No offer yet' : 'Link an application to check'}</div>`}
       </div>
       <div class="pt-3 border-t border-gray-50">
         <a href="https://docs.google.com/document/d/1mrGTXyFzFK3E7S0NHL0GwrjDAjYpi-FoOea185Yb5Dg/edit?usp=sharing" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 text-sm font-semibold" style="color:#443EFF">
@@ -2003,8 +2075,11 @@ function confirmVasInterest(leadId) {
     const s = VAS_SERVICES.find(x => x.key === k);
     return a ? `${s.label}: ${a.university}` : '';
   }).filter(Boolean);
+  const remittanceAppId = vasState.applicationByService['remittance'];
+  const remittanceApp = remittanceAppId ? apps.find(a => a.id === remittanceAppId) : null;
+  const offerLetterAvailable = !!(remittanceApp && remittanceApp.hasOffer);
 
-  VAS_KYC_MOCK[leadId] = { aadhaarFront: vasState.aadhaarFront || '', aadhaarBack: vasState.aadhaarBack || '', panFront: vasState.panFront || '', accommodationType: vasState.accommodationType || '' };
+  VAS_KYC_MOCK[leadId] = { aadhaarFront: vasState.aadhaarFront || '', aadhaarBack: vasState.aadhaarBack || '', panFront: vasState.panFront || '', passportFile: vasState.passportFile || '', accommodationType: vasState.accommodationType || '' };
   const pipelineType = vasState.pipelineType;
   if (vasState.selected.has('loan') && !eduFinancingState(leadId).assigned) {
     requestEducationFinancing(pipelineType, leadId, { silent: true });
@@ -2023,6 +2098,8 @@ function confirmVasInterest(leadId) {
     aadhaarFront: vasState.aadhaarFront || '',
     aadhaarBack: vasState.aadhaarBack || '',
     panFront: vasState.panFront || '',
+    passportFile: vasState.passportFile || '',
+    offerLetterAvailable: offerLetterAvailable,
     accommodationType: vasState.accommodationType || '',
     paymentType: vasState.paymentType === 'Others' ? (vasState.paymentTypeOther || 'Others') : (vasState.paymentType || ''),
     amount: vasState.amount || '',
