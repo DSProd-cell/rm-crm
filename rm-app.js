@@ -647,6 +647,14 @@ function applicationsForLead(lead) {
   return apps;
 }
 
+// Whether the lead has already reached STI (Submitted to Institute) — drives whether the
+// University/Linked Application field is shown as auto-fetched (post-STI) or a skippable
+// pick (pre-STI), per the VAS request flow. sti-pipeline leaves are all pre-STI by definition.
+function leadIsSTIDone(lead) {
+  if (lead.stiDate) return true;
+  return !PIPELINE_LEAVES.sti.includes(lead.status);
+}
+
 function studentProfileMock(lead) {
   const h = hashStr(lead.id);
   return {
@@ -689,6 +697,9 @@ let vasState = { selected: new Set(), applicationByService: {}, day: 0, slot: nu
 const VAS_INTERESTS_MOCK = {};
 const VAS_KYC_MOCK = {};
 const VAS_LOAN_MOCK = {};
+// Per-lead set of "dayIndex|slotLabel" already booked for any service — a counsellor is one
+// person, so a slot used for one vendor's call can't also be offered for a different service.
+const VAS_BOOKED_SLOTS_MOCK = {};
 
 // ─── Education Financing (Loan) — no slot needed; requesting simulates a Yocket loan RM getting assigned ──
 function eduFinancingState(leadId) {
@@ -1484,7 +1495,13 @@ function openVasModal(pipelineType, leadId) {
   if (!lead) return;
 
   const saved = VAS_KYC_MOCK[leadId] || {};
-  vasState = { leadId, pipelineType, selected: new Set(), applicationByService: {}, day: 0, slot: null, aadhaar: saved.aadhaar || '', pan: saved.pan || '', accommodationType: saved.accommodationType || '' };
+  vasState = {
+    leadId, pipelineType, selected: new Set(), applicationByService: {}, day: 0, slot: null,
+    aadhaarFront: saved.aadhaarFront || '', aadhaarBack: saved.aadhaarBack || '', panFront: saved.panFront || '',
+    accommodationType: saved.accommodationType || '',
+    paymentType: '', amount: '', currency: '', payer: '',
+    departureDate: '', destinationCountry: lead.country || '',
+  };
   vasWizardStep = 1;
   renderVasWizard();
   document.getElementById('vasModal').classList.remove('hidden');
@@ -1497,7 +1514,28 @@ function closeVasModal() {
 }
 
 function vasNeedsConfigStep() {
-  return vasState.selected.has('remittance') || vasState.selected.has('accommodation') || vasState.selected.has('loan');
+  return vasState.selected.has('remittance') || vasState.selected.has('accommodation') || vasState.selected.has('loan')
+    || vasState.selected.has('flight') || vasState.selected.has('sim') || vasState.selected.has('forex');
+}
+
+// Mandatory-field gate for Step 2 — Remittance needs Payment Type/Amount/Currency/Payer;
+// Flight/SIM/Forex need Destination Country. Everything else in Step 2 stays optional.
+function vasStep2Valid() {
+  if (vasState.selected.has('remittance')) {
+    return !!(vasState.paymentType && vasState.amount && vasState.currency && vasState.payer);
+  }
+  if (vasState.selected.has('flight') || vasState.selected.has('sim') || vasState.selected.has('forex')) {
+    return !!vasState.destinationCountry;
+  }
+  return true;
+}
+
+function updateVasStep2NextBtn() {
+  const btn = document.getElementById('vasStep2Next');
+  if (!btn) return;
+  const ok = vasStep2Valid();
+  btn.disabled = !ok;
+  btn.style.background = ok ? '#443EFF' : '#94A3B8';
 }
 
 // Loan (Education Financing) doesn't need a call slot — its Request button (shown in Step 2)
@@ -1553,9 +1591,15 @@ function renderVasDetailStep(lead) {
   let rows = '';
   if (entry.application && entry.application !== '—') rows += row('Linked Application', escHtml(entry.application));
   rows += row('Slot', escHtml(entry.slot));
-  if (entry.aadhaar) rows += row('Aadhaar Card Number', escHtml(entry.aadhaar));
-  if (entry.pan) rows += row('PAN Card Number', escHtml(entry.pan));
+  if (entry.paymentType) rows += row('Payment Type', escHtml(entry.paymentType));
+  if (entry.amount) rows += row('Amount', escHtml(`${entry.currency || ''} ${entry.amount}`.trim()));
+  if (entry.payer) rows += row('Payer', escHtml(entry.payer));
+  if (entry.aadhaarFront) rows += row('Aadhaar Card — Front', escHtml(entry.aadhaarFront));
+  if (entry.aadhaarBack) rows += row('Aadhaar Card — Back', escHtml(entry.aadhaarBack));
+  if (entry.panFront) rows += row('PAN Card — Front', escHtml(entry.panFront));
   if (entry.accommodationType) rows += row('Accommodation Type', escHtml(entry.accommodationType));
+  if (entry.destinationCountry) rows += row('Destination Country', escHtml(entry.destinationCountry));
+  if (entry.departureDate) rows += row('Departure Date', escHtml(entry.departureDate));
   if (entry.confirmedAt) rows += row('Marked On', escHtml(entry.confirmedAt));
 
   const loanBlock = entry.loan ? `
@@ -1649,23 +1693,28 @@ function renderVasStep1(lead) {
         }
         return `
         <label class="w-full rounded-xl border transition-all p-4 cursor-pointer flex items-center gap-3" id="vasRow-${s.key}" style="${vasState.selected.has(s.key) ? 'border-color:#443EFF;background:#FAF9FF' : 'border-color:#E5E7EB;background:#fff'}">
-          <input type="checkbox" class="w-4 h-4 flex-shrink-0" style="accent-color:#443EFF" ${vasState.selected.has(s.key) ? 'checked' : ''} onchange="toggleVasService('${s.key}',this.checked)"/>
+          <input type="radio" name="vasServiceRadio" class="w-4 h-4 flex-shrink-0" style="accent-color:#443EFF" ${vasState.selected.has(s.key) ? 'checked' : ''} onchange="selectVasService('${s.key}')"/>
           <p class="text-sm font-semibold text-[#0F172A] flex-1">${s.label}</p>
         </label>`;
       }).join('')}
-    </div>`;
+    </div>
+    <p class="text-xs text-[#94A3B8] pb-2">Each service is handled by a different vendor, so interest is booked one service at a time.</p>`;
   document.getElementById('vasModalFooter').innerHTML = vasFooterHtml('Next', 'vasFromStep1Next()', vasState.selected.size === 0, 'vasStep1Next');
 }
 
-function toggleVasService(key, checked) {
-  if (checked) vasState.selected.add(key); else vasState.selected.delete(key);
-  const row = document.getElementById(`vasRow-${key}`);
-  if (row) { row.style.borderColor = checked ? '#443EFF' : '#E5E7EB'; row.style.background = checked ? '#FAF9FF' : '#fff'; }
+// Single-select: services are fulfilled by different vendors, so only one can be booked per pass.
+function selectVasService(key) {
+  vasState.selected.clear();
+  vasState.selected.add(key);
+  document.querySelectorAll('[id^="vasRow-"]').forEach(row => {
+    const isSelected = row.id === `vasRow-${key}`;
+    row.style.borderColor = isSelected ? '#443EFF' : '#E5E7EB';
+    row.style.background = isSelected ? '#FAF9FF' : '#fff';
+  });
   const btn = document.getElementById('vasStep1Next');
   if (btn) {
-    const ok = vasState.selected.size > 0;
-    btn.disabled = !ok;
-    btn.style.background = ok ? '#443EFF' : '#94A3B8';
+    btn.disabled = false;
+    btn.style.background = '#443EFF';
     btn.textContent = (vasNeedsConfigStep() || vasNeedsSlotStep()) ? 'Next' : 'Confirm Interest';
   }
 }
@@ -1677,37 +1726,114 @@ function vasFromStep1Next() {
   confirmVasInterest(currentLeadDetail().lead.id);
 }
 
-// ── Step 2: Details (only reached when Remittance and/or Accommodation is selected) ──
+// Mock document upload (Remittance needs Aadhaar Front/Back + PAN Front as files, not typed numbers).
+function vasFileUploadHtml(fieldKey, label, currentFileName) {
+  return `
+    <div>
+      <label class="text-[10px] font-semibold uppercase tracking-wide text-[#94A3B8] mb-2 block">${label} <span class="normal-case font-normal">(optional)</span></label>
+      ${currentFileName
+        ? `<div class="flex items-center justify-between border border-gray-200 rounded-lg px-3 py-2.5 text-sm">
+             <span class="flex items-center gap-1.5 text-[#0F172A] truncate min-w-0"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="flex-shrink-0"><path d="M20 6 9 17l-5-5"/></svg><span class="truncate">${escHtml(currentFileName)}</span></span>
+             <button type="button" class="text-xs font-semibold cursor-pointer flex-shrink-0 ml-2" style="color:#EF4444" onclick="vasRemoveFile('${fieldKey}')">Remove</button>
+           </div>`
+        : `<label class="flex items-center justify-center gap-2 border border-dashed border-gray-300 rounded-lg px-3 py-2.5 text-sm font-semibold cursor-pointer hover:bg-[#FAF9FF] transition-colors" style="color:#443EFF">
+             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a5 5 0 01-7.07-7.07l9.19-9.19a3.5 3.5 0 014.95 4.95l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/></svg>
+             Upload File
+             <input type="file" class="hidden" onchange="vasFileSelected('${fieldKey}', this)"/>
+           </label>`}
+    </div>`;
+}
+
+function vasFileSelected(fieldKey, input) {
+  const file = input.files && input.files[0];
+  if (!file) return;
+  vasState[fieldKey] = file.name;
+  renderVasStep2(currentLeadDetail().lead);
+}
+
+function vasRemoveFile(fieldKey) {
+  vasState[fieldKey] = '';
+  renderVasStep2(currentLeadDetail().lead);
+}
+
+const VAS_ACCOMMODATION_TYPE_INFO = {
+  HMO: 'A shared property — the student gets their own bedroom and shares the kitchen/living room with others.',
+  PBSA: 'A student-only building with private or shared rooms and student-focused amenities.',
+};
+const VAS_DESTINATION_COUNTRIES = ['UK', 'USA', 'Canada', 'Australia', 'Germany', 'Ireland', 'UAE', 'New Zealand'];
+
+// ── Step 2: Details (only reached when a service with extra fields is selected) ──
 function renderVasStep2(lead) {
   document.getElementById('vasModalHeader').innerHTML = vasHeaderHtml(2, lead);
   const apps = applicationsForLead(lead);
   const needApp = VAS_SERVICES.filter(s => s.needsApplication && vasState.selected.has(s.key));
   const selectedLabels = [...vasState.selected].map(k => VAS_SERVICES.find(s => s.key === k).label).join(', ');
-  const existingApp = needApp.map(s => vasState.applicationByService[s.key]).find(Boolean) || '';
+  const priorApp = needApp.map(s => vasState.applicationByService[s.key]).find(v => v !== undefined);
+  const existingApp = priorApp !== undefined ? priorApp : (apps[0] ? apps[0].id : '');
   needApp.forEach(s => { vasState.applicationByService[s.key] = existingApp; });
   const linkedApp = apps.find(a => a.id === existingApp);
 
   let fields = '';
   if (needApp.length) {
-    fields += `
-      <div>
-        <label class="text-[10px] font-semibold uppercase tracking-wide text-[#94A3B8] mb-2 block">Linked Application <span class="normal-case font-normal">(optional)</span></label>
-        <select class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-[#0F172A] bg-white" onchange="onVasAppSelectChange(this.value)">
-          <option value="">— Not linked to an application —</option>
-          ${apps.map(a => `<option value="${a.id}" ${a.id === existingApp ? 'selected' : ''}>${a.university} — ${a.course}</option>`).join('')}
-        </select>
-      </div>`;
+    // Post-STI, the university is already settled — show it as auto-fetched, same as Passport/Offer
+    // Letter elsewhere. Pre-STI, it's still a work in progress, so leave it as a skippable pick.
+    if (leadIsSTIDone(lead) && linkedApp) {
+      fields += `
+        <div>
+          <label class="text-[10px] font-semibold uppercase tracking-wide text-[#94A3B8] mb-2 block">University <span class="normal-case font-normal">(auto-fetched)</span></label>
+          <div class="text-sm font-semibold text-[#0F172A]">${escHtml(linkedApp.university)} — ${escHtml(linkedApp.course)}</div>
+        </div>`;
+    } else {
+      fields += `
+        <div>
+          <label class="text-[10px] font-semibold uppercase tracking-wide text-[#94A3B8] mb-2 block">University / Linked Application <span class="normal-case font-normal">(optional)</span></label>
+          <select class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-[#0F172A] bg-white" onchange="onVasAppSelectChange(this.value)">
+            <option value="">— Not linked to an application —</option>
+            ${apps.map(a => `<option value="${a.id}" ${a.id === existingApp ? 'selected' : ''}>${a.university} — ${a.course}</option>`).join('')}
+          </select>
+        </div>`;
+    }
   }
 
   if (vasState.selected.has('remittance')) {
+    const payerHint = vasState.payer === 'Non-Blood Relative' ? 'Non-blood relative payer: 3% additional charges apply, and only card payment can be used.' : '';
     fields += `
-      <div class="border-t border-gray-50 pt-3">
-        <label class="text-[10px] font-semibold uppercase tracking-wide text-[#94A3B8] mb-2 block">Aadhaar Card Number <span class="normal-case font-normal">(optional)</span></label>
-        <input type="text" maxlength="12" class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-[#0F172A]" placeholder="12-digit number" value="${escHtml(vasState.aadhaar || '')}" oninput="vasState.aadhaar=this.value"/>
+      <div class="${fields ? 'border-t border-gray-50 pt-3' : ''}">
+        <label class="text-[10px] font-semibold uppercase tracking-wide text-[#94A3B8] mb-2 block">Payment Type</label>
+        <select class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm bg-white text-[#0F172A]" onchange="vasState.paymentType=this.value;updateVasStep2NextBtn()">
+          <option value="" ${!vasState.paymentType ? 'selected' : ''}>Select…</option>
+          ${['Application Fee', 'Deposit', 'Tuition Fee', 'Accommodation', 'Fund Transfer', 'Others'].map(o => `<option value="${o}" ${vasState.paymentType === o ? 'selected' : ''}>${o}</option>`).join('')}
+        </select>
+      </div>
+      <div class="pt-3 flex gap-3">
+        <div class="flex-1">
+          <label class="text-[10px] font-semibold uppercase tracking-wide text-[#94A3B8] mb-2 block">Amount</label>
+          <input type="number" min="0" class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-[#0F172A]" placeholder="e.g. 500000" value="${escHtml(vasState.amount || '')}" oninput="vasState.amount=this.value;updateVasStep2NextBtn()"/>
+        </div>
+        <div class="flex-1">
+          <label class="text-[10px] font-semibold uppercase tracking-wide text-[#94A3B8] mb-2 block">Currency</label>
+          <select class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm bg-white text-[#0F172A]" onchange="vasState.currency=this.value;updateVasStep2NextBtn()">
+            <option value="" ${!vasState.currency ? 'selected' : ''}>Select…</option>
+            ${['INR', 'USD', 'GBP', 'EUR', 'CAD', 'AUD'].map(c => `<option value="${c}" ${vasState.currency === c ? 'selected' : ''}>${c}</option>`).join('')}
+          </select>
+        </div>
       </div>
       <div class="pt-3">
-        <label class="text-[10px] font-semibold uppercase tracking-wide text-[#94A3B8] mb-2 block">PAN Card Number <span class="normal-case font-normal">(optional)</span></label>
-        <input type="text" maxlength="10" style="text-transform:uppercase" class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-[#0F172A]" placeholder="ABCDE1234F" value="${escHtml(vasState.pan || '')}" oninput="vasState.pan=this.value.toUpperCase()"/>
+        <label class="text-[10px] font-semibold uppercase tracking-wide text-[#94A3B8] mb-2 block">Payer</label>
+        <select class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm bg-white text-[#0F172A]" onchange="vasState.payer=this.value;updateVasStep2NextBtn();document.getElementById('vasPayerHint-${lead.id}').textContent=this.value==='Non-Blood Relative'?'Non-blood relative payer: 3% additional charges apply, and only card payment can be used.':''">
+          <option value="" ${!vasState.payer ? 'selected' : ''}>Select…</option>
+          ${['Self', 'Parents', 'Sibling', 'Spouse', 'Non-Blood Relative'].map(p => `<option value="${p}" ${vasState.payer === p ? 'selected' : ''}>${p}</option>`).join('')}
+        </select>
+        <p class="text-xs mt-1.5" id="vasPayerHint-${lead.id}" style="color:#C2410C">${payerHint}</p>
+      </div>
+      <div class="pt-3 border-t border-gray-50">
+        ${vasFileUploadHtml('aadhaarFront', 'Aadhaar Card — Front', vasState.aadhaarFront)}
+      </div>
+      <div class="pt-3">
+        ${vasFileUploadHtml('aadhaarBack', 'Aadhaar Card — Back', vasState.aadhaarBack)}
+      </div>
+      <div class="pt-3">
+        ${vasFileUploadHtml('panFront', 'PAN Card — Front', vasState.panFront)}
       </div>
       <div class="pt-3 flex gap-4">
         <div class="flex-1">
@@ -1720,6 +1846,13 @@ function renderVasStep2(lead) {
             ? `<button class="text-sm font-semibold cursor-pointer" style="color:#443EFF" onclick="showToast('Opening offer letter…','info')">View Offer Letter</button>`
             : `<div class="text-sm text-[#94A3B8]">${linkedApp ? 'No offer yet' : 'Link an application to check'}</div>`}
         </div>
+      </div>
+      <div class="pt-3 border-t border-gray-50">
+        <a href="https://docs.google.com/document/d/1mrGTXyFzFK3E7S0NHL0GwrjDAjYpi-FoOea185Yb5Dg/edit?usp=sharing" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 text-sm font-semibold" style="color:#443EFF">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3v4a1 1 0 001 1h4"/><path d="M17 21H7a2 2 0 01-2-2V5a2 2 0 012-2h7l5 5v11a2 2 0 01-2 2z"/></svg>
+          Payment Methods &amp; Terms and Conditions
+        </a>
+        <p class="text-xs text-[#94A3B8] mt-1">Payment method options, charges, and important disclaimers (bank account type, TCS) are covered in this doc — share it with the student before payment.</p>
       </div>`;
   }
 
@@ -1727,10 +1860,26 @@ function renderVasStep2(lead) {
     fields += `
       <div class="${fields ? 'border-t border-gray-50 pt-3' : ''}">
         <label class="text-[10px] font-semibold uppercase tracking-wide text-[#94A3B8] mb-2 block">Accommodation Type <span class="normal-case font-normal">(optional)</span></label>
-        <select class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm bg-white text-[#0F172A]" onchange="vasState.accommodationType=this.value">
+        <select class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm bg-white text-[#0F172A]" onchange="vasState.accommodationType=this.value;document.getElementById('vasAccTypeHint-${lead.id}').textContent=VAS_ACCOMMODATION_TYPE_INFO[this.value]||''">
           <option value="" ${!vasState.accommodationType ? 'selected' : ''}>— Not specified —</option>
-          <option value="Flat/Apartment" ${vasState.accommodationType === 'Flat/Apartment' ? 'selected' : ''}>Flat/Apartment</option>
-          <option value="PG/Hostel" ${vasState.accommodationType === 'PG/Hostel' ? 'selected' : ''}>PG/Hostel</option>
+          <option value="HMO" ${vasState.accommodationType === 'HMO' ? 'selected' : ''}>HMO — House in Multiple Occupation</option>
+          <option value="PBSA" ${vasState.accommodationType === 'PBSA' ? 'selected' : ''}>PBSA — Purpose-Built Student Accommodation</option>
+        </select>
+        <p class="text-xs text-[#94A3B8] mt-1.5" id="vasAccTypeHint-${lead.id}">${VAS_ACCOMMODATION_TYPE_INFO[vasState.accommodationType] || ''}</p>
+      </div>`;
+  }
+
+  if (vasState.selected.has('flight') || vasState.selected.has('sim') || vasState.selected.has('forex')) {
+    fields += `
+      <div class="${fields ? 'border-t border-gray-50 pt-3' : ''}">
+        <label class="text-[10px] font-semibold uppercase tracking-wide text-[#94A3B8] mb-2 block">Departure Date <span class="normal-case font-normal">(optional)</span></label>
+        <input type="date" class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-[#0F172A]" value="${escHtml(vasState.departureDate || '')}" oninput="vasState.departureDate=this.value"/>
+      </div>
+      <div class="pt-3">
+        <label class="text-[10px] font-semibold uppercase tracking-wide text-[#94A3B8] mb-2 block">Destination Country</label>
+        <select class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm bg-white text-[#0F172A]" onchange="vasState.destinationCountry=this.value;updateVasStep2NextBtn()">
+          <option value="" ${!vasState.destinationCountry ? 'selected' : ''}>Select…</option>
+          ${VAS_DESTINATION_COUNTRIES.map(c => `<option value="${c}" ${vasState.destinationCountry === c ? 'selected' : ''}>${c}</option>`).join('')}
         </select>
       </div>`;
   }
@@ -1751,10 +1900,11 @@ function renderVasStep2(lead) {
       ${fields}
     </div>`;
   const step2NeedsSlot = vasNeedsSlotStep();
-  document.getElementById('vasModalFooter').innerHTML = vasFooterHtml(step2NeedsSlot ? 'Next' : 'Confirm Interest', 'vasFromStep2Next()', false, 'vasStep2Next');
+  document.getElementById('vasModalFooter').innerHTML = vasFooterHtml(step2NeedsSlot ? 'Next' : 'Confirm Interest', 'vasFromStep2Next()', !vasStep2Valid(), 'vasStep2Next');
 }
 
 function vasFromStep2Next() {
+  if (!vasStep2Valid()) return;
   if (vasNeedsSlotStep()) { vasGoToStep(3); return; }
   confirmVasInterest(vasState.leadId);
 }
@@ -1784,7 +1934,8 @@ function renderVasStep3(lead) {
 }
 
 function renderVasSlots(leadId, dayIndex) {
-  const slots = slotsForDay(dayIndex);
+  const booked = VAS_BOOKED_SLOTS_MOCK[leadId];
+  const slots = slotsForDay(dayIndex).filter(s => !booked || !booked.has(`${dayIndex}|${s}`));
   const grid = document.getElementById(`vasSlots-${leadId}`);
   if (!grid) return;
   grid.innerHTML = slots.length ? slots.map(s => `
@@ -1818,8 +1969,8 @@ function selectVasSlot(leadId, el, slotLabel) {
 
 function confirmVasInterest(leadId) {
   const needsSlot = vasNeedsSlotStep();
-  if (vasState.selected.size === 0 || (needsSlot && !vasState.slot)) {
-    showToast('Select at least one service and a time slot.', 'error');
+  if (vasState.selected.size === 0 || (needsSlot && !vasState.slot) || !vasStep2Valid()) {
+    showToast('Select at least one service and complete the required fields.', 'error');
     return;
   }
   const { lead } = currentLeadDetail();
@@ -1835,10 +1986,15 @@ function confirmVasInterest(leadId) {
     return a ? `${s.label}: ${a.university}` : '';
   }).filter(Boolean);
 
-  VAS_KYC_MOCK[leadId] = { aadhaar: vasState.aadhaar || '', pan: vasState.pan || '', accommodationType: vasState.accommodationType || '' };
+  VAS_KYC_MOCK[leadId] = { aadhaarFront: vasState.aadhaarFront || '', aadhaarBack: vasState.aadhaarBack || '', panFront: vasState.panFront || '', accommodationType: vasState.accommodationType || '' };
   const pipelineType = vasState.pipelineType;
   if (vasState.selected.has('loan') && !eduFinancingState(leadId).assigned) {
     requestEducationFinancing(pipelineType, leadId, { silent: true });
+  }
+
+  if (needsSlot) {
+    if (!VAS_BOOKED_SLOTS_MOCK[leadId]) VAS_BOOKED_SLOTS_MOCK[leadId] = new Set();
+    VAS_BOOKED_SLOTS_MOCK[leadId].add(`${vasState.day}|${vasState.slot}`);
   }
 
   if (!VAS_INTERESTS_MOCK[leadId]) VAS_INTERESTS_MOCK[leadId] = [];
@@ -1846,9 +2002,16 @@ function confirmVasInterest(leadId) {
     services: services.join(', '),
     application: appLabels.join(' · ') || '—',
     slot: slotLabel,
-    aadhaar: vasState.aadhaar || '',
-    pan: vasState.pan || '',
+    aadhaarFront: vasState.aadhaarFront || '',
+    aadhaarBack: vasState.aadhaarBack || '',
+    panFront: vasState.panFront || '',
     accommodationType: vasState.accommodationType || '',
+    paymentType: vasState.paymentType || '',
+    amount: vasState.amount || '',
+    currency: vasState.currency || '',
+    payer: vasState.payer || '',
+    departureDate: vasState.departureDate || '',
+    destinationCountry: vasState.destinationCountry || '',
     loan: vasState.selected.has('loan') ? { ...eduFinancingState(leadId) } : null,
     confirmedAt: new Date().toLocaleDateString('en-GB'),
   });
