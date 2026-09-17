@@ -612,7 +612,6 @@ const LEAD_DETAIL_TABS = [
   { key:'calllogs', label:'Call Logs' },
   { key:'activitylogs', label:'Activity Logs' },
   { key:'visa', label:'Visa Status' },
-  { key:'vas', label:'VAS Interest' },
 ];
 
 const UNIVERSITY_POOL = [
@@ -632,6 +631,7 @@ function applicationsForLead(lead) {
   const apps = [];
   for (let i = 0; i < count; i++) {
     const u = UNIVERSITY_POOL[(h + i * 3) % UNIVERSITY_POOL.length];
+    const hasOffer = (h + i) % 2 === 0;
     apps.push({
       id: `APP-${10000 + (h + i * 97) % 90000}`,
       university: u.name,
@@ -640,6 +640,8 @@ function applicationsForLead(lead) {
       status: i === 0 ? 'Filing In Process' : 'Application Draft By Counsellor',
       intakeStatus: i === 0 ? 'CLOSED: SEP 26' : 'OPEN: JAN 27',
       stage: i === 0 ? 'pre' : 'pre',
+      hasOffer,
+      offerLetterUrl: hasOffer ? '#' : null,
     });
   }
   return apps;
@@ -680,10 +682,98 @@ const VAS_SERVICES = [
   { key:'flight', label:'Flight', needsApplication:false },
   { key:'sim', label:'Sim Card', needsApplication:false },
   { key:'forex', label:'Forex Card/Cash', needsApplication:false },
+  { key:'loan', label:'Education Financing', needsApplication:false },
 ];
 
 let vasState = { selected: new Set(), applicationByService: {}, day: 0, slot: null };
 const VAS_INTERESTS_MOCK = {};
+const VAS_KYC_MOCK = {};
+const VAS_LOAN_MOCK = {};
+
+// ─── Education Financing (Loan) — no slot needed; requesting simulates a Yocket loan RM getting assigned ──
+function eduFinancingState(leadId) {
+  if (!VAS_LOAN_MOCK[leadId]) {
+    VAS_LOAN_MOCK[leadId] = { assigned: false, rmName: '', rmEmail: '', rmContact: '', notes: '', followUpDate: new Date().toLocaleDateString('en-GB') };
+  }
+  return VAS_LOAN_MOCK[leadId];
+}
+
+function eduFinancingCardHtml(pipelineType, lead) {
+  const s = eduFinancingState(lead.id);
+  const row = (label, value) => `
+    <div class="flex items-center justify-between py-2.5">
+      <span class="text-sm font-semibold text-[#656E7F]">${label}</span>
+      <span class="text-sm text-[#1F1F1F]">${value || '------'}</span>
+    </div>`;
+  return `
+    <div class="pl-card mb-3" id="eduFinancingCard-${lead.id}">
+      <div class="flex items-center justify-between pb-3 mb-1" style="border-bottom:1px solid #E2E8F0">
+        <span class="text-base font-bold text-[#1F1F1F]">Education Financing</span>
+        ${s.assigned ? `<span class="pl-badge pl-badge-completed">Requested</span>` : ''}
+      </div>
+      ${row('Yocket RM Name', s.assigned ? escHtml(s.rmName) : '')}
+      ${row('Yocket RM Email', s.assigned && s.rmEmail ? escHtml(s.rmEmail) : '')}
+      ${row('Yocket RM Contact Number', s.assigned ? escHtml(s.rmContact) : '')}
+      ${s.assigned ? '' : `
+      <div class="flex items-start justify-between py-2.5 gap-4">
+        <span class="text-sm font-semibold text-[#656E7F] flex-shrink-0">Notes</span>
+        <textarea class="flex-1 border border-[#E2E8F0] rounded-lg px-3 py-2 text-sm" rows="2" placeholder="Type here" oninput="eduFinancingNotesInput('${lead.id}', this.value)">${escHtml(s.notes || '')}</textarea>
+      </div>
+      <button class="pl-btn-primary w-full mt-3" onclick="requestEducationFinancing('${pipelineType}','${lead.id}')">Request Education Financing Details</button>`}
+      ${s.assigned && s.notes ? `<div class="flex items-center justify-between py-2.5"><span class="text-sm font-semibold text-[#656E7F]">Notes</span><span class="text-sm text-[#1F1F1F]">${escHtml(s.notes)}</span></div>` : ''}
+      <div class="text-xs italic text-[#656E7F] mt-2">Follow Up Date: ${s.followUpDate}</div>
+    </div>`;
+}
+
+function eduFinancingNotesInput(leadId, value) {
+  eduFinancingState(leadId).notes = value;
+}
+
+// Compact version of the same rows, embedded inline in the VAS modal's Step 2 (no card wrapper).
+// One-time action: once requested, it just shows the assigned details — no "update" state.
+function eduFinancingModalBlockHtml(pipelineType, lead) {
+  const s = eduFinancingState(lead.id);
+  const row = (label, value) => `
+    <div class="flex items-center justify-between py-1.5">
+      <span class="text-sm text-[#64748B]">${label}</span>
+      <span class="text-sm font-semibold text-[#0F172A]">${value || '------'}</span>
+    </div>`;
+  return `
+    <div id="eduFinancingModalBlock-${lead.id}">
+      <label class="text-[10px] font-semibold uppercase tracking-wide text-[#94A3B8] mb-1 block">Education Financing</label>
+      ${row('Yocket RM Name', s.assigned ? escHtml(s.rmName) : '')}
+      ${row('Yocket RM Email', s.assigned && s.rmEmail ? escHtml(s.rmEmail) : '')}
+      ${row('Yocket RM Contact Number', s.assigned ? escHtml(s.rmContact) : '')}
+      ${s.assigned
+        ? `<div class="text-xs mt-1.5" style="color:#16A34A">✓ Requested — Yocket loan team notified</div>`
+        : `<button type="button" class="w-full mt-2 h-9 rounded-lg text-white text-sm font-semibold transition-colors" style="background:#443EFF" onclick="requestEducationFinancing('${pipelineType}','${lead.id}',{fromModal:true})">Request Education Financing Details</button>`}
+      <div class="text-xs italic text-[#94A3B8] mt-1.5">Follow Up Date: ${s.followUpDate}</div>
+    </div>`;
+}
+
+function requestEducationFinancing(pipelineType, leadId, opts) {
+  opts = opts || {};
+  const s = eduFinancingState(leadId);
+  const alreadyAssigned = s.assigned;
+  s.assigned = true;
+  s.rmName = 'Palash Baldi';
+  s.rmContact = '+918233270156';
+  s.followUpDate = new Date(Date.now() + 86400000).toLocaleDateString('en-GB');
+  refreshEduFinancingCard(pipelineType, leadId);
+  const lead = (MOCK_LEADS[pipelineType] || []).find(l => l.id === leadId);
+  const modalBlock = document.getElementById(`eduFinancingModalBlock-${leadId}`);
+  if (modalBlock && lead) modalBlock.outerHTML = eduFinancingModalBlockHtml(pipelineType, lead);
+  if (!opts.silent && !alreadyAssigned) showToast('Education financing request sent — a Yocket loan RM has been assigned.', 'success');
+  // Requesting inline is the finishing action for a loan-only interest — no separate "Confirm Interest" click needed.
+  if (opts.fromModal && !alreadyAssigned && !vasNeedsSlotStep()) confirmVasInterest(leadId);
+}
+
+function refreshEduFinancingCard(pipelineType, leadId) {
+  const el = document.getElementById(`eduFinancingCard-${leadId}`);
+  if (!el) return;
+  const lead = (MOCK_LEADS[pipelineType] || []).find(l => l.id === leadId);
+  if (lead) el.outerHTML = eduFinancingCardHtml(pipelineType, lead);
+}
 function dispositionSelectHtml(id) {
   return `<div>
     <label class="block text-xs font-semibold text-text-main mb-1">Disposition <span class="text-text-muted font-normal">(purpose of the call)</span></label>
@@ -726,12 +816,13 @@ function noteAuthorFor(lead, i) { return i % 2 === 0 ? 'You' : lead.clName; }
 
 function notesListHtml(lead) {
   const added = lead._addedNotes || [];
-  const existing = lead.notes.map((n, i) => ({ title: noteTitleFor(n), date: noteDateFor(i), author: noteAuthorFor(lead, i) }));
+  const existing = lead.notes.map((n, i) => ({ title: noteTitleFor(n), body: n, date: noteDateFor(i), author: noteAuthorFor(lead, i) }));
   const all = [...added, ...existing];
   if (!all.length) return `<div class="text-xs text-text-muted py-2">No notes yet.</div>`;
   return all.map((note, i) => `
     <div class="py-2.5 ${i < all.length - 1 ? 'border-b border-border' : ''}">
       <div class="text-sm font-semibold text-text-main">${note.title}</div>
+      ${note.body ? `<div class="text-xs text-text-main mt-1">${escHtml(note.body)}</div>` : ''}
       <div class="text-xs text-text-muted mt-1">${note.date} &nbsp;·&nbsp; ${note.author}</div>
     </div>`).join('');
 }
@@ -748,6 +839,54 @@ function renderNotesSection(pipelineType, leadId) {
 
 function fetchNotesInline(pipelineType, leadId) {
   renderNotesSection(pipelineType, leadId);
+}
+
+// ─── Sidebar Notes — always-expanded composer + history, matching production's lead sidebar ──
+const NOTE_TYPE_OPTIONS = [
+  'IELTS - RNR', 'IELTS - Plan Dropped', 'IELTS - Future Intake', 'IELTS - Preparation Not Started / Incomplete',
+  'IELTS - Self-Booking Exam', 'IELTS - Arranging Booking Amount', 'IELTS - Not Mandatory', 'IELTS - Waiver Requested',
+  'IELTS - Exam Booked/Given', 'IELTS - Exploring Other Exams', 'IELTS - Passport Unavailable',
+  'Docs - Plan Dropped', 'Docs - Looking for Future Intake', 'Docs - Arranging Docs', 'Docs - Pursuing Bachelors/12th', 'Docs - RNR',
+];
+
+function sidebarNotesHtml(pipelineType, lead) {
+  return `
+    <div>${notesListHtml(lead)}</div>
+    <div class="mt-3 pt-3 border-t border-border">
+      <select class="w-full px-2.5 py-2 border border-border rounded-lg text-sm bg-white mb-2" id="noteType-${lead.id}">
+        <option value="">Note type…</option>
+        ${NOTE_TYPE_OPTIONS.map(o => `<option value="${escHtml(o)}">${escHtml(o)}</option>`).join('')}
+      </select>
+      <textarea class="w-full px-3 py-2 border border-border rounded-lg text-sm" id="noteInput-${lead.id}" placeholder="Add a note" rows="2" maxlength="500"></textarea>
+      <div class="flex items-center justify-between mt-2">
+        <button class="flex items-center gap-1.5 text-xs font-semibold text-text-muted cursor-pointer hover:text-text-main transition-colors" onclick="showToast('File attached.','info')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a5 5 0 01-7.07-7.07l9.19-9.19a3.5 3.5 0 014.95 4.95l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/></svg>
+          Attach File
+        </button>
+        <div class="flex gap-1.5">
+          <button class="w-7 h-7 rounded-lg border border-border flex items-center justify-center cursor-pointer hover:bg-surface" title="Clear" onclick="document.getElementById('noteInput-${lead.id}').value='';document.getElementById('noteType-${lead.id}').value=''">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+          <button class="w-7 h-7 rounded-lg text-white flex items-center justify-center cursor-pointer" style="background:#443EFF" title="Save" onclick="submitSidebarNote('${pipelineType}','${lead.id}')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>`;
+}
+
+function submitSidebarNote(pipelineType, leadId) {
+  const lead = (MOCK_LEADS[pipelineType] || []).find(l => l.id === leadId);
+  if (!lead) return;
+  const noteInput = document.getElementById(`noteInput-${leadId}`);
+  if (!noteInput || !noteInput.value.trim()) { showToast('Note cannot be empty.', 'error'); return; }
+  const typeSelect = document.getElementById(`noteType-${leadId}`);
+  const title = (typeSelect && typeSelect.value) || noteTitleFor(noteInput.value);
+  if (!lead._addedNotes) lead._addedNotes = [];
+  lead._addedNotes.unshift({ title, body: noteInput.value.trim(), date: 'Today', author: 'You' });
+  const container = document.getElementById(`notesInline-${leadId}`);
+  if (container) container.innerHTML = sidebarNotesHtml(pipelineType, lead);
+  showToast('Note saved successfully.', 'success');
 }
 
 function showAddNoteForm(pipelineType, leadId) {
@@ -820,8 +959,8 @@ function openLeadDetail(pipelineType, leadId) {
 
   document.getElementById('leadDetailTabBar').innerHTML = buildLeadTabBarHtml('profile');
   document.getElementById('leadDetailSidebar').innerHTML = buildLeadSidebarHtml(pipelineType, lead);
+  document.getElementById('leadDetailSidebar').scrollTop = 0;
   document.getElementById('leadDetailPage').classList.remove('hidden');
-  document.getElementById('leadDetailPage').scrollTop = 0;
   switchLeadTab('profile');
 }
 
@@ -847,70 +986,72 @@ function switchLeadTab(tabKey) {
     calllogs: buildCallLogsTabHtml,
     activitylogs: buildActivityLogsTabHtml,
     visa: buildVisaTabHtml,
-    vas: buildVasTabHtml,
   };
   const fn = builders[tabKey] || buildProfileTabHtml;
   document.getElementById('leadDetailContent').innerHTML = fn(pipelineType, lead);
-  document.getElementById('leadDetailPage').scrollTop = 0;
+  document.getElementById('leadDetailContent').scrollTop = 0;
 }
 
 function buildLeadSidebarHtml(pipelineType, lead) {
   return `
-    <div class="pl-tile mb-4">
-      <div class="flex items-center justify-between w-full mb-1">
-        <span class="flex items-center gap-2"><span class="text-lg">⭐</span><span class="text-sm font-semibold" style="color:#4F46E5">Premium Plan</span></span>
-        <button class="w-6 h-6 rounded flex items-center justify-center text-white flex-shrink-0" style="background:#443EFF" onclick="showToast('Premium plan setup coming soon.','info')">+</button>
+    <div class="rounded-xl mb-4" style="background:#F3F3FF;padding:14px">
+      <div class="pl-tile mb-4">
+        <div class="flex items-center justify-between w-full mb-1">
+          <span class="flex items-center gap-2"><span class="text-lg">⭐</span><span class="text-sm font-semibold" style="color:#4F46E5">Premium Plan</span></span>
+          <button class="w-6 h-6 rounded flex items-center justify-center text-white flex-shrink-0" style="background:#443EFF" onclick="showToast('Premium plan setup coming soon.','info')">+</button>
+        </div>
+        <div class="text-xs" style="color:#656E7F">No plan assigned yet. Click + to set up a premium plan for this student.</div>
       </div>
-      <div class="text-xs" style="color:#656E7F">No plan assigned yet. Click + to set up a premium plan for this student.</div>
-    </div>
 
-    <div class="flex items-center gap-2 mb-3">
-      <img src="assets/icons/contacts.svg" width="16" height="16" alt=""/>
-      <span class="text-sm" style="color:#1C1C1C">${lead.id}</span>
-      <img src="assets/icons/copy_icons.svg" width="12" height="12" alt="" class="cursor-pointer" onclick="navigator.clipboard?.writeText('${lead.id}');showToast('Lead ID copied.','info')"/>
-    </div>
-    <div class="flex items-center gap-2 mb-2.5">
-      <img src="assets/icons/message_icons.svg" width="16" height="16" alt=""/>
-      <button class="pl-btn-outline flex-1" onclick="showToast('Opening email...','info')">View Email</button>
-    </div>
-    <div class="flex items-center gap-2 mb-4">
-      <img src="assets/icons/call_icon.svg" width="16" height="16" alt=""/>
-      <button class="pl-btn-outline flex-1" onclick="revealPhone(this)">View Phone Number</button>
-      <img src="assets/icons/call_icon_new.svg" width="20" height="20" alt="" class="cursor-pointer flex-shrink-0" onclick="showToast('Calling ${escHtml(lead.name)}…','info')" title="Call"/>
-      <img src="assets/icons/whatsapp-color.svg" width="20" height="20" alt="" class="cursor-pointer flex-shrink-0 rounded border" style="border-color:#E2E8F0" onclick="showToast('Opening WhatsApp…','info')" title="WhatsApp"/>
-    </div>
-
-    <div class="mb-2.5">
-      <label class="block text-xs mb-1" style="color:#656E7F">Prep requirement status</label>
-      <div class="w-full px-3 py-2.5 border rounded text-sm bg-white font-medium" style="border-color:#CCC">${lead.status}</div>
-    </div>
-    <div class="mb-2.5">
-      <label class="block text-xs mb-1" style="color:#656E7F">Prospect Status</label>
-      <div class="w-full px-3 py-2.5 border rounded text-sm bg-white" style="border-color:#CCC;color:#94A3B8">Prospect Status</div>
-    </div>
-    <div class="mb-2.5">
-      <label class="block text-xs mb-1" style="color:#656E7F">Test Prep Enrollment Status</label>
-      <div class="w-full px-3 py-2.5 border rounded text-sm bg-white" style="border-color:#CCC;color:#94A3B8">Test Prep Enrollment Status</div>
-    </div>
-    <div class="mb-4">
-      <label class="block text-xs mb-1" style="color:#656E7F">Test Prep Demo Type</label>
-      <div class="w-full px-3 py-2.5 border rounded text-sm bg-white" style="border-color:#CCC;color:#94A3B8">Test Prep Demo Type</div>
-    </div>
-
-    <div class="grid grid-cols-2 gap-2 mb-3">
-      <div class="pl-tile">
-        <div class="flex items-center gap-1.5 text-xs font-semibold mb-1" style="color:#443EFF"><img src="assets/icons/call_icon.svg" width="12" height="12" alt="" style="filter:invert(21%) sepia(89%) saturate(4933%) hue-rotate(246deg)"/>Counsellor</div>
-        <div class="text-sm font-semibold">${escHtml(lead.clName)}</div>
+      <div class="flex items-center gap-2 mb-3">
+        <img src="assets/icons/contacts.svg" width="16" height="16" alt=""/>
+        <span class="text-sm" style="color:#1C1C1C">${lead.id}</span>
+        <img src="assets/icons/copy_icons.svg" width="12" height="12" alt="" class="cursor-pointer" onclick="navigator.clipboard?.writeText('${lead.id}');showToast('Lead ID copied.','info')"/>
       </div>
-      <div class="pl-tile relative">
-        <div class="flex items-center gap-1.5 text-xs font-semibold mb-1" style="color:#443EFF"><img src="assets/icons/call_icon.svg" width="12" height="12" alt="" style="filter:invert(21%) sepia(89%) saturate(4933%) hue-rotate(246deg)"/>RM</div>
-        <div class="text-sm font-semibold">Arjun Patel</div>
-        <img src="assets/icons/edit_button_with_pen_sign.svg" width="18" height="18" alt="" class="absolute top-2 right-2 cursor-pointer" onclick="showToast('RM reassignment is admin-only.','info')"/>
+      <div class="flex items-center gap-2 mb-2.5">
+        <img src="assets/icons/message_icons.svg" width="16" height="16" alt=""/>
+        <button class="pl-btn-outline flex-1" onclick="showToast('Opening email...','info')">View Email</button>
       </div>
-    </div>
+      <div class="flex items-center gap-2 mb-4">
+        <img src="assets/icons/call_icon.svg" width="16" height="16" alt=""/>
+        <button class="pl-btn-outline flex-1" onclick="revealPhone(this)">View Phone Number</button>
+        <img src="assets/icons/call_icon_new.svg" width="20" height="20" alt="" class="cursor-pointer flex-shrink-0" onclick="showToast('Calling ${escHtml(lead.name)}…','info')" title="Call"/>
+        <img src="assets/icons/whatsapp-color.svg" width="20" height="20" alt="" class="cursor-pointer flex-shrink-0 rounded border" style="border-color:#E2E8F0" onclick="showToast('Opening WhatsApp…','info')" title="WhatsApp"/>
+      </div>
 
-    <button class="pl-btn-primary w-full flex items-center justify-center gap-2 mb-2" onclick="showToast('Video call scheduling coming soon.','info')">Schedule Video Call</button>
-    <button class="pl-btn-secondary w-full flex items-center justify-center gap-2 mb-4" onclick="showToast('Test Prep demo booking is a counsellor action.','info')" disabled>Book Test Prep Demo</button>
+      <div class="mb-2.5">
+        <label class="block text-xs mb-1" style="color:#656E7F">Prep requirement status</label>
+        <div class="w-full px-3 py-2.5 border rounded text-sm bg-white font-medium" style="border-color:#CCC">${lead.status}</div>
+      </div>
+      <div class="mb-2.5">
+        <label class="block text-xs mb-1" style="color:#656E7F">Prospect Status</label>
+        <div class="w-full px-3 py-2.5 border rounded text-sm bg-white" style="border-color:#CCC;color:#94A3B8">Prospect Status</div>
+      </div>
+      <div class="mb-2.5">
+        <label class="block text-xs mb-1" style="color:#656E7F">Test Prep Enrollment Status</label>
+        <div class="w-full px-3 py-2.5 border rounded text-sm bg-white" style="border-color:#CCC;color:#94A3B8">Test Prep Enrollment Status</div>
+      </div>
+      <div class="mb-4">
+        <label class="block text-xs mb-1" style="color:#656E7F">Test Prep Demo Type</label>
+        <div class="w-full px-3 py-2.5 border rounded text-sm bg-white" style="border-color:#CCC;color:#94A3B8">Test Prep Demo Type</div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-2 mb-3">
+        <div class="pl-tile">
+          <div class="flex items-center gap-1.5 text-xs font-semibold mb-1" style="color:#443EFF"><img src="assets/icons/call_icon.svg" width="12" height="12" alt="" style="filter:invert(21%) sepia(89%) saturate(4933%) hue-rotate(246deg)"/>Counsellor</div>
+          <div class="text-sm font-semibold">${escHtml(lead.clName)}</div>
+        </div>
+        <div class="pl-tile relative">
+          <div class="flex items-center gap-1.5 text-xs font-semibold mb-1" style="color:#443EFF"><img src="assets/icons/call_icon.svg" width="12" height="12" alt="" style="filter:invert(21%) sepia(89%) saturate(4933%) hue-rotate(246deg)"/>RM</div>
+          <div class="text-sm font-semibold">Arjun Patel</div>
+          <img src="assets/icons/edit_button_with_pen_sign.svg" width="18" height="18" alt="" class="absolute top-2 right-2 cursor-pointer" onclick="showToast('RM reassignment is admin-only.','info')"/>
+        </div>
+      </div>
+
+      <button class="pl-btn-primary w-full flex items-center justify-center gap-2 mb-2" onclick="showToast('Video call scheduling coming soon.','info')">Schedule Video Call</button>
+      <button class="pl-btn-secondary w-full flex items-center justify-center gap-2 mb-2" onclick="showToast('Test Prep demo booking is a counsellor action.','info')" disabled>Book Test Prep Demo</button>
+      <button class="pl-btn-primary w-full flex items-center justify-center gap-2" onclick="openVasModal('${pipelineType}','${lead.id}')">VAS Interest${(VAS_INTERESTS_MOCK[lead.id] || []).length ? ` <span class="rounded-full text-[10px] font-bold flex items-center justify-center" style="background:rgba(255,255,255,.25);width:18px;height:18px">${VAS_INTERESTS_MOCK[lead.id].length}</span>` : ''}</button>
+    </div>
 
     <div class="grid grid-cols-2 gap-3 text-xs mb-1 pt-3" style="border-top:1px solid #E2E8F0">
       <div class="flex items-start gap-1.5">
@@ -923,46 +1064,41 @@ function buildLeadSidebarHtml(pipelineType, lead) {
       </div>
     </div>
     <button class="pl-edit-link text-xs mt-1.5 mb-3" onclick="this.nextElementSibling.classList.toggle('hidden')">Show more<img src="assets/icons/down_blue.svg" width="12" height="12" alt=""/></button>
-    <div class="hidden grid grid-cols-2 gap-3 text-xs mb-4">
-      <div>
-        <div style="color:#656E7F">Counsellor</div>
-        <div class="font-semibold mt-0.5">${escHtml(lead.clName)}</div>
+    <div class="hidden">
+      <div class="grid grid-cols-2 gap-3 text-xs mb-3">
+        <div>
+          <div style="color:#656E7F">Counsellor</div>
+          <div class="font-semibold mt-0.5">${escHtml(lead.clName)}</div>
+        </div>
+        <div>
+          <div style="color:#656E7F">Relationship Manager</div>
+          <div class="font-semibold mt-0.5">Arjun Patel</div>
+        </div>
       </div>
-      <div>
-        <div style="color:#656E7F">Relationship Manager</div>
-        <div class="font-semibold mt-0.5">Arjun Patel</div>
+      <button class="pl-edit-link text-xs mb-3" onclick="this.nextElementSibling.classList.toggle('hidden')">Show more<img src="assets/icons/down_blue.svg" width="12" height="12" alt=""/></button>
+      <div class="hidden grid grid-cols-2 gap-3 text-xs mb-4">
+        <div>
+          <div style="color:#656E7F">IELTS Status</div>
+          <div class="font-semibold mt-0.5">Not Decided</div>
+        </div>
+        <div>
+          <div style="color:#656E7F">Score</div>
+          <div class="font-semibold mt-0.5">—</div>
+        </div>
+        <div>
+          <div style="color:#656E7F">Passport Status</div>
+          <div class="font-semibold mt-0.5">Bearer</div>
+        </div>
+        <div>
+          <div style="color:#656E7F">Document Status</div>
+          <div class="font-semibold mt-0.5">Partially Uploaded</div>
+        </div>
       </div>
-      <div>
-        <div style="color:#656E7F">IELTS Status</div>
-        <div class="font-semibold mt-0.5">Not Decided</div>
-      </div>
-      <div>
-        <div style="color:#656E7F">Score</div>
-        <div class="font-semibold mt-0.5">—</div>
-      </div>
-      <div>
-        <div style="color:#656E7F">Passport Status</div>
-        <div class="font-semibold mt-0.5">Bearer</div>
-      </div>
-      <div>
-        <div style="color:#656E7F">Document Status</div>
-        <div class="font-semibold mt-0.5">Partially Uploaded</div>
-      </div>
-    </div>
-
-    <div class="flex flex-col gap-2 mb-4 pt-3" style="border-top:1px solid #E2E8F0">
-      <button class="pl-btn-outline w-full flex items-center justify-center gap-2" onclick="showDispositionForm('${lead.id}')">
-        Disposition
-      </button>
-      <button class="pl-btn-outline w-full flex items-center justify-center gap-2" onclick="showQueryForm('${pipelineType}','${lead.id}','${escHtml(lead.name)}')">
-        Raise Query for Counsellor
-      </button>
-      <div id="dispositionFormWrap-${lead.id}"></div>
     </div>
 
     <div class="pt-3" style="border-top:1px solid #E2E8F0">
       <div class="text-xs font-semibold mb-1.5">Notes</div>
-      <div id="notesInline-${lead.id}"><button class="pl-btn-outline w-full" onclick="fetchNotesInline('${pipelineType}','${lead.id}')">Fetch Notes</button></div>
+      <div id="notesInline-${lead.id}">${sidebarNotesHtml(pipelineType, lead)}</div>
     </div>`;
 }
 
@@ -1032,6 +1168,8 @@ function buildProfileTabHtml(pipelineType, lead) {
       <div><strong>Overall tuition fee budget</strong> — Rs ${m.tuitionBudget.toLocaleString('en-IN')}</div>
       <div><strong>How will you finance your education?</strong> — ${m.financing}</div>
     `)}
+
+    ${eduFinancingCardHtml(pipelineType, lead)}
 
     ${profileFieldCardHtml('globe', 'Study Destination', `
       <div><strong>Country</strong> — ${lead.country}</div>
@@ -1335,118 +1473,314 @@ function buildVisaTabHtml(pipelineType, lead) {
     </div>`;
 }
 
-// ─── VAS Interest tab (new feature) ───────────────────────────────────────────
-function buildVasTabHtml(pipelineType, lead) {
-  const apps = applicationsForLead(lead);
-  const history = VAS_INTERESTS_MOCK[lead.id] || [];
-  return `
-    <div class="pl-card mb-4">
-      <div class="text-base font-bold text-[#1F1F1F] mb-1">VAS Interest</div>
-      <div class="text-xs text-[#656E7F] mb-4">Mark what the student is interested in, then book a time slot to discuss it.</div>
-      <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-4">
-        ${VAS_SERVICES.map(s => `
-          <label class="flex items-center gap-2 px-3 py-2.5 border border-[#CCC] rounded cursor-pointer hover:bg-[#F8F8FF] transition-colors">
-            <input type="checkbox" class="w-3.5 h-3.5" style="accent-color:#443EFF" onchange="toggleVasService('${s.key}',this.checked)"/>
-            <span class="text-sm font-medium">${s.label}</span>
-          </label>`).join('')}
-      </div>
-      <div id="vasAppSelectors-${lead.id}" class="space-y-2 mb-4"></div>
-      <button class="pl-btn-primary opacity-50" id="vasProceedBtn-${lead.id}" disabled onclick="vasProceedToSlots('${lead.id}')">Mark Interest &amp; Book Slot</button>
-      <div id="vasSlotPickerWrap-${lead.id}"></div>
-    </div>
+// ─── VAS Interest modal — 3-step wizard (Interested In → Details → Slot) ──────
+// Mirrors production's "Select a Plan" → "Configure" pattern: fixed-width dialog,
+// breadcrumb header, a "Back to X" link, a lavender summary box, sticky footer.
+let vasWizardStep = 1;
 
-    <div class="pl-card" style="padding:0;overflow:hidden">
-      <div class="px-4 py-3 border-b border-[#E2E8F0] text-sm font-bold text-[#1F1F1F]">Marked VAS Interests</div>
-      <div id="vasHistoryWrap-${lead.id}">${vasHistoryTableHtml(history)}</div>
+function openVasModal(pipelineType, leadId) {
+  const leads = MOCK_LEADS[pipelineType] || [];
+  const lead = leads.find(l => l.id === leadId);
+  if (!lead) return;
+
+  const saved = VAS_KYC_MOCK[leadId] || {};
+  vasState = { leadId, pipelineType, selected: new Set(), applicationByService: {}, day: 0, slot: null, aadhaar: saved.aadhaar || '', pan: saved.pan || '', accommodationType: saved.accommodationType || '' };
+  vasWizardStep = 1;
+  renderVasWizard();
+  document.getElementById('vasModal').classList.remove('hidden');
+  document.getElementById('vasModal').classList.add('flex');
+}
+
+function closeVasModal() {
+  document.getElementById('vasModal').classList.add('hidden');
+  document.getElementById('vasModal').classList.remove('flex');
+}
+
+function vasNeedsConfigStep() {
+  return vasState.selected.has('remittance') || vasState.selected.has('accommodation') || vasState.selected.has('loan');
+}
+
+// Loan (Education Financing) doesn't need a call slot — its Request button (shown in Step 2)
+// handles fulfillment directly. If it's the only thing selected, skip Step 3 entirely.
+function vasNeedsSlotStep() {
+  return [...vasState.selected].some(k => k !== 'loan');
+}
+
+function renderVasWizard() {
+  const { lead } = currentLeadDetail();
+  if (!lead) return;
+  if (vasWizardStep === 1) renderVasStep1(lead);
+  else if (vasWizardStep === 2) renderVasStep2(lead);
+  else if (vasWizardStep === 3) renderVasStep3(lead);
+  else if (vasWizardStep === 'detail') renderVasDetailStep(lead);
+}
+
+function vasGoToStep(step) {
+  vasWizardStep = step;
+  renderVasWizard();
+}
+
+function viewVasHistoryDetail(leadId, idx) {
+  vasState.viewingIndex = idx;
+  vasWizardStep = 'detail';
+  renderVasWizard();
+}
+
+// ── Detail view: read-only recap of one already-captured interest ──
+function renderVasDetailStep(lead) {
+  const entry = (VAS_INTERESTS_MOCK[lead.id] || [])[vasState.viewingIndex];
+  document.getElementById('vasModalHeader').innerHTML = `
+    <div class="px-5 pt-4 pb-3 border-b border-gray-50 flex items-center justify-between">
+      <p class="text-xs text-[#64748B]">VAS Interest <span class="mx-1">›</span><span class="text-[#443EFF] font-medium ml-1">Captured Interest</span></p>
+      <p class="text-xs font-semibold text-[#0F172A]">${escHtml(lead.name)} (${lead.id})</p>
+    </div>
+    <button type="button" class="px-5 pt-3 pb-4 text-sm text-[#443EFF] hover:text-[#3630D6] flex items-center gap-1 transition-colors font-semibold" onclick="vasGoToStep(1)">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>Back to services
+    </button>`;
+
+  if (!entry) {
+    document.getElementById('vasModalBody').innerHTML = `<div class="py-8 text-center text-sm text-[#94A3B8]">No details found.</div>`;
+    document.getElementById('vasModalFooter').innerHTML = `<button class="flex-1 h-10 rounded-lg text-white text-sm font-semibold" style="background:#443EFF" onclick="closeVasModal()">Close</button>`;
+    return;
+  }
+
+  const row = (label, value) => `
+    <div class="flex items-center justify-between py-2 border-b border-gray-50">
+      <span class="text-sm text-[#64748B]">${label}</span>
+      <span class="text-sm font-semibold text-[#0F172A]">${value}</span>
     </div>`;
 
-  function vasHistoryTableHtml(rows) {
-    if (!rows.length) return `<div class="text-center text-xs text-[#656E7F] py-6">No VAS interests marked yet.</div>`;
-    return `<table class="w-full text-xs">
-      <thead><tr style="background:#F5F5F7" class="text-[10px] uppercase font-semibold text-[#656E7F]"><th class="px-3 py-2 text-left">Services</th><th class="px-3 py-2 text-left">Application</th><th class="px-3 py-2 text-left">Slot</th><th class="px-3 py-2 text-left">Status</th></tr></thead>
-      <tbody>${rows.map(r => `<tr class="border-t border-[#E2E8F0]"><td class="px-3 py-2.5">${r.services}</td><td class="px-3 py-2.5">${r.application || '—'}</td><td class="px-3 py-2.5">${r.slot}</td><td class="px-3 py-2.5"><span class="pl-badge" style="background:#EEF2FF;color:#443EFF;border-color:#C7D2FE">Scheduled</span></td></tr>`).join('')}</tbody>
-    </table>`;
+  let rows = '';
+  if (entry.application && entry.application !== '—') rows += row('Linked Application', escHtml(entry.application));
+  rows += row('Slot', escHtml(entry.slot));
+  if (entry.aadhaar) rows += row('Aadhaar Card Number', escHtml(entry.aadhaar));
+  if (entry.pan) rows += row('PAN Card Number', escHtml(entry.pan));
+  if (entry.accommodationType) rows += row('Accommodation Type', escHtml(entry.accommodationType));
+  if (entry.confirmedAt) rows += row('Marked On', escHtml(entry.confirmedAt));
+
+  const loanBlock = entry.loan ? `
+    <div class="pt-3 mt-1">
+      <label class="text-[10px] font-semibold uppercase tracking-wide text-[#94A3B8] mb-1 block">Education Financing</label>
+      ${row('Yocket RM Name', escHtml(entry.loan.rmName || '------'))}
+      ${row('Yocket RM Email', escHtml(entry.loan.rmEmail || '------'))}
+      ${row('Yocket RM Contact Number', escHtml(entry.loan.rmContact || '------'))}
+      ${row('Follow Up Date', escHtml(entry.loan.followUpDate || '—'))}
+    </div>` : '';
+
+  document.getElementById('vasModalBody').innerHTML = `
+    <div class="py-4">
+      <div class="bg-[#EDE9FE] border border-[#DDD6FE] rounded-lg p-3 mb-2">
+        <p class="text-[10px] font-semibold uppercase tracking-wide text-[#443EFF] mb-0.5">Interested In</p>
+        <p class="text-base font-semibold text-[#312E81]">${escHtml(entry.services)}</p>
+      </div>
+      ${rows}
+      ${loanBlock}
+    </div>`;
+  document.getElementById('vasModalFooter').innerHTML = `<button class="flex-1 h-10 rounded-lg text-white text-sm font-semibold" style="background:#443EFF" onclick="closeVasModal()">Close</button>`;
+}
+
+function vasHeaderHtml(step, lead) {
+  if (step === 1) {
+    return `
+      <div class="px-5 sticky top-0 bg-white pt-3 pb-4 border-b border-[#e2e8f0] flex justify-between items-center">
+        <div class="flex flex-col items-start">
+          <span class="text-base font-bold text-[#0F172A]">VAS Interest</span>
+          <p class="text-sm text-[#64748B]">${escHtml(lead.name)} · #${lead.id}</p>
+        </div>
+        <button class="w-7 h-7 rounded-lg bg-surface flex items-center justify-center cursor-pointer flex-shrink-0" onclick="closeVasModal()">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18" stroke-width="2"/><line x1="6" y1="6" x2="18" y2="18" stroke-width="2"/></svg>
+        </button>
+      </div>`;
   }
+  const crumbLabel = step === 2 ? 'Details' : 'Slot';
+  const backTarget = step === 3 && !vasNeedsConfigStep() ? 1 : step - 1;
+  const backLabel = backTarget === 1 ? 'Back to services' : 'Back to details';
+  return `
+    <div class="px-5 pt-4 pb-3 border-b border-gray-50 flex items-center justify-between">
+      <p class="text-xs text-[#64748B]">VAS Interest <span class="mx-1">›</span><span class="text-[#443EFF] font-medium ml-1">${crumbLabel}</span></p>
+      <p class="text-xs font-semibold text-[#0F172A]">${escHtml(lead.name)} (${lead.id})</p>
+    </div>
+    <button type="button" class="px-5 pt-3 pb-4 text-sm text-[#443EFF] hover:text-[#3630D6] flex items-center gap-1 transition-colors font-semibold" onclick="vasGoToStep(${backTarget})">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>${backLabel}
+    </button>`;
+}
+
+function vasFooterHtml(nextLabel, nextOnclick, nextDisabled, nextId) {
+  return `
+    <button class="flex-1 h-10 rounded-lg border border-[#CBD5E1] text-sm font-semibold text-[#475569] hover:bg-[#F1F5F9] transition-colors" onclick="closeVasModal()">Cancel</button>
+    <button class="flex-1 h-10 rounded-lg text-white text-sm font-semibold transition-colors" id="${nextId}" ${nextDisabled ? 'disabled' : ''} style="background:${nextDisabled ? '#94A3B8' : '#443EFF'}" onclick="${nextOnclick}">${nextLabel}</button>`;
+}
+
+// ── Step 1: Interested In ──
+function renderVasStep1(lead) {
+  document.getElementById('vasModalHeader').innerHTML = vasHeaderHtml(1, lead);
+  const history = VAS_INTERESTS_MOCK[lead.id] || [];
+  document.getElementById('vasModalBody').innerHTML = `
+    ${history.length ? `
+    <div class="pt-4">
+      <label class="text-[10px] font-semibold uppercase tracking-wide text-[#94A3B8] mb-2 block">Already Marked (${history.length})</label>
+      <div class="space-y-2">
+        ${history.map((h, idx) => `
+          <div class="flex items-center justify-between rounded-lg border border-[#E5E7EB] px-3 py-2.5 cursor-pointer hover:border-[#C7D2FE] hover:bg-[#FAF9FF] transition-colors" style="background:#FAFAFA" onclick="viewVasHistoryDetail('${lead.id}',${idx})">
+            <div class="min-w-0">
+              <div class="text-sm font-semibold text-[#0F172A] truncate">${h.services}</div>
+              <div class="text-xs text-[#64748B] mt-0.5 truncate">${h.slot}${h.application && h.application !== '—' ? ' · ' + h.application : ''}</div>
+            </div>
+            <div class="flex items-center gap-2 flex-shrink-0">
+              <span class="pl-badge" style="background:#EEF2FF;color:#443EFF;border-color:#C7D2FE">Scheduled</span>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:#94A3B8"><path d="m9 18 6-6-6-6"/></svg>
+            </div>
+          </div>`).join('')}
+      </div>
+      <div class="border-t border-gray-100 mt-4"></div>
+    </div>` : ''}
+    <div class="py-4 space-y-2.5">
+      ${history.length ? `<label class="text-[10px] font-semibold uppercase tracking-wide text-[#94A3B8] mb-1 block">Mark New Interest</label>` : ''}
+      ${VAS_SERVICES.map(s => {
+        if (s.key === 'loan' && eduFinancingState(lead.id).assigned) {
+          return `
+            <div class="w-full rounded-xl border p-4 flex items-center gap-3" style="border-color:#E5E7EB;background:#F8FAFC">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="flex-shrink-0"><path d="M20 6 9 17l-5-5"/></svg>
+              <div class="flex-1">
+                <p class="text-sm font-semibold text-[#0F172A]">${s.label}</p>
+                <p class="text-xs text-[#94A3B8]">Already requested — Yocket loan team assigned</p>
+              </div>
+            </div>`;
+        }
+        return `
+        <label class="w-full rounded-xl border transition-all p-4 cursor-pointer flex items-center gap-3" id="vasRow-${s.key}" style="${vasState.selected.has(s.key) ? 'border-color:#443EFF;background:#FAF9FF' : 'border-color:#E5E7EB;background:#fff'}">
+          <input type="checkbox" class="w-4 h-4 flex-shrink-0" style="accent-color:#443EFF" ${vasState.selected.has(s.key) ? 'checked' : ''} onchange="toggleVasService('${s.key}',this.checked)"/>
+          <p class="text-sm font-semibold text-[#0F172A] flex-1">${s.label}</p>
+        </label>`;
+      }).join('')}
+    </div>`;
+  document.getElementById('vasModalFooter').innerHTML = vasFooterHtml('Next', 'vasFromStep1Next()', vasState.selected.size === 0, 'vasStep1Next');
 }
 
 function toggleVasService(key, checked) {
-  if (checked) {
-    vasState.selected.add(key);
-  } else {
-    vasState.selected.delete(key);
-    delete vasState.applicationByService[key];
+  if (checked) vasState.selected.add(key); else vasState.selected.delete(key);
+  const row = document.getElementById(`vasRow-${key}`);
+  if (row) { row.style.borderColor = checked ? '#443EFF' : '#E5E7EB'; row.style.background = checked ? '#FAF9FF' : '#fff'; }
+  const btn = document.getElementById('vasStep1Next');
+  if (btn) {
+    const ok = vasState.selected.size > 0;
+    btn.disabled = !ok;
+    btn.style.background = ok ? '#443EFF' : '#94A3B8';
+    btn.textContent = (vasNeedsConfigStep() || vasNeedsSlotStep()) ? 'Next' : 'Confirm Interest';
   }
-  const { lead } = currentLeadDetail();
+}
+
+function vasFromStep1Next() {
+  if (vasState.selected.size === 0) return;
+  if (vasNeedsConfigStep()) { vasWizardStep = 2; renderVasWizard(); return; }
+  if (vasNeedsSlotStep()) { vasWizardStep = 3; renderVasWizard(); return; }
+  confirmVasInterest(currentLeadDetail().lead.id);
+}
+
+// ── Step 2: Details (only reached when Remittance and/or Accommodation is selected) ──
+function renderVasStep2(lead) {
+  document.getElementById('vasModalHeader').innerHTML = vasHeaderHtml(2, lead);
   const apps = applicationsForLead(lead);
-  const selectorsWrap = document.getElementById(`vasAppSelectors-${lead.id}`);
   const needApp = VAS_SERVICES.filter(s => s.needsApplication && vasState.selected.has(s.key));
+  const selectedLabels = [...vasState.selected].map(k => VAS_SERVICES.find(s => s.key === k).label).join(', ');
+  const existingApp = needApp.map(s => vasState.applicationByService[s.key]).find(Boolean) || '';
+  needApp.forEach(s => { vasState.applicationByService[s.key] = existingApp; });
+  const linkedApp = apps.find(a => a.id === existingApp);
 
-  if (needApp.length >= 2) {
-    // Remittance + Accommodation both selected — one shared application, not one each.
-    // Carry forward whichever application (if any) was already picked for one of these services,
-    // and re-select it in the dropdown so it never appears to reset when another service is toggled.
-    const label = needApp.map(s => s.label).join(' & ');
-    const existing = needApp.map(s => vasState.applicationByService[s.key]).find(Boolean) || '';
-    needApp.forEach(s => { vasState.applicationByService[s.key] = existing; });
-    selectorsWrap.innerHTML = `
+  let fields = '';
+  if (needApp.length) {
+    fields += `
       <div>
-        <label class="block text-xs font-semibold text-[#1F1F1F] mb-1">Which application is this for? <span class="text-[11px] font-normal" style="color:#656E7F">(applies to both ${label})</span> <span class="text-danger">*</span></label>
-        <select class="w-full px-3 py-2 border text-sm bg-white" onchange="onVasAppSelectChange('shared',this.value)">
-          <option value="">— Select application —</option>
-          ${apps.map(a => `<option value="${a.id}" ${a.id === existing ? 'selected' : ''}>${a.university} — ${a.course} (${a.id})</option>`).join('')}
+        <label class="text-[10px] font-semibold uppercase tracking-wide text-[#94A3B8] mb-2 block">Linked Application <span class="normal-case font-normal">(optional)</span></label>
+        <select class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-[#0F172A] bg-white" onchange="onVasAppSelectChange(this.value)">
+          <option value="">— Not linked to an application —</option>
+          ${apps.map(a => `<option value="${a.id}" ${a.id === existingApp ? 'selected' : ''}>${a.university} — ${a.course}</option>`).join('')}
         </select>
       </div>`;
-  } else {
-    selectorsWrap.innerHTML = needApp.map(s => {
-      const cur = vasState.applicationByService[s.key] || '';
-      return `
-      <div>
-        <label class="block text-xs font-semibold text-[#1F1F1F] mb-1">Which application is ${s.label.toLowerCase()} for? <span class="text-danger">*</span></label>
-        <select class="w-full px-3 py-2 border text-sm bg-white" onchange="onVasAppSelectChange('${s.key}',this.value)">
-          <option value="">— Select application —</option>
-          ${apps.map(a => `<option value="${a.id}" ${a.id === cur ? 'selected' : ''}>${a.university} — ${a.course} (${a.id})</option>`).join('')}
+  }
+
+  if (vasState.selected.has('remittance')) {
+    fields += `
+      <div class="border-t border-gray-50 pt-3">
+        <label class="text-[10px] font-semibold uppercase tracking-wide text-[#94A3B8] mb-2 block">Aadhaar Card Number <span class="normal-case font-normal">(optional)</span></label>
+        <input type="text" maxlength="12" class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-[#0F172A]" placeholder="12-digit number" value="${escHtml(vasState.aadhaar || '')}" oninput="vasState.aadhaar=this.value"/>
+      </div>
+      <div class="pt-3">
+        <label class="text-[10px] font-semibold uppercase tracking-wide text-[#94A3B8] mb-2 block">PAN Card Number <span class="normal-case font-normal">(optional)</span></label>
+        <input type="text" maxlength="10" style="text-transform:uppercase" class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-[#0F172A]" placeholder="ABCDE1234F" value="${escHtml(vasState.pan || '')}" oninput="vasState.pan=this.value.toUpperCase()"/>
+      </div>
+      <div class="pt-3 flex gap-4">
+        <div class="flex-1">
+          <label class="text-[10px] font-semibold uppercase tracking-wide text-[#94A3B8] mb-2 block">Passport <span class="normal-case font-normal">(auto-fetched)</span></label>
+          <div class="text-sm font-semibold text-[#0F172A]">${studentProfileMock(lead).passportStatus}</div>
+        </div>
+        <div class="flex-1">
+          <label class="text-[10px] font-semibold uppercase tracking-wide text-[#94A3B8] mb-2 block">Offer Letter <span class="normal-case font-normal">(auto-fetched)</span></label>
+          ${linkedApp && linkedApp.hasOffer
+            ? `<button class="text-sm font-semibold cursor-pointer" style="color:#443EFF" onclick="showToast('Opening offer letter…','info')">View Offer Letter</button>`
+            : `<div class="text-sm text-[#94A3B8]">${linkedApp ? 'No offer yet' : 'Link an application to check'}</div>`}
+        </div>
+      </div>`;
+  }
+
+  if (vasState.selected.has('accommodation')) {
+    fields += `
+      <div class="${fields ? 'border-t border-gray-50 pt-3' : ''}">
+        <label class="text-[10px] font-semibold uppercase tracking-wide text-[#94A3B8] mb-2 block">Accommodation Type <span class="normal-case font-normal">(optional)</span></label>
+        <select class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm bg-white text-[#0F172A]" onchange="vasState.accommodationType=this.value">
+          <option value="" ${!vasState.accommodationType ? 'selected' : ''}>— Not specified —</option>
+          <option value="Flat/Apartment" ${vasState.accommodationType === 'Flat/Apartment' ? 'selected' : ''}>Flat/Apartment</option>
+          <option value="PG/Hostel" ${vasState.accommodationType === 'PG/Hostel' ? 'selected' : ''}>PG/Hostel</option>
         </select>
       </div>`;
-    }).join('');
   }
-  updateVasProceedBtn(lead.id);
-}
 
-function onVasAppSelectChange(serviceKey, appId) {
-  if (serviceKey === 'shared') {
-    VAS_SERVICES.filter(s => s.needsApplication && vasState.selected.has(s.key)).forEach(s => {
-      vasState.applicationByService[s.key] = appId;
-    });
-  } else {
-    vasState.applicationByService[serviceKey] = appId;
+  if (vasState.selected.has('loan')) {
+    fields += `
+      <div class="${fields ? 'border-t border-gray-50 pt-3' : ''}">
+        ${eduFinancingModalBlockHtml(vasState.pipelineType, lead)}
+      </div>`;
   }
-  updateVasProceedBtn(currentLeadDetail().lead.id);
-}
 
-function updateVasProceedBtn(leadId) {
-  const btn = document.getElementById(`vasProceedBtn-${leadId}`);
-  if (!btn) return;
-  const needApp = VAS_SERVICES.filter(s => s.needsApplication && vasState.selected.has(s.key));
-  const appsOk = needApp.every(s => vasState.applicationByService[s.key]);
-  const ok = vasState.selected.size > 0 && appsOk;
-  btn.disabled = !ok;
-  btn.classList.toggle('opacity-50', !ok);
-}
-
-function vasProceedToSlots(leadId) {
-  const needApp = VAS_SERVICES.filter(s => s.needsApplication && vasState.selected.has(s.key));
-  const missingApp = needApp.find(s => !vasState.applicationByService[s.key]);
-  if (missingApp) { showToast(`Select which application ${missingApp.label.toLowerCase()} is for before booking a slot.`, 'error'); return; }
-  vasState.day = 0; vasState.slot = null;
-  const wrap = document.getElementById(`vasSlotPickerWrap-${leadId}`);
-  wrap.innerHTML = `
-    <div class="mt-4 pt-4 border-t border-border">
-      <div class="text-sm font-bold mb-3">Pick a time slot</div>
-      ${vasDayPickerHtml('vas', leadId)}
-      <div class="grid grid-cols-4 gap-2 mt-4" id="vasSlots-${leadId}"></div>
-      <button class="w-full mt-4 py-2.5 rounded-lg text-sm font-semibold text-white cursor-pointer opacity-50" id="vasConfirmBtn-${leadId}" disabled onclick="confirmVasSlot('${leadId}')" style="background:#94A3B8">Confirm Slot</button>
+  document.getElementById('vasModalBody').innerHTML = `
+    <div class="space-y-3 py-4">
+      <div class="bg-[#EDE9FE] border border-[#DDD6FE] rounded-lg p-3">
+        <p class="text-[10px] font-semibold uppercase tracking-wide text-[#443EFF] mb-0.5">Interested In</p>
+        <p class="text-base font-semibold text-[#312E81]">${selectedLabels}</p>
+      </div>
+      ${fields}
     </div>`;
-  renderVasSlots(leadId, 0);
+  const step2NeedsSlot = vasNeedsSlotStep();
+  document.getElementById('vasModalFooter').innerHTML = vasFooterHtml(step2NeedsSlot ? 'Next' : 'Confirm Interest', 'vasFromStep2Next()', false, 'vasStep2Next');
+}
+
+function vasFromStep2Next() {
+  if (vasNeedsSlotStep()) { vasGoToStep(3); return; }
+  confirmVasInterest(vasState.leadId);
+}
+
+function onVasAppSelectChange(appId) {
+  const needApp = VAS_SERVICES.filter(s => s.needsApplication && vasState.selected.has(s.key));
+  needApp.forEach(s => { vasState.applicationByService[s.key] = appId; });
+  renderVasStep2(currentLeadDetail().lead);
+}
+
+// ── Step 3: Pick a Slot ──
+function renderVasStep3(lead) {
+  document.getElementById('vasModalHeader').innerHTML = vasHeaderHtml(3, lead);
+  const selectedLabels = [...vasState.selected].map(k => VAS_SERVICES.find(s => s.key === k).label).join(', ');
+  document.getElementById('vasModalBody').innerHTML = `
+    <div class="py-4">
+      <div class="bg-[#EDE9FE] border border-[#DDD6FE] rounded-lg p-3 mb-4">
+        <p class="text-[10px] font-semibold uppercase tracking-wide text-[#443EFF] mb-0.5">Interested In</p>
+        <p class="text-base font-semibold text-[#312E81]">${selectedLabels}</p>
+      </div>
+      <label class="text-[10px] font-semibold uppercase tracking-wide text-[#94A3B8] mb-2 block">Pick a time slot to discuss</label>
+      ${vasDayPickerHtml('vas', lead.id)}
+      <div class="grid grid-cols-4 gap-2 mt-4" id="vasSlots-${lead.id}"></div>
+    </div>`;
+  document.getElementById('vasModalFooter').innerHTML = vasFooterHtml('Confirm Interest', `confirmVasInterest('${lead.id}')`, true, `vasConfirmBtn-${lead.id}`);
+  renderVasSlots(lead.id, vasState.day || 0);
 }
 
 function renderVasSlots(leadId, dayIndex) {
@@ -1459,58 +1793,71 @@ function renderVasSlots(leadId, dayIndex) {
     </div>`).join('') : `<div class="col-span-4 text-center text-xs text-text-muted py-4">No slots left today — try tomorrow.</div>`;
 }
 
+function updateVasConfirmBtn(leadId) {
+  const btn = document.getElementById(`vasConfirmBtn-${leadId}`);
+  if (!btn) return;
+  const ok = vasState.selected.size > 0 && !!vasState.slot;
+  btn.disabled = !ok;
+  btn.style.background = ok ? '#443EFF' : '#94A3B8';
+}
+
 function selectVasDay(leadId, dayIndex) {
   vasState.day = dayIndex; vasState.slot = null;
   document.querySelectorAll(`[id^="vasDay-${leadId}-"]`).forEach(el => el.classList.remove('active'));
   document.getElementById(`vasDay-${leadId}-${dayIndex}`).classList.add('active');
   renderVasSlots(leadId, dayIndex);
-  const btn = document.getElementById(`vasConfirmBtn-${leadId}`);
-  if (btn) { btn.disabled = true; btn.style.opacity = 0.5; btn.style.background = '#94A3B8'; }
+  updateVasConfirmBtn(leadId);
 }
 
 function selectVasSlot(leadId, el, slotLabel) {
   vasState.slot = slotLabel;
   document.querySelectorAll(`#vasSlots-${leadId} .vas-slot-pill`).forEach(p => p.classList.remove('active'));
   el.classList.add('active');
-  const btn = document.getElementById(`vasConfirmBtn-${leadId}`);
-  btn.disabled = false; btn.style.opacity = 1; btn.style.background = '#443EFF';
+  updateVasConfirmBtn(leadId);
 }
 
-function confirmVasSlot(leadId) {
+function confirmVasInterest(leadId) {
+  const needsSlot = vasNeedsSlotStep();
+  if (vasState.selected.size === 0 || (needsSlot && !vasState.slot)) {
+    showToast('Select at least one service and a time slot.', 'error');
+    return;
+  }
   const { lead } = currentLeadDetail();
   const apps = applicationsForLead(lead);
   const days = nextThreeDays();
-  const dayLabel = `${days[vasState.day].dayNum} ${days[vasState.day].monthShort}`;
+  const dayLabel = needsSlot ? `${days[vasState.day].dayNum} ${days[vasState.day].monthShort}` : '';
+  const slotLabel = needsSlot ? `${dayLabel}, ${vasState.slot}` : 'No slot needed';
   const services = [...vasState.selected].map(k => VAS_SERVICES.find(s => s.key === k).label);
   const appLabels = Object.entries(vasState.applicationByService).map(([k, appId]) => {
+    if (!appId) return '';
     const a = apps.find(x => x.id === appId);
     const s = VAS_SERVICES.find(x => x.key === k);
     return a ? `${s.label}: ${a.university}` : '';
   }).filter(Boolean);
 
+  VAS_KYC_MOCK[leadId] = { aadhaar: vasState.aadhaar || '', pan: vasState.pan || '', accommodationType: vasState.accommodationType || '' };
+  const pipelineType = vasState.pipelineType;
+  if (vasState.selected.has('loan') && !eduFinancingState(leadId).assigned) {
+    requestEducationFinancing(pipelineType, leadId, { silent: true });
+  }
+
   if (!VAS_INTERESTS_MOCK[leadId]) VAS_INTERESTS_MOCK[leadId] = [];
   VAS_INTERESTS_MOCK[leadId].unshift({
     services: services.join(', '),
-    application: appLabels.join(' · '),
-    slot: `${dayLabel}, ${vasState.slot}`,
+    application: appLabels.join(' · ') || '—',
+    slot: slotLabel,
+    aadhaar: vasState.aadhaar || '',
+    pan: vasState.pan || '',
+    accommodationType: vasState.accommodationType || '',
+    loan: vasState.selected.has('loan') ? { ...eduFinancingState(leadId) } : null,
+    confirmedAt: new Date().toLocaleDateString('en-GB'),
   });
 
-  document.getElementById(`vasHistoryWrap-${leadId}`).innerHTML = (function () {
-    const rows = VAS_INTERESTS_MOCK[leadId];
-    return `<table class="w-full text-xs">
-      <thead><tr style="background:#F5F5F7" class="text-[10px] uppercase font-semibold text-[#656E7F]"><th class="px-3 py-2 text-left">Services</th><th class="px-3 py-2 text-left">Application</th><th class="px-3 py-2 text-left">Slot</th><th class="px-3 py-2 text-left">Status</th></tr></thead>
-      <tbody>${rows.map(r => `<tr class="border-t border-[#E2E8F0]"><td class="px-3 py-2.5">${r.services}</td><td class="px-3 py-2.5">${r.application || '—'}</td><td class="px-3 py-2.5">${r.slot}</td><td class="px-3 py-2.5"><span class="pl-badge" style="background:#EEF2FF;color:#443EFF;border-color:#C7D2FE">Scheduled</span></td></tr>`).join('')}</tbody>
-    </table>`;
-  })();
-
-  document.getElementById(`vasSlotPickerWrap-${leadId}`).innerHTML = '';
-  document.querySelectorAll(`#leadDetailContent input[type="checkbox"]`).forEach(cb => cb.checked = false);
-  document.getElementById(`vasAppSelectors-${leadId}`).innerHTML = '';
-  vasState = { selected: new Set(), applicationByService: {}, day: 0, slot: null };
-  updateVasProceedBtn(leadId);
-  showToast('VAS interest marked and slot booked.', 'success');
+  closeVasModal();
+  const sidebar = document.getElementById('leadDetailSidebar');
+  if (sidebar) sidebar.innerHTML = buildLeadSidebarHtml(pipelineType, lead);
+  showToast(`VAS interest marked (${services.join(', ')})${needsSlot ? ` — slot booked for ${dayLabel}, ${vasState.slot}.` : '.'}`, 'success');
 }
-
 function closeLeadDetailPage() {
   document.getElementById('leadDetailPage').classList.add('hidden');
 }

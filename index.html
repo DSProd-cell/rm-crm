@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="color-scheme" content="light"/>
 <title>RM CRM</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script>
@@ -41,7 +42,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Righteous&family=Poppins:wght@300;400;500;600;700&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet"/>
-<link rel="stylesheet" href="styles.css?v=4"/>
+<link rel="stylesheet" href="styles.css?v=7"/>
 </head>
 <body class="font-body bg-surface text-text-main min-h-screen">
 
@@ -858,6 +859,16 @@
   </div>
 </div>
 
+<!-- ═══ VAS INTEREST MODAL ═══ -->
+<div class="hidden fixed inset-0 z-[300] items-center justify-center p-4" id="vasModal">
+  <div class="absolute inset-0 modal-overlay" onclick="closeVasModal()"></div>
+  <div class="relative bg-white rounded-xl shadow-2xl w-full z-10 flex flex-col overflow-hidden" style="max-width:600px;width:100%;height:640px;max-height:90vh">
+    <div id="vasModalHeader" class="flex-shrink-0"></div>
+    <div class="flex-1 overflow-y-auto px-5" id="vasModalBody"></div>
+    <div class="border-t border-gray-200 bg-white px-5 py-3 flex gap-3 flex-shrink-0" id="vasModalFooter"></div>
+  </div>
+</div>
+
 <!-- ═══ TOAST CONTAINER ═══ -->
 <div id="toastContainer" class="fixed bottom-5 left-1/2 -translate-x-1/2 z-[400] flex flex-col gap-2 items-center pointer-events-none"></div>
 
@@ -908,8 +919,8 @@
 </div>
 
 <!-- ═══════════ LEAD DETAIL — FULL PAGE ═══════════ -->
-<div id="leadDetailPage" class="hidden fixed inset-0 top-14 bg-surface z-[97] overflow-y-auto">
-  <div class="px-6 py-3 flex items-center gap-3 sticky top-0 z-10" id="leadDetailHeaderBar">
+<div id="leadDetailPage" class="hidden fixed inset-0 top-14 bg-surface z-[97] flex flex-col">
+  <div class="px-6 py-3 flex items-center gap-3 flex-shrink-0" id="leadDetailHeaderBar">
     <button onclick="closeLeadDetailPage()" class="flex items-center gap-1.5 text-sm text-[#443EFF] cursor-pointer flex-shrink-0 transition-colors">
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6" stroke-width="2"/></svg>
       Back
@@ -920,16 +931,16 @@
     <button class="pl-btn-pill-outline flex-shrink-0" onclick="showToast('Opening Internal Portal…','info')">Internal Portal</button>
     <div class="flex items-center gap-2 flex-shrink-0" id="leadDetailActions"></div>
   </div>
-  <div class="bg-white border-b border-[#E2E8F0] sticky z-10 flex items-stretch max-w-[1240px] mx-auto" style="top:53px">
+  <div class="bg-white border-b border-[#E2E8F0] flex items-stretch max-w-[1240px] mx-auto w-full flex-shrink-0">
     <div class="w-[280px] flex-shrink-0 border-r border-[#E2E8F0] flex hidden lg:flex">
       <button class="lead-outer-tab active">Lead Details</button>
       <button class="lead-outer-tab" onclick="showToast('Chat is not available in this demo.','info')">Chat</button>
     </div>
     <div class="flex-1 min-w-0 overflow-x-auto hide-scrollbar flex" id="leadDetailTabBar"></div>
   </div>
-  <div class="max-w-[1240px] mx-auto flex items-start gap-0">
-    <aside class="w-[280px] flex-shrink-0 border-r border-[#E2E8F0] p-4 hidden lg:block" id="leadDetailSidebar" style="min-height:calc(100vh - 170px)"></aside>
-    <div class="flex-1 min-w-0 px-5 py-5" id="leadDetailContent"></div>
+  <div class="max-w-[1240px] mx-auto flex items-stretch gap-0 flex-1 min-h-0 w-full">
+    <aside class="w-[280px] flex-shrink-0 border-r border-[#E2E8F0] p-4 hidden lg:block overflow-y-auto hide-scrollbar" id="leadDetailSidebar"></aside>
+    <div class="flex-1 min-w-0 px-5 py-5 overflow-y-auto hide-scrollbar" id="leadDetailContent"></div>
   </div>
 </div>
 
@@ -1044,6 +1055,6 @@
   </div>
 </div>
 
-<script src="rm-app.js?v=29"></script>
+<script src="rm-app.js?v=39"></script>
 </body>
 </html>
