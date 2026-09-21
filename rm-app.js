@@ -436,11 +436,18 @@ function qualitySeverity(pct) {
   return severityColors('red');
 }
 
+// Quality Score buckets — each is measured on specific task cohorts (shown as a tooltip)
+const QUALITY_BUCKET_BASIS = {
+  '2nd Call Reschedule & Join': 'Based on F2F Missed task in Boost STI',
+  'Boost C2I': 'Based on C2I and dMAT tasks in Boost Revenue',
+  'Boost Leap Prime': 'Based on Prime task in Boost Revenue',
+  'Loan VC Book & Join': 'Based on Loan VC Not Booked and Loan VC Not Attended tasks in Boost Loan',
+};
 const QUALITY_SCORE_BUCKETS = [
   { label:'2nd Call Reschedule & Join', pct:62 },
-  { label:'Boost Lock-in', pct:74 },
+  { label:'Boost C2I', pct:74 },
+  { label:'Boost Leap Prime', pct:68 },
   { label:'Loan VC Book & Join', pct:55 },
-  { label:'Prep Demo Booked, Enrollment Pending', pct:40 },
 ];
 function qualityBarColor(pct) {
   if (pct >= 75) return '#16A34A';
@@ -451,7 +458,7 @@ function qualityScoreBarsHtml(buckets) {
   return buckets.map(b => `
     <div>
       <div class="flex items-center justify-between gap-2 mb-0.5">
-        <span class="text-[10px] text-text-muted leading-tight">${b.label}</span>
+        <span class="text-[10px] text-text-muted leading-tight" title="${QUALITY_BUCKET_BASIS[b.label] || ''}">${b.label}</span>
         <span class="text-[10px] font-semibold font-mono flex-shrink-0">${b.pct}%</span>
       </div>
       <div class="h-1.5 bg-border rounded-full overflow-hidden"><div class="h-full rounded-full" style="width:${b.pct}%;background:${qualityBarColor(b.pct)}"></div></div>
@@ -2872,11 +2879,12 @@ function renderMgrDashboard() {
   applySeverityToCard('boostCardMgrEscalations', boostSeverityWide(TEAM_ESCALATIONS.reduce((s, e) => s + e.count, 0)));
   applySeverityToCard('boostCardMgrOwnTasks', boostSeverity(3));
 
+  const clampPct = v => Math.max(0, Math.min(100, v));
   document.getElementById('mgrQualityBars').innerHTML = qualityScoreBarsHtml([
-    { label:'2nd Call Reschedule & Join', pct:Math.max(0, Math.min(100, avgQuality - 6)) },
-    { label:'Boost Lock-in', pct:Math.max(0, Math.min(100, avgQuality + 6)) },
-    { label:'Loan VC Book & Join', pct:Math.max(0, Math.min(100, avgQuality - 11)) },
-    { label:'Prep Demo Booked, Enrollment Pending', pct:Math.max(0, Math.min(100, avgQuality - 22)) },
+    { label:'2nd Call Reschedule & Join', pct:clampPct(avgQuality - 6) },
+    { label:'Boost C2I', pct:clampPct(avgQuality + 6) },
+    { label:'Boost Leap Prime', pct:clampPct(avgQuality + 1) },
+    { label:'Loan VC Book & Join', pct:clampPct(avgQuality - 11) },
   ]);
   document.getElementById('mgrBestTag').innerHTML = best ? `Best: <strong class="text-success">${best.name}</strong> · ${best.quality}` : 'No RMs match the current filter.';
 
