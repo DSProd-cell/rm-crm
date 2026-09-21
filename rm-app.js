@@ -175,6 +175,7 @@ const state = {
   hierTlSelected: new Set(),
   mgrPerfPeriod: 'yesterday',
   mgrPerfScope: 'rm',
+  incEarnersScope: 'rm',
 };
 
 // ─── HELPERS ─────────────────────────────────────────────────────────────────
@@ -238,8 +239,6 @@ function switchRole(role) {
   if (!isAdmin) {
     document.getElementById('rmDashboard').classList.toggle('hidden', isMgr);
     document.getElementById('mgrRollup').classList.toggle('hidden', !isMgr);
-    document.getElementById('incentivesMain').classList.toggle('hidden', isMgr);
-    document.getElementById('mgrIncentivesMain').classList.toggle('hidden', !isMgr);
     document.getElementById('opportunityDetail').classList.add('hidden');
     document.getElementById('incentivesMainInner').classList.remove('hidden');
 
@@ -256,12 +255,13 @@ function switchRole(role) {
       state.hierTlSelected = new Set();
       state.mgrPerfPeriod = 'yesterday';
       state.mgrPerfScope = 'rm';
+      state.incEarnersScope = 'rm';
       buildHierFilterList('rm');
       if (role === 'senior_manager') buildHierFilterList('tl');
       updateHierFilterLabels();
       renderMgrDashboard();
-      renderMgrIncentives();
     }
+    renderIncentives();
     const ticketsLabel = document.getElementById('ldTicketsLabel');
     if (ticketsLabel) ticketsLabel.textContent = isMgr ? 'Team Tickets' : 'My Tickets';
   }
@@ -362,6 +362,7 @@ function toggleHierDropdown(type, e) {
 
 function refreshMgrFilteredViews() {
   renderMgrDashboard();
+  renderIncentives();
 }
 
 function applyHierFilter(type) {
@@ -1502,8 +1503,8 @@ function openVasModal(pipelineType, leadId) {
     leadId, pipelineType, selected: new Set(), applicationByService: {}, day: 0, slot: null,
     aadhaarFront: saved.aadhaarFront || '', aadhaarBack: saved.aadhaarBack || '', panFront: saved.panFront || '',
     passportFile: saved.passportFile !== undefined ? saved.passportFile : defaultPassportFile,
-    accommodationType: saved.accommodationType || '',
-    paymentType: '', paymentTypeOther: '', amount: '', currency: '', currencyOther: '', payer: '',
+    accommodationType: saved.accommodationType || '', accommodationCountry: saved.accommodationCountry || lead.country || '',
+    paymentType: '', paymentTypeOther: '', amount: '', currency: '', payer: '',
     departureDate: '', destinationCountry: lead.country || '', notes: '',
   };
   vasWizardStep = 1;
@@ -1527,8 +1528,7 @@ function vasNeedsConfigStep() {
 function vasStep2Valid() {
   if (vasState.selected.has('remittance')) {
     const paymentTypeOk = vasState.paymentType === 'Others' ? !!vasState.paymentTypeOther : !!vasState.paymentType;
-    const currencyOk = vasState.currency === 'Other' ? !!vasState.currencyOther : !!vasState.currency;
-    return !!(paymentTypeOk && vasState.amount && currencyOk && vasState.payer
+    return !!(paymentTypeOk && vasState.amount && vasState.currency && vasState.payer
       && vasState.aadhaarFront && vasState.aadhaarBack && vasState.panFront);
   }
   if (vasState.selected.has('flight') || vasState.selected.has('sim') || vasState.selected.has('forex')) {
@@ -1621,6 +1621,7 @@ function renderVasDetailStep(lead) {
       <button type="button" class="text-sm font-semibold cursor-pointer" style="color:#443EFF" onclick="vasPreviewDoc(null,'Offer Letter.pdf')">View</button>
     </div>`;
   }
+  if (entry.accommodationCountry) rows += row('Country', escHtml(entry.accommodationCountry));
   if (entry.accommodationType) rows += row('Accommodation Type', escHtml(entry.accommodationType));
   if (entry.destinationCountry) rows += row('Destination Country', escHtml(entry.destinationCountry));
   if (entry.departureDate) rows += row('Departure Date', escHtml(entry.departureDate));
@@ -1841,6 +1842,53 @@ const VAS_ACCOMMODATION_TYPE_INFO = {
 };
 const VAS_DESTINATION_COUNTRIES = ['UK', 'USA', 'Canada', 'Australia', 'Germany', 'Ireland', 'UAE', 'New Zealand'];
 
+// All ISO 4217 currencies, code + name, so the field can be typed/searched rather than picked
+// from a short fixed list.
+const VAS_CURRENCIES = [
+  'INR — Indian Rupee', 'USD — US Dollar', 'GBP — British Pound', 'EUR — Euro', 'AED — UAE Dirham',
+  'CAD — Canadian Dollar', 'AUD — Australian Dollar', 'NZD — New Zealand Dollar', 'SGD — Singapore Dollar',
+  'JPY — Japanese Yen', 'CNY — Chinese Yuan', 'HKD — Hong Kong Dollar', 'CHF — Swiss Franc',
+  'SEK — Swedish Krona', 'NOK — Norwegian Krone', 'DKK — Danish Krone', 'ZAR — South African Rand',
+  'SAR — Saudi Riyal', 'QAR — Qatari Riyal', 'KWD — Kuwaiti Dinar', 'BHD — Bahraini Dinar',
+  'OMR — Omani Rial', 'JOD — Jordanian Dinar', 'EGP — Egyptian Pound', 'MYR — Malaysian Ringgit',
+  'THB — Thai Baht', 'IDR — Indonesian Rupiah', 'PHP — Philippine Peso', 'VND — Vietnamese Dong',
+  'KRW — South Korean Won', 'TWD — Taiwan Dollar', 'PKR — Pakistani Rupee', 'BDT — Bangladeshi Taka',
+  'LKR — Sri Lankan Rupee', 'NPR — Nepalese Rupee', 'KES — Kenyan Shilling', 'NGN — Nigerian Naira',
+  'GHS — Ghanaian Cedi', 'TZS — Tanzanian Shilling', 'UGX — Ugandan Shilling', 'ETB — Ethiopian Birr',
+  'MAD — Moroccan Dirham', 'BRL — Brazilian Real', 'MXN — Mexican Peso', 'ARS — Argentine Peso',
+  'CLP — Chilean Peso', 'COP — Colombian Peso', 'PEN — Peruvian Sol', 'RUB — Russian Ruble',
+  'TRY — Turkish Lira', 'PLN — Polish Zloty', 'CZK — Czech Koruna', 'HUF — Hungarian Forint',
+  'RON — Romanian Leu', 'BGN — Bulgarian Lev', 'ISK — Icelandic Krona', 'ILS — Israeli Shekel',
+  'KZT — Kazakhstani Tenge', 'UAH — Ukrainian Hryvnia', 'GEL — Georgian Lari', 'AZN — Azerbaijani Manat',
+];
+
+// Custom search dropdown for Currency — a native <datalist> mispositions its popup when the
+// input sits inside this modal's scrollable/flex layout, so this renders our own suggestion list.
+function vasFilterCurrency(leadId, query) {
+  vasState.currency = query;
+  updateVasStep2NextBtn();
+  const dropdown = document.getElementById(`vasCurrencyDropdown-${leadId}`);
+  if (!dropdown) return;
+  const q = query.trim().toLowerCase();
+  const matches = (q ? VAS_CURRENCIES.filter(c => c.toLowerCase().includes(q)) : VAS_CURRENCIES).slice(0, 8);
+  if (!matches.length) { dropdown.classList.add('hidden'); dropdown.innerHTML = ''; return; }
+  dropdown.innerHTML = matches.map(c => `<div class="px-3 py-2 text-sm cursor-pointer hover:bg-[#FAF9FF]" onmousedown="vasSelectCurrency('${leadId}','${c}')">${escHtml(c)}</div>`).join('');
+  dropdown.classList.remove('hidden');
+}
+
+function vasSelectCurrency(leadId, value) {
+  vasState.currency = value;
+  const input = document.getElementById(`vasCurrencyInput-${leadId}`);
+  if (input) input.value = value;
+  vasCloseCurrencyList(leadId);
+  updateVasStep2NextBtn();
+}
+
+function vasCloseCurrencyList(leadId) {
+  const dropdown = document.getElementById(`vasCurrencyDropdown-${leadId}`);
+  if (dropdown) { dropdown.classList.add('hidden'); dropdown.innerHTML = ''; }
+}
+
 // ── Step 2: Details (only reached when a service with extra fields is selected) ──
 function renderVasStep2(lead) {
   document.getElementById('vasModalHeader').innerHTML = vasHeaderHtml(2, lead);
@@ -1884,7 +1932,7 @@ function renderVasStep2(lead) {
         <label class="text-[10px] font-semibold uppercase tracking-wide text-[#94A3B8] mb-2 block">Payment Type</label>
         <select class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm bg-white text-[#0F172A]" onchange="vasState.paymentType=this.value;renderVasStep2(currentLeadDetail().lead)">
           <option value="" ${!vasState.paymentType ? 'selected' : ''}>Select…</option>
-          ${['Application Fee', 'Deposit', 'Tuition Fee', 'Accommodation', 'Fund Transfer', 'Others'].map(o => `<option value="${o}" ${vasState.paymentType === o ? 'selected' : ''}>${o}</option>`).join('')}
+          ${['Application Fee', 'Deposit', 'Tuition Fee', 'Accommodation', 'Fund Transfer', 'IHS', 'Visa', 'Blocked Account', 'GIC', 'Others'].map(o => `<option value="${o}" ${vasState.paymentType === o ? 'selected' : ''}>${o}</option>`).join('')}
         </select>
         ${vasState.paymentType === 'Others' ? `
         <input type="text" class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-[#0F172A] mt-2" placeholder="Please specify the payment type" value="${escHtml(vasState.paymentTypeOther || '')}" oninput="vasState.paymentTypeOther=this.value;updateVasStep2NextBtn()"/>` : ''}
@@ -1894,14 +1942,13 @@ function renderVasStep2(lead) {
           <label class="text-[10px] font-semibold uppercase tracking-wide text-[#94A3B8] mb-2 block">Amount</label>
           <input type="number" min="0" class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-[#0F172A]" placeholder="e.g. 500000" value="${escHtml(vasState.amount || '')}" oninput="vasState.amount=this.value;updateVasStep2NextBtn()"/>
         </div>
-        <div class="flex-1">
+        <div class="flex-1 relative">
           <label class="text-[10px] font-semibold uppercase tracking-wide text-[#94A3B8] mb-2 block">Currency</label>
-          <select class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm bg-white text-[#0F172A]" onchange="vasState.currency=this.value;renderVasStep2(currentLeadDetail().lead)">
-            <option value="" ${!vasState.currency ? 'selected' : ''}>Select…</option>
-            ${['GBP', 'EUR', 'USD', 'AED', 'CAD', 'NZD', 'AUD', 'Other'].map(c => `<option value="${c}" ${vasState.currency === c ? 'selected' : ''}>${c}</option>`).join('')}
-          </select>
-          ${vasState.currency === 'Other' ? `
-          <input type="text" class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-[#0F172A] mt-2" placeholder="Please specify the currency" value="${escHtml(vasState.currencyOther || '')}" oninput="vasState.currencyOther=this.value;updateVasStep2NextBtn()"/>` : ''}
+          <input type="text" id="vasCurrencyInput-${lead.id}" autocomplete="off" class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-[#0F172A]" placeholder="Search currency…" value="${escHtml(vasState.currency || '')}"
+            oninput="vasFilterCurrency('${lead.id}', this.value)"
+            onfocus="vasFilterCurrency('${lead.id}', this.value)"
+            onblur="setTimeout(()=>vasCloseCurrencyList('${lead.id}'), 150)"/>
+          <div id="vasCurrencyDropdown-${lead.id}" class="hidden absolute left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto" style="z-index:320"></div>
         </div>
       </div>
       <div class="pt-3">
@@ -1940,8 +1987,22 @@ function renderVasStep2(lead) {
   }
 
   if (vasState.selected.has('accommodation')) {
+    // Country: auto-fetched from the linked application once the student has reached STI (same
+    // rule as University above); pre-STI there's no confirmed application to pull it from, so the
+    // counsellor enters it manually.
+    const accCountryAuto = leadIsSTIDone(lead) && linkedApp;
     fields += `
       <div class="${fields ? 'border-t border-gray-50 pt-3' : ''}">
+        ${accCountryAuto ? `
+        <label class="text-[10px] font-semibold uppercase tracking-wide text-[#94A3B8] mb-2 block">Country <span class="normal-case font-normal">(auto-fetched)</span></label>
+        <div class="text-sm font-semibold text-[#0F172A]">${escHtml(lead.country)}</div>` : `
+        <label class="text-[10px] font-semibold uppercase tracking-wide text-[#94A3B8] mb-2 block">Country <span class="normal-case font-normal">(optional)</span></label>
+        <select class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm bg-white text-[#0F172A]" onchange="vasState.accommodationCountry=this.value">
+          <option value="" ${!vasState.accommodationCountry ? 'selected' : ''}>Select…</option>
+          ${VAS_DESTINATION_COUNTRIES.map(c => `<option value="${c}" ${vasState.accommodationCountry === c ? 'selected' : ''}>${c}</option>`).join('')}
+        </select>`}
+      </div>
+      <div class="border-t border-gray-50 pt-3">
         <label class="text-[10px] font-semibold uppercase tracking-wide text-[#94A3B8] mb-2 block">Accommodation Type <span class="normal-case font-normal">(optional)</span></label>
         <select class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm bg-white text-[#0F172A]" onchange="vasState.accommodationType=this.value;document.getElementById('vasAccTypeHint-${lead.id}').textContent=VAS_ACCOMMODATION_TYPE_INFO[this.value]||''">
           <option value="" ${!vasState.accommodationType ? 'selected' : ''}>— Not specified —</option>
@@ -2078,8 +2139,11 @@ function confirmVasInterest(leadId) {
   const remittanceAppId = vasState.applicationByService['remittance'];
   const remittanceApp = remittanceAppId ? apps.find(a => a.id === remittanceAppId) : null;
   const offerLetterAvailable = !!(remittanceApp && remittanceApp.hasOffer);
+  const accommodationAppId = vasState.applicationByService['accommodation'];
+  const accommodationApp = accommodationAppId ? apps.find(a => a.id === accommodationAppId) : null;
+  const accommodationCountry = leadIsSTIDone(lead) && accommodationApp ? lead.country : (vasState.accommodationCountry || '');
 
-  VAS_KYC_MOCK[leadId] = { aadhaarFront: vasState.aadhaarFront || '', aadhaarBack: vasState.aadhaarBack || '', panFront: vasState.panFront || '', passportFile: vasState.passportFile || '', accommodationType: vasState.accommodationType || '' };
+  VAS_KYC_MOCK[leadId] = { aadhaarFront: vasState.aadhaarFront || '', aadhaarBack: vasState.aadhaarBack || '', panFront: vasState.panFront || '', passportFile: vasState.passportFile || '', accommodationType: vasState.accommodationType || '', accommodationCountry: vasState.accommodationCountry || '' };
   const pipelineType = vasState.pipelineType;
   if (vasState.selected.has('loan') && !eduFinancingState(leadId).assigned) {
     requestEducationFinancing(pipelineType, leadId, { silent: true });
@@ -2101,9 +2165,10 @@ function confirmVasInterest(leadId) {
     passportFile: vasState.passportFile || '',
     offerLetterAvailable: offerLetterAvailable,
     accommodationType: vasState.accommodationType || '',
+    accommodationCountry: accommodationCountry,
     paymentType: vasState.paymentType === 'Others' ? (vasState.paymentTypeOther || 'Others') : (vasState.paymentType || ''),
     amount: vasState.amount || '',
-    currency: vasState.currency === 'Other' ? (vasState.currencyOther || 'Other') : (vasState.currency || ''),
+    currency: vasState.currency || '',
     payer: vasState.payer || '',
     departureDate: vasState.departureDate || '',
     destinationCountry: vasState.destinationCountry || '',
@@ -2944,6 +3009,7 @@ const RM_OFFERS_SSM = [
 const OFFER_GRADIENTS = {
   orange: 'linear-gradient(135deg,#F97316,#C2410C)',
   blue: 'linear-gradient(135deg,#3B82F6,#1D4ED8)',
+  purple: 'linear-gradient(135deg,#8B5CF6,#6D28D9)',
 };
 
 function offerCardHtml(o, theme) {
@@ -3075,39 +3141,311 @@ function topEarnerRowHtml(e, i) {
   </div>`;
 }
 
-function topEarnersColumnHtml(title, entries) {
+// ─── INCENTIVES & EARNINGS (RM / TL / SM) — mirrors the production pod-leader layout ─────────────
+const INC_COLORS = { earn:'#16A34A', reportees:'#1D4ED8', blue:'#2563EB', muted:'#64748B', ink:'#0F172A', orange:'#EA580C', pct:'#DC2626' };
+const INC_ROLE_LABEL = { rm:'Student Success Manager', team_lead:'Team Lead', senior_manager:'Senior Manager' };
+
+function fmtINR(n) { return `₹${Math.round(n).toLocaleString('en-IN')}`; }
+function fmtINRShort(n) {
+  if (n >= 100000) return `₹${(n / 100000).toFixed(1)}L`;
+  if (n >= 1000) return `₹${+(n / 1000).toFixed(1)}K`;
+  return `₹${n}`;
+}
+function rmEarned(r) { return r.revenue * 3400 + r.sti * 800 + r.loan * 600; }
+function rmScore(r) { return r.revenue * 3400 + r.sti * 800 + r.loan * 1800 + parseInt(r.quality) * 50; }
+
+function incentiveData() {
+  const role = state.role === 'team_lead' || state.role === 'senior_manager' ? state.role : 'rm';
+  const team = role === 'rm' ? [] : visibleTeam();
+  const per = (list, k) => list.reduce((s, r) => s + r[k], 0);
+  let opp, rows, total, sub, monthly, groups = [];
+  const rmSeries = [12000, 16000, 14000, 18000, 21000, 18000];
+  if (role === 'rm') {
+    total = 18400;
+    sub = 'Based on your slab achievements · tap to expand';
+    rows = [
+      { name:'Deposits', pill:'2 deposits (100%)', earned:4000, drive:'Monthly Deposit Drive' },
+      { name:'Lock-ins (C2I)', pill:'6 lock-ins (75%)', earned:8000, drive:'Monthly Lock-in Drive' },
+      { name:'F2F Conversion', pill:'9 F2Fs (82%)', earned:4400, drive:'F2F Conversion Drive' },
+      { name:'Quality Bonus', pill:'Quality 72% (below)', earned:2000, drive:'Quality Bonus Drive', below:true },
+    ];
+    opp = { sti:{ n:7, v:112000 }, revenue:{ n:4, v:96000 }, loan:{ n:3, v:76000 } };
+    monthly = rmSeries;
+  } else {
+    opp = { sti:{ n:per(team, 'sti'), v:per(team, 'sti') * 16000 }, revenue:{ n:per(team, 'revenue'), v:per(team, 'revenue') * 24000 }, loan:{ n:per(team, 'loan'), v:per(team, 'loan') * 25000 } };
+    const rmRows = [...team].map(r => ({ name:r.name, amt:rmEarned(r) })).sort((a, b) => b.amt - a.amt);
+    if (role === 'team_lead') {
+      total = 24800;
+      sub = 'Based on your team slab achievements · tap to expand';
+      rows = [
+        { name:'Team Target Achievement Bonus', pill:'Target 86%', earned:12000, drive:'Monthly Team Target Drive' },
+        { name:'Team Lock-in Override (2% of C2I)', pill:'21 lock-ins (84%)', earned:9600, drive:'Monthly Lock-in Drive' },
+        { name:'Team Quality Bonus', pill:'Quality 71% (below)', earned:3200, drive:'Quality Bonus Drive', below:true },
+      ];
+      groups = [{ label:'Student Success Managers', people:rmRows }];
+      monthly = rmSeries.map(v => v * 3);
+    } else {
+      total = 36500;
+      sub = 'Based on your cluster slab achievements · tap to expand';
+      rows = [
+        { name:'Cluster Target Achievement Bonus', pill:'Target 91%', earned:18000, drive:'Monthly Cluster Target Drive' },
+        { name:'Cluster Lock-in Override', pill:'54 lock-ins (90%)', earned:12500, drive:'Monthly Lock-in Drive' },
+        { name:'Cluster Quality Bonus', pill:'Quality 69% (below)', earned:6000, drive:'Quality Bonus Drive', below:true },
+      ];
+      const tls = TEAM_LEADS_MOCK
+        .map(tl => ({ name:tl.name, amt:Math.round(team.filter(r => r.tl === tl.id).reduce((s, r) => s + rmEarned(r), 0) * 0.1 / 50) * 50, has:team.some(r => r.tl === tl.id) }))
+        .filter(t => t.has).sort((a, b) => b.amt - a.amt);
+      groups = [{ label:'Team Leads', people:tls }, { label:'Student Success Managers', people:rmRows }];
+      monthly = rmSeries.map(v => v * 5);
+    }
+  }
+  const reportTotal = groups.reduce((s, g) => s + g.people.reduce((t, p) => t + p.amt, 0), 0);
+  return { role, team, total, sub, rows, opp, monthly, groups, reportTotal, oppTotal:opp.sti.v + opp.revenue.v + opp.loan.v };
+}
+
+function incPillHtml(text, below) {
+  const c = below ? { bg:'#FEF2F2', fg:'#DC2626', bd:'#FCA5A5' } : { bg:'#EFF6FF', fg:'#2563EB', bd:'#DBEAFE' };
+  return `<span class="inline-flex items-center rounded-full border px-2.5 py-0.5 text-[11px] font-semibold" style="background:${c.bg};color:${c.fg};border-color:${c.bd}">${text}</span>`;
+}
+
+function incBreakdownHtml(d) {
+  const period = '2026-09-01 - 2026-09-30';
+  const grid = 'grid grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_minmax(0,0.8fr)] items-center gap-2';
+  return `<div class="overflow-hidden">
+    <div class="flex items-center gap-2 px-3 py-3 bg-white">
+      <svg class="w-4 h-4 flex-shrink-0" style="color:${INC_COLORS.orange}" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      <p class="text-[10px] font-bold uppercase tracking-wider" style="color:${INC_COLORS.muted}">Incentive Breakdown</p>
+      <span style="color:${INC_COLORS.muted}">·</span>
+      <p class="text-[9px] uppercase tracking-wide" style="color:${INC_COLORS.muted}">Click any row to see drive details</p>
+    </div>
+    <div class="${grid} px-3 pb-2">
+      ${['Component & Drive Period', 'Status', 'Earned'].map((h, i) => `<p class="text-[10px] font-semibold uppercase tracking-wide ${i === 2 ? 'text-right' : i === 1 ? 'text-center' : ''}" style="color:${INC_COLORS.muted}">${h}</p>`).join('')}
+    </div>
+    <div>
+      ${d.rows.map((r, i) => `
+        <div class="border-b border-[#F1F5F9]">
+          <div class="${grid} px-3 py-2.5 cursor-pointer hover:bg-[#F8FAFC] transition-colors" onclick="toggleIncRow(${i})">
+            <p class="text-sm font-semibold truncate" style="color:${INC_COLORS.ink}">${r.name}</p>
+            <div class="flex justify-center">${incPillHtml(r.pill, r.below)}</div>
+            <div class="text-right">
+              <p class="text-sm font-bold" style="color:${INC_COLORS.blue}">${fmtINRShort(r.earned)}</p>
+              <svg class="w-3 h-3 inline-block transition-transform" id="incRowChev-${i}" style="color:${INC_COLORS.muted}" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+          </div>
+          <div id="incRowBody-${i}" class="hidden bg-[#F8FAFC]">
+            <div class="${grid} px-3 py-2.5 pl-6">
+              <div class="min-w-0">
+                <p class="text-sm truncate" style="color:${INC_COLORS.muted}">${r.drive}</p>
+                <p class="text-[11px]" style="color:#94A3B8">📅 ${period}</p>
+              </div>
+              <div class="flex justify-center">${incPillHtml(r.pill, r.below)}</div>
+              <p class="text-sm font-bold text-right" style="color:${INC_COLORS.blue}">${fmtINRShort(r.earned)}</p>
+            </div>
+          </div>
+        </div>`).join('')}
+      <div class="${grid} px-3 py-3 bg-white">
+        <p class="text-sm font-bold" style="color:${INC_COLORS.ink}">Total</p><div></div>
+        <p class="text-sm font-bold text-right" style="color:${INC_COLORS.earn}">${fmtINR(d.total)}</p>
+      </div>
+    </div>
+  </div>`;
+}
+
+function incReporteesHtml(d) {
+  return `<div>
+    ${d.groups.map((g, gi) => `
+      <div>
+        <div class="flex items-center justify-between px-3 py-3 border-b border-[#e5e7eb] cursor-pointer hover:bg-[#F8FAFC] transition-colors" onclick="toggleIncGroup(${gi})">
+          <div class="flex items-center gap-2"><p class="text-sm font-semibold" style="color:${INC_COLORS.ink}">${g.label}</p><p class="text-xs" style="color:${INC_COLORS.muted}">${g.people.length} people</p></div>
+          <svg class="w-4 h-4 transition-transform" id="incGrpChev-${gi}" style="color:${INC_COLORS.muted}" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <div id="incGrpBody-${gi}" class="hidden">
+          ${g.people.map(p => `
+            <div class="flex items-center justify-between gap-2 px-3 py-2.5 pl-6 border-b border-[#F1F5F9] hover:bg-[#F8FAFC] transition-colors">
+              <p class="text-sm truncate" style="color:${INC_COLORS.muted}">${p.name}</p>
+              <p class="text-sm font-bold" style="color:${INC_COLORS.blue}">${fmtINR(p.amt)}</p>
+            </div>`).join('') || `<p class="px-6 py-3 text-xs" style="color:#94A3B8">No data available</p>`}
+        </div>
+      </div>`).join('')}
+  </div>`;
+}
+
+function incTopEarnerRowHtml(e, i) {
+  const rank = i < 3
+    ? `<div class="w-5 flex-shrink-0 flex items-center justify-center" style="color:${TROPHY_COLORS[i]}"><svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">${TROPHY_SVG_PATH}</svg></div>`
+    : `<div class="w-5 flex-shrink-0 flex items-center justify-center"><span class="text-xs font-medium" style="color:#94A3B8">${i + 1}</span></div>`;
+  return `<div class="flex items-center gap-2">
+    ${rank}
+    <span class="w-7 h-7 rounded-full text-white text-[10px] font-bold flex items-center justify-center flex-shrink-0" style="background:#443EFF">${initials(e.name)}</span>
+    <p class="text-sm font-medium truncate flex-1 min-w-0" style="color:${INC_COLORS.ink}">${e.name}</p>
+    <div class="w-20 flex-1"><div class="h-1.5 rounded-full" style="background:#E2E8F0"><div class="h-1.5 rounded-full" style="background:${INC_COLORS.pct};width:${e.pct}%"></div></div></div>
+    <span class="text-xs font-semibold w-9 text-right flex-shrink-0" style="color:${INC_COLORS.pct}">${e.pct}%</span>
+  </div>`;
+}
+
+function incEarnersColumn(title, entries) {
   return `<div>
     <p class="text-[10px] font-semibold uppercase tracking-wide mb-3" style="color:#94A3B8">${title}</p>
-    <div class="space-y-4">${entries.length ? entries.map(topEarnerRowHtml).join('') : `<div class="text-xs text-text-muted text-center py-4">No data yet</div>`}</div>
+    <div class="space-y-4">${entries.length ? entries.map(incTopEarnerRowHtml).join('') : `<p class="text-xs" style="color:#94A3B8">No data available</p>`}</div>
   </div>`;
 }
 
-function buildTopEarnersSection(thisMonth, allTime) {
-  return `<div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-    ${topEarnersColumnHtml('This Month', thisMonth)}
-    ${topEarnersColumnHtml('All Time', allTime)}
+function incEarnersData(d) {
+  if (d.role === 'rm') return { thisMonth:TOP_EARNERS_THIS_MONTH, allTime:TOP_EARNERS_ALL_TIME };
+  const pct = (list, key) => { const mx = Math.max(...list.map(x => x[key]), 1); return list.map(x => ({ name:x.name, pct:Math.round(x[key] / mx * 100) })).sort((a, b) => b.pct - a.pct); };
+  if (state.incEarnersScope === 'sm' && d.role === 'senior_manager') {
+    return { thisMonth:[{ name:'Shubham Sharma', pct:100 }], allTime:[{ name:'Shubham Sharma', pct:100 }] };
+  }
+  if (state.incEarnersScope === 'tl') {
+    const tls = TEAM_LEADS_MOCK.map((tl, i) => { const t = MGR_TEAM.filter(r => r.tl === tl.id); return { name:tl.name, m:t.reduce((s, r) => s + rmEarned(r), 0), a:t.reduce((s, r) => s + rmScore(r), 0) + i * 700 }; });
+    return { thisMonth:pct(tls, 'm'), allTime:pct(tls, 'a') };
+  }
+  const rms = d.team.map(r => ({ name:r.name, m:rmEarned(r), a:rmScore(r) }));
+  return { thisMonth:pct(rms, 'm'), allTime:pct(rms, 'a') };
+}
+
+function buildIncEarners(d) {
+  const e = incEarnersData(d);
+  const toggle = d.role === 'rm' ? '' : `<div class="flex items-center gap-2 mb-5">
+    <span class="text-sm" style="color:${INC_COLORS.muted}">Show rankings for:</span>
+    ${[['rm', 'RM'], ['tl', 'TL'], ...(d.role === 'senior_manager' ? [['sm', 'SM']] : [])].map(([k, l]) => { const on = state.incEarnersScope === k; return `<button class="px-3 py-1 text-xs font-semibold rounded-md border transition-colors cursor-pointer" style="${on ? 'border-color:#443eff;color:#443eff;background:#fff' : 'border-color:transparent;color:#64748B'}" onclick="setIncEarnersScope('${k}')">${l}</button>`; }).join('')}
+  </div>`;
+  return `${toggle}<div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+    ${incEarnersColumn('This Month', e.thisMonth)}
+    ${incEarnersColumn('All Time', e.allTime)}
+  </div>
+  ${d.role === 'rm' ? '' : `<p class="text-xs italic text-center mt-6" style="color:#94A3B8">Absolute amounts are hidden for reportees — percentage achievements shown only.</p>`}`;
+}
+
+function setIncEarnersScope(scope) {
+  state.incEarnersScope = scope;
+  const body = document.getElementById('body-incearners');
+  if (body) body.innerHTML = buildIncEarners(incentiveData());
+}
+
+const OFFER_ICON_GIFT = '<rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13"/><path d="M19 12v7a2 2 0 01-2 2H7a2 2 0 01-2-2v-7"/><path d="M7.5 8a2.5 2.5 0 010-5A4.8 8 0 0112 8a4.8 8 0 014.5-5 2.5 2.5 0 010 5"/>';
+const OFFER_ICON_CLOCK = '<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>';
+const OFFER_ICON_AWARD = '<circle cx="12" cy="8" r="6"/><path d="M15.5 13.5 17 22l-5-3-5 3 1.5-8.5"/>';
+
+function incOfferGroupHtml(g) {
+  return `<div class="border rounded-lg overflow-hidden">
+    <div class="flex items-center gap-2 px-3 py-3 border-b" style="background:${g.bg};border-color:${g.bd}">
+      <svg class="w-4 h-4" style="color:${g.fg}" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">${g.icon}</svg>
+      <span class="text-xs font-bold uppercase tracking-wider" style="color:${g.fg}">${g.title}</span>
+      ${g.pill ? `<span class="rounded-full flex items-center border px-2 py-0.5 text-[11px] font-semibold" style="border-color:#FFB74D;background:#FFF3E0;color:#E65100">${g.pill}</span>` : ''}
+    </div>
+    <div class="flex gap-3 m-3 overflow-x-auto pb-1">
+      ${g.offers.length ? g.offers.map(o => offerCardHtml(o, g.card)).join('') : offersEmptyHtml()}
+    </div>
   </div>`;
 }
 
-// ─── MANAGER INCENTIVES ───────────────────────────────────────────────────────
-function renderMgrIncentives() {
-  const totalPayout = MGR_TEAM.reduce((s, r) => s + r.revenue * 3400 + r.sti * 800 + r.loan * 600, 0);
-  const teamEarned = totalPayout + 24800;
-  const totalOverdue = MGR_TEAM.reduce((s, r) => s + r.overdue, 0);
-  const oppSize = totalOverdue * 18000 + 40000;
+function buildIncOffers(d) {
+  const groups = [
+    { title:'Offers for Students', bg:'#FFF7ED', bd:'#FFEDD5', fg:'#EA580C', icon:OFFER_ICON_GIFT, offers:RM_OFFERS_STUDENTS, card:'orange' },
+    { title:'Offers for Student Success Managers', bg:'#EFF6FF', bd:'#DBEAFE', fg:'#2563EB', icon:OFFER_ICON_CLOCK, pill:'For You', offers:RM_OFFERS_SSM, card:'blue' },
+  ];
+  if (d.role !== 'rm') groups.push({ title:'Team Lead Offers', bg:'#F5F3FF', bd:'#EDE9FE', fg:'#7C3AED', icon:OFFER_ICON_AWARD, pill:'Leadership Bonus', offers:[], card:'purple' });
+  if (d.role === 'senior_manager') groups.push({ title:'Senior Manager Offers', bg:'#F5F3FF', bd:'#EDE9FE', fg:'#7C3AED', icon:OFFER_ICON_AWARD, pill:'Leadership Bonus', offers:[], card:'purple' });
+  return groups.map(incOfferGroupHtml).join('');
+}
 
-  document.getElementById('mgrEarnedAmt').textContent = `₹${teamEarned.toLocaleString('en-IN')}`;
-  document.getElementById('mgrOppAmt').textContent = `₹${oppSize.toLocaleString('en-IN')}`;
-  document.getElementById('mgrOppSub').textContent = `${TEAM_IBT.reduce((s, i) => s + i.count, 0)} open tasks across the team`;
+function buildIncTrend(d) {
+  const months = ['Apr 26', 'May 26', 'Jun 26', 'Jul 26', 'Aug 26', 'Sep 26', 'Oct 26', 'Nov 26', 'Dec 26', 'Jan 27', 'Feb 27', 'Mar 27'];
+  const vals = months.map((_, i) => d.monthly[i] || 0);
+  const maxTick = Math.max(Math.ceil(Math.max(...vals) / 5000) * 5000, 20000);
+  const W = 1000, H = 280, L = 52, R = 10, T = 10, B = 30;
+  const plotW = W - L - R, plotH = H - T - B;
+  const step = maxTick > 60000 ? 10000 : 5000;
+  const ticks = []; for (let t = 0; t <= maxTick; t += step) ticks.push(t);
+  const bw = plotW / months.length;
+  const yOf = v => T + plotH - (v / maxTick) * plotH;
+  const cur = 5;
+  return `<svg viewBox="0 0 ${W} ${H}" class="w-full" role="img" aria-label="Monthly incentive earned">
+    ${ticks.map(t => `<line x1="${L}" x2="${W - R}" y1="${yOf(t)}" y2="${yOf(t)}" stroke="#E2E8F0" stroke-dasharray="3 3"/><text x="${L - 8}" y="${yOf(t) + 4}" text-anchor="end" font-size="11" fill="#64748B">${t === 0 ? '₹0' : '₹' + t / 1000 + 'K'}</text>`).join('')}
+    ${vals.map((v, i) => `${v ? `<rect x="${L + i * bw + bw * 0.22}" y="${yOf(v)}" width="${bw * 0.56}" height="${T + plotH - yOf(v)}" rx="3" fill="${i === cur ? '#EA580C' : '#443EFF'}" fill-opacity="${i === cur ? 1 : 0.55}"><title>${months[i]}: ${fmtINR(v)}</title></rect>` : ''}<text x="${L + i * bw + bw / 2}" y="${H - 10}" text-anchor="middle" font-size="11" fill="#64748B">${months[i]}</text>`).join('')}
+  </svg>`;
+}
 
-  const thisMonth = [...MGR_TEAM].map(r => ({ ...r, earned: r.revenue * 3400 + r.sti * 800 + r.loan * 600 })).sort((a, b) => b.earned - a.earned);
-  const thisMonthMax = thisMonth[0].earned || 1;
-  const allTime = [...MGR_TEAM].map(r => ({ ...r, score: r.revenue * 3400 + r.sti * 800 + r.loan * 600 * 3 + parseInt(r.quality) * 50 })).sort((a, b) => b.score - a.score);
-  const allTimeMax = allTime[0].score || 1;
-  document.getElementById('body-mgrearners').innerHTML = buildTopEarnersSection(
-    thisMonth.map(r => ({ name:r.name, pct:Math.round(r.earned / thisMonthMax * 100) })),
-    allTime.map(r => ({ name:r.name, pct:Math.round(r.score / allTimeMax * 100) }))
-  );
+function incSectionHtml(id, title, icon, bodyHtml, iconFill) {
+  return `<section class="bg-white rounded-xl border border-gray-200 overflow-hidden mb-4">
+    <button onclick="toggleSection('${id}')" class="w-full flex items-center justify-between gap-4 px-4 py-3.5 hover:bg-surface/60 transition-colors cursor-pointer">
+      <div class="flex items-center gap-3 min-w-0">
+        <div class="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"><svg class="w-5 h-5" style="color:${INC_COLORS.orange}" ${iconFill ? 'fill="currentColor"' : 'fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"'} viewBox="0 0 24 24">${icon}</svg></div>
+        <div class="text-base font-semibold truncate" style="color:${INC_COLORS.ink}">${title}</div>
+      </div>
+      <svg class="w-4 h-4 text-text-muted transition-transform" id="chevron-${id}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9" stroke-width="2"/></svg>
+    </button>
+    <div id="body-${id}" class="hidden px-4 pb-5 pt-1 space-y-3">${bodyHtml}</div>
+  </section>`;
+}
+
+function incEarnCardHtml(id, label, amount, color, sub, bodyHtml) {
+  return `<div class="flex-1 min-w-0">
+    <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <button class="w-full flex items-center justify-between gap-4 px-4 py-4 cursor-pointer hover:bg-surface/60 transition-colors text-left" onclick="toggleIncCard('${id}')">
+        <div class="text-left min-w-0">
+          <p class="text-[11px] font-semibold tracking-wider uppercase" style="color:${INC_COLORS.muted}">${label}</p>
+          <p class="text-2xl font-bold mt-1" style="color:${color}">${amount}</p>
+          <p class="text-xs text-gray-500 mt-0.5">${sub}</p>
+        </div>
+        <svg class="w-4 h-4 flex-shrink-0 transition-transform" id="incCardChev-${id}" style="color:${INC_COLORS.muted}" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+      <div id="incCardBody-${id}" class="hidden border-t border-[#F1F5F9]">${bodyHtml}</div>
+    </div>
+  </div>`;
+}
+
+function renderIncentives() {
+  const root = document.getElementById('incentivesMainInner');
+  if (!root) return;
+  const d = incentiveData();
+  const roleLabel = INC_ROLE_LABEL[d.role];
+  const tile = (emoji, label, key, note) => `<div class="flex-1 min-w-[160px] bg-white rounded-xl border border-gray-200 px-4 py-4">
+      <p class="text-[11px] font-semibold tracking-wider uppercase" style="color:${INC_COLORS.muted}">${emoji} ${label}</p>
+      <p class="text-2xl font-bold mt-1" style="color:${INC_COLORS.ink}">${fmtINRShort(d.opp[key].v)}</p>
+      <p class="text-xs text-gray-500 mt-0.5">${d.opp[key].n} tasks · ${note}</p>
+    </div>`;
+  root.innerHTML = `
+    <div class="flex flex-col md:flex-row gap-3 mb-4 items-start">
+      ${incEarnCardHtml('mine', `My Earnings as ${roleLabel}`, fmtINR(d.total), INC_COLORS.earn, d.sub, incBreakdownHtml(d))}
+      ${d.role === 'rm' ? '' : incEarnCardHtml('team', 'Reportees\' Earnings', fmtINR(d.reportTotal), INC_COLORS.reportees, 'Total earned across selected team · tap to expand', incReporteesHtml(d))}
+    </div>
+    <div class="flex flex-wrap gap-3 mb-4">
+      <div class="flex-1 min-w-[160px] rounded-xl px-4 py-4 relative cursor-pointer" style="background:${INC_COLORS.orange}" onclick="openOppDetail()">
+        <svg class="w-4 h-4 absolute top-4 right-3 text-white/80" fill="currentColor" viewBox="0 0 24 24"><path d="M10 6 8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>
+        <div class="text-left min-w-0 pr-6">
+          <p class="text-[11px] font-semibold text-white/80 tracking-wider uppercase">Total Opportunity</p>
+          <p class="text-2xl font-bold text-white mt-1">${fmtINR(d.oppTotal)}</p>
+          <p class="text-xs text-white/80 mt-0.5">All open pipelines combined</p>
+        </div>
+      </div>
+      ${tile('⚡', 'Boost STI', 'sti', 'Pending STI conversions')}
+      ${tile('📈', 'Boost Revenue', 'revenue', 'Revenue at risk + future')}
+      ${tile('💰', 'Boost Loan', 'loan', 'Pending loan closures')}
+    </div>
+    ${incSectionHtml('incearners', 'Top Earners', TROPHY_SVG_PATH, buildIncEarners(d), true)}
+    ${incSectionHtml('incoffers', 'On Going Offers', OFFER_ICON_GIFT, buildIncOffers(d))}
+    ${incSectionHtml('inctrend', 'Monthly Incentive Earned — FY 2026–27', '<path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/>', buildIncTrend(d))}`;
+}
+
+function toggleIncCard(id) {
+  ['mine', 'team'].forEach(k => {
+    const body = document.getElementById(`incCardBody-${k}`);
+    const chev = document.getElementById(`incCardChev-${k}`);
+    if (!body) return;
+    const open = k === id && body.classList.contains('hidden');
+    body.classList.toggle('hidden', !open);
+    if (chev) chev.classList.toggle('rotate-180', open);
+  });
+}
+function toggleIncRow(i) {
+  document.getElementById(`incRowBody-${i}`)?.classList.toggle('hidden');
+  document.getElementById(`incRowChev-${i}`)?.classList.toggle('rotate-180');
+}
+function toggleIncGroup(i) {
+  document.getElementById(`incGrpBody-${i}`)?.classList.toggle('hidden');
+  document.getElementById(`incGrpChev-${i}`)?.classList.toggle('rotate-180');
 }
 
 function teamTotalOverdue() { return MGR_TEAM.reduce((s, r) => s + r.overdue, 0); }
@@ -3184,6 +3522,26 @@ function buildMgrDrilldown(rm) {
 
 // ─── INCENTIVES (RM) ──────────────────────────────────────────────────────────
 function openOppDetail() {
+  const d = incentiveData();
+  const row = (label, key, pipe) => `
+    <div class="flex items-center gap-3 bg-surface rounded-xl border border-border px-4 py-3 cursor-pointer hover:border-accent transition-colors" onclick="openPipeline('${pipe}')">
+      <div class="flex-1"><div class="text-sm font-semibold">${label}</div><div class="text-xs text-text-muted">${d.opp[key].n} tasks</div></div>
+      <div class="font-mono font-bold text-accent">${fmtINR(d.opp[key].v)}</div>
+      <svg class="w-4 h-4 text-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6" stroke-width="2"/></svg>
+    </div>`;
+  const taskTotal = d.opp.sti.n + d.opp.revenue.n + d.opp.loan.n;
+  document.getElementById('opportunityDetail').innerHTML = `
+    <button class="flex items-center gap-1 text-sm font-semibold text-primary mb-4 cursor-pointer" onclick="closeOppDetail()">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6" stroke-width="2"/></svg>
+      Back to Incentives &amp; Earnings
+    </button>
+    <div class="text-sm font-bold mb-2">Total Pipeline Opportunity</div>
+    <div class="rounded-xl p-5 text-white mb-4" style="background:linear-gradient(135deg,#EA580C 0%,#C2410C 100%)">
+      <div class="text-[10px] font-bold uppercase tracking-wide opacity-80 mb-1">Total Pipeline Value</div>
+      <div class="font-mono text-3xl font-extrabold">${fmtINR(d.oppTotal)}</div>
+      <div class="text-xs opacity-80 mt-1">${taskTotal} tasks across all stages</div>
+    </div>
+    <div class="space-y-2">${row('Boost STI', 'sti', 'sti')}${row('Boost Revenue', 'revenue', 'revenue')}${row('Boost Loan', 'loan', 'loan')}</div>`;
   document.getElementById('incentivesMainInner').classList.add('hidden');
   document.getElementById('opportunityDetail').classList.remove('hidden');
 }
@@ -4385,8 +4743,7 @@ function boot() {
   updateCallStatus('active');
   renderTopPerformers('yesterday');
   renderRmBoostSeverity();
-  document.getElementById('body-offers').innerHTML = buildOngoingOffers(RM_OFFERS_STUDENTS, RM_OFFERS_SSM);
-  document.getElementById('body-earners').innerHTML = buildTopEarnersSection(TOP_EARNERS_THIS_MONTH, TOP_EARNERS_ALL_TIME);
+  renderIncentives();
   document.getElementById('reminderDateTime').min = nowLocalISO();
   document.getElementById('reminderDateTimeMgr').min = nowLocalISO();
   populateQueryLeadSelects();
