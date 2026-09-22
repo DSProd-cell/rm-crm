@@ -42,7 +42,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Righteous&family=Poppins:wght@300;400;500;600;700&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet"/>
-<link rel="stylesheet" href="styles.css?v=7"/>
+<link rel="stylesheet" href="styles.css?v=8"/>
 </head>
 <body class="font-body bg-surface text-text-main min-h-screen">
 
@@ -324,26 +324,43 @@
             </div>
           </section>
 
-          <!-- Raise Query for Counsellor (standalone, by Lead ID) -->
+          <!-- Create Task for CL (standalone, by Lead ID) -->
           <section class="bg-white rounded-xl border border-border overflow-hidden mt-4">
             <button onclick="toggleSection('mgrquery')" class="w-full flex items-center justify-between px-5 py-4 hover:bg-surface/60 transition-colors cursor-pointer">
-              <h2 class="font-semibold text-text-main flex items-center gap-2">📨 Raise Query for Counsellor</h2>
+              <h2 class="font-semibold text-text-main flex items-center gap-2">📋 Create Task for CL</h2>
               <svg class="w-4 h-4 text-text-muted transition-transform" id="chevron-mgrquery" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9" stroke-width="2"/></svg>
             </button>
             <div id="body-mgrquery" class="hidden px-5 pb-5">
               <div class="space-y-3">
                 <div>
                   <label class="block text-xs font-semibold text-text-main mb-1">Lead ID <span class="text-danger">*</span> <span class="text-text-muted font-normal">(only leads with an active task can be selected)</span></label>
-                  <select class="w-full px-3 py-2 border border-border rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary" id="mgrQueryLeadId" onchange="onQueryLeadChange('mgrQueryLeadId','mgrQueryCounsellorInfo')"></select>
+                  <select class="w-full px-3 py-2 border border-border rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary" id="mgrClTaskLeadId" onchange="onClTaskLeadChange('mgrClTaskLeadId','mgrClTaskCounsellorInfo')"></select>
                 </div>
-                <div class="hidden text-xs text-text-muted bg-surface border border-border rounded-lg px-3 py-2" id="mgrQueryCounsellorInfo"></div>
+                <div class="hidden text-xs text-text-muted bg-surface border border-border rounded-lg px-3 py-2" id="mgrClTaskCounsellorInfo"></div>
                 <div>
-                  <label class="block text-xs font-semibold text-text-main mb-1">Query / Question <span class="text-danger">*</span></label>
-                  <textarea class="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Describe your query for the counsellor (max 500 chars)" maxlength="500" id="mgrQueryText"></textarea>
+                  <label class="block text-xs font-semibold text-text-main mb-1">Task Type <span class="text-danger">*</span></label>
+                  <select class="w-full px-3 py-2 border border-border rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary" id="mgrClTaskType">
+                    <option value="">Select task type</option>
+                    <option value="FILE_MORE_APPLICATIONS">File More Applications</option>
+                    <option value="CONNECT_WITH_STUDENT">Connect with Student</option>
+                    <option value="INTERESTED_FOR_IELTS_BOOKING">Interested for IELTS Booking</option>
+                    <option value="STUDENT_DEFERRED">Student Deferred</option>
+                    <option value="STUDENT_DROPPED">Student Dropped</option>
+                    <option value="UPDATE_APP_PRIORITY">Update App Priority</option>
+                    <option value="NO_ACTION_NEEDED">No Action Needed</option>
+                  </select>
                 </div>
-                <button class="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-accent hover:bg-accent-dark text-white text-sm font-semibold rounded-lg cursor-pointer transition-colors" onclick="submitStandaloneQuery('mgrQueryLeadId','mgrQueryText')">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
-                  Raise Query
+                <div>
+                  <label class="block text-xs font-semibold text-text-main mb-1">Notes <span class="text-text-muted font-normal">(optional)</span></label>
+                  <textarea class="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Add any context for the counsellor (max 500 chars)" maxlength="500" id="mgrClTaskNotes"></textarea>
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-text-main mb-1">Due Date <span class="text-text-muted font-normal">(optional)</span></label>
+                  <input type="date" class="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary" id="mgrClTaskDueDate"/>
+                </div>
+                <button class="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-accent hover:bg-accent-dark text-white text-sm font-semibold rounded-lg cursor-pointer transition-colors" onclick="submitStandaloneClTask('mgrClTaskLeadId','mgrClTaskType','mgrClTaskNotes','mgrClTaskDueDate')">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 11l3 3L22 4"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+                  Create Task
                 </button>
               </div>
             </div>
@@ -499,26 +516,43 @@
           </div>
         </section>
 
-        <!-- Raise Query for Counsellor (standalone, by Lead ID) -->
+        <!-- Create Task for CL (standalone, by Lead ID) -->
         <section class="bg-white rounded-xl border border-border overflow-hidden mt-4">
           <button onclick="toggleSection('rmquery')" class="w-full flex items-center justify-between px-5 py-4 hover:bg-surface/60 transition-colors cursor-pointer">
-            <h2 class="font-semibold text-text-main flex items-center gap-2">📨 Raise Query for Counsellor</h2>
+            <h2 class="font-semibold text-text-main flex items-center gap-2">📋 Create Task for CL</h2>
             <svg class="w-4 h-4 text-text-muted transition-transform" id="chevron-rmquery" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9" stroke-width="2"/></svg>
           </button>
           <div id="body-rmquery" class="hidden px-5 pb-5">
             <div class="space-y-3">
               <div>
                 <label class="block text-xs font-semibold text-text-main mb-1">Lead ID <span class="text-danger">*</span> <span class="text-text-muted font-normal">(only leads with an active task can be selected)</span></label>
-                <select class="w-full px-3 py-2 border border-border rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary" id="rmQueryLeadId" onchange="onQueryLeadChange('rmQueryLeadId','rmQueryCounsellorInfo')"></select>
+                <select class="w-full px-3 py-2 border border-border rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary" id="rmClTaskLeadId" onchange="onClTaskLeadChange('rmClTaskLeadId','rmClTaskCounsellorInfo')"></select>
               </div>
-              <div class="hidden text-xs text-text-muted bg-surface border border-border rounded-lg px-3 py-2" id="rmQueryCounsellorInfo"></div>
+              <div class="hidden text-xs text-text-muted bg-surface border border-border rounded-lg px-3 py-2" id="rmClTaskCounsellorInfo"></div>
               <div>
-                <label class="block text-xs font-semibold text-text-main mb-1">Query / Question <span class="text-danger">*</span></label>
-                <textarea class="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Describe your query for the counsellor (max 500 chars)" maxlength="500" id="rmQueryText"></textarea>
+                <label class="block text-xs font-semibold text-text-main mb-1">Task Type <span class="text-danger">*</span></label>
+                <select class="w-full px-3 py-2 border border-border rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary" id="rmClTaskType">
+                  <option value="">Select task type</option>
+                  <option value="FILE_MORE_APPLICATIONS">File More Applications</option>
+                  <option value="CONNECT_WITH_STUDENT">Connect with Student</option>
+                  <option value="INTERESTED_FOR_IELTS_BOOKING">Interested for IELTS Booking</option>
+                  <option value="STUDENT_DEFERRED">Student Deferred</option>
+                  <option value="STUDENT_DROPPED">Student Dropped</option>
+                  <option value="UPDATE_APP_PRIORITY">Update App Priority</option>
+                  <option value="NO_ACTION_NEEDED">No Action Needed</option>
+                </select>
               </div>
-              <button class="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-accent hover:bg-accent-dark text-white text-sm font-semibold rounded-lg cursor-pointer transition-colors" onclick="submitStandaloneQuery('rmQueryLeadId','rmQueryText')">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
-                Raise Query
+              <div>
+                <label class="block text-xs font-semibold text-text-main mb-1">Notes <span class="text-text-muted font-normal">(optional)</span></label>
+                <textarea class="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Add any context for the counsellor (max 500 chars)" maxlength="500" id="rmClTaskNotes"></textarea>
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-text-main mb-1">Due Date <span class="text-text-muted font-normal">(optional)</span></label>
+                <input type="date" class="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary" id="rmClTaskDueDate"/>
+              </div>
+              <button class="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-accent hover:bg-accent-dark text-white text-sm font-semibold rounded-lg cursor-pointer transition-colors" onclick="submitStandaloneClTask('rmClTaskLeadId','rmClTaskType','rmClTaskNotes','rmClTaskDueDate')">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 11l3 3L22 4"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+                Create Task
               </button>
             </div>
           </div>
@@ -699,6 +733,50 @@
     <div class="px-5 py-4 border-t border-border flex gap-2">
       <button class="flex-1 px-4 py-2.5 border border-border rounded-lg text-sm font-semibold cursor-pointer hover:bg-surface" onclick="closeTicketModal()">Cancel</button>
       <button class="flex-1 px-4 py-2.5 bg-accent hover:bg-accent-dark text-white rounded-lg text-sm font-semibold cursor-pointer" onclick="submitTicket()">Raise Ticket</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ CREATE TASK FOR CL MODAL ═══ -->
+<div class="hidden fixed inset-0 z-[300] items-center justify-center p-4" id="clTaskModal">
+  <div class="absolute inset-0 modal-overlay" onclick="closeClTaskModal()"></div>
+  <div class="relative bg-white rounded-xl shadow-2xl w-full max-w-md z-10 overflow-hidden">
+    <div class="px-5 py-4 flex items-center gap-2" style="background:#EEF2FF">
+      <h3 class="text-base font-bold flex-1">Create Task for CL</h3>
+      <button class="w-7 h-7 rounded-lg bg-white flex items-center justify-center cursor-pointer" onclick="closeClTaskModal()">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18" stroke-width="2"/><line x1="6" y1="6" x2="18" y2="18" stroke-width="2"/></svg>
+      </button>
+    </div>
+    <div class="px-5 py-3" style="background:#FDF6EC;border-bottom:1px solid #EEE3D3">
+      <label class="block text-xs font-bold text-text-main mb-1">Lead Name <span class="text-danger">*</span></label>
+      <div class="w-full px-3 py-2 border border-border rounded-lg text-sm bg-white text-text-muted font-semibold" id="clTaskLeadName">—</div>
+    </div>
+    <div class="p-5 space-y-4">
+      <div>
+        <label class="block text-sm font-semibold text-text-main mb-1.5">Task Type <span class="text-danger">*</span></label>
+        <select class="w-full px-3 py-2.5 border border-border rounded-lg text-sm bg-white" id="clTaskType">
+          <option value="">Select task type</option>
+          <option value="FILE_MORE_APPLICATIONS">File More Applications</option>
+          <option value="CONNECT_WITH_STUDENT">Connect with Student</option>
+          <option value="INTERESTED_FOR_IELTS_BOOKING">Interested for IELTS Booking</option>
+          <option value="STUDENT_DEFERRED">Student Deferred</option>
+          <option value="STUDENT_DROPPED">Student Dropped</option>
+          <option value="UPDATE_APP_PRIORITY">Update App Priority</option>
+          <option value="NO_ACTION_NEEDED">No Action Needed</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-sm font-semibold text-text-main mb-1.5">Notes <span class="text-text-muted font-normal">(optional)</span></label>
+        <textarea class="w-full px-3 py-2.5 border border-border rounded-lg text-sm" placeholder="Add any context for the counsellor (max 500 chars)" maxlength="500" id="clTaskNotes" style="min-height:80px"></textarea>
+      </div>
+      <div>
+        <label class="block text-sm font-semibold text-text-main mb-1.5">Due Date <span class="text-text-muted font-normal">(optional)</span></label>
+        <input type="date" class="w-full px-3 py-2.5 border border-border rounded-lg text-sm" id="clTaskDueDate"/>
+      </div>
+    </div>
+    <div class="px-5 py-4 border-t border-border flex gap-2">
+      <button class="flex-1 px-4 py-2.5 border border-border rounded-lg text-sm font-semibold cursor-pointer hover:bg-surface" onclick="closeClTaskModal()">Cancel</button>
+      <button class="flex-1 px-4 py-2.5 bg-accent hover:bg-accent-dark text-white rounded-lg text-sm font-semibold cursor-pointer" onclick="submitClTask()">Create Task</button>
     </div>
   </div>
 </div>
@@ -899,6 +977,6 @@
   </div>
 </div>
 
-<script src="rm-app.js?v=55"></script>
+<script src="rm-app.js?v=57"></script>
 </body>
 </html>

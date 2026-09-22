@@ -139,6 +139,24 @@ body {
   background: #fff;
   cursor: pointer;
 }
+.pl-btn-pill-solid {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 39px;
+  padding: 0 16px;
+  border: 1px solid #443EFF;
+  color: #fff;
+  font-weight: 700;
+  font-size: 12px;
+  border-radius: 6.5px;
+  background: #443EFF;
+  cursor: pointer;
+}
+.pl-btn-pill-solid:hover {
+  background: #3730D9;
+  border-color: #3730D9;
+}
 #leadDetailPage select,
 #leadDetailPage input[type="text"],
 #leadDetailPage input[type="date"],

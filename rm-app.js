@@ -807,6 +807,11 @@ function nowLocalISO() {
   d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
   return d.toISOString().slice(0, 16);
 }
+function todayISO() {
+  const d = new Date();
+  d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+  return d.toISOString().slice(0, 10);
+}
 function isFutureDateTime(value) {
   return !!value && new Date(value).getTime() > Date.now();
 }
@@ -974,7 +979,11 @@ function openLeadDetail(pipelineType, leadId) {
     <span class="inline-flex items-center gap-1.5">${plIcon('flag', 13)}${lead.status.replace(/ /g, '_').toUpperCase()}</span>
     <span class="inline-flex items-center gap-1.5 ml-3">${plIcon('calendar', 13)}${lead.intake}</span>
     <span class="inline-flex items-center gap-1.5 ml-3">${plIcon('globe', 13)}${lead.country}</span>`;
-  document.getElementById('leadDetailActions').innerHTML = '';
+  document.getElementById('leadDetailActions').innerHTML = `
+    <button class="pl-btn-pill-solid flex-shrink-0" onclick="openClTaskModal('${pipelineType}','${lead.id}','${escHtml(lead.name)}')">
+      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 11l3 3L22 4"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+      Create Task for CL
+    </button>`;
 
   document.getElementById('leadDetailTabBar').innerHTML = buildLeadTabBarHtml('profile');
   document.getElementById('leadDetailSidebar').innerHTML = buildLeadSidebarHtml(pipelineType, lead);
@@ -2278,9 +2287,9 @@ function openTaskView(pipelineType, leadId) {
         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 11l3 3L22 4"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
         Disposition
       </button>
-      <button class="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-semibold cursor-pointer border border-border text-primary hover:bg-surface transition-colors" onclick="showQueryForm('${pipelineType}','${lead.id}','${escHtml(lead.name)}')">
-        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
-        Raise Query for Counsellor
+      <button class="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-semibold cursor-pointer border border-border text-primary hover:bg-surface transition-colors" onclick="openClTaskModal('${pipelineType}','${lead.id}','${escHtml(lead.name)}')">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 11l3 3L22 4"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+        Create Task for CL
       </button>
     </div>
     <div id="dispositionFormWrap-${lead.id}" class="mt-3"></div>`;
@@ -2335,34 +2344,6 @@ function submitDisposition(leadId) {
   if (!sel || !sel.value) { showToast('Please select a disposition.', 'error'); return; }
   document.getElementById(`dispositionFormWrap-${leadId}`).innerHTML = '';
   showToast(`Disposition "${sel.value}" saved.`, 'success');
-}
-
-function showQueryForm(pipeline, leadId, leadName) {
-  const body = document.getElementById('leadDetailContent');
-  body.insertAdjacentHTML('beforeend', `
-    <div id="queryFormWrap" class="mt-3.5 pt-3.5 border-t border-border">
-      <div class="text-xs font-bold text-text-muted mb-2.5 uppercase tracking-wide">Raise Query — ${leadName}</div>
-      <div class="mb-2.5">
-        <label class="block text-xs font-semibold text-text-muted mb-1">Query / Question *</label>
-        <textarea class="w-full px-3 py-2 border border-border rounded-lg text-sm" id="queryText" placeholder="Describe the counsellor's query (max 500 chars)" maxlength="500"></textarea>
-      </div>
-      <div class="flex gap-2">
-        <button class="px-3.5 py-1.5 bg-accent text-white text-xs font-semibold rounded-lg cursor-pointer" onclick="submitQuery('${pipeline}','${leadId}','${escHtml(leadName)}')">Submit Query</button>
-        <button class="px-3.5 py-1.5 border border-border text-xs font-semibold rounded-lg cursor-pointer" onclick="document.getElementById('queryFormWrap').remove()">Cancel</button>
-      </div>
-    </div>`);
-}
-
-function submitQuery(pipeline, leadId, leadName) {
-  const q = document.getElementById('queryText');
-  if (!q.value.trim()) { showToast('Query cannot be empty.', 'error'); return; }
-  QUERIES_MOCK.unshift({
-    id: `Q-${++queryIdCounter}`, pipeline, leadId, leadName,
-    thread: [{ from:'rm', text:q.value.trim(), date:'Today' }],
-    unread: false,
-  });
-  document.getElementById('queryFormWrap').remove();
-  showToast('Query sent to counsellor. They have 7 days to respond.', 'success');
 }
 
 // ─── DRAWER ───────────────────────────────────────────────────────────────────
@@ -2544,69 +2525,117 @@ function toggleWaGroup(key) {
   document.getElementById(`wa-chev-${key}`).classList.toggle('rotate-180');
 }
 
-// ─── COUNSELLOR QUERIES ─────────────────────────────────────────────────────────
-let queryIdCounter = 1063;
-const QUERIES_MOCK = [
-  { id:'Q-1042', pipeline:'sti', leadId:'RM-2041', leadName:'Ananya Sharma',
-    thread:[
-      { from:'rm', text:'Student is asking if the scholarship can still be applied post CF — can you confirm eligibility?', date:'2026-09-05 11:20' },
-      { from:'counsellor', text:'Yes, the scholarship can still be applied within 7 days of CF. Please have the student submit the form.', date:'2026-09-05 15:40' },
-    ], unread:true },
-  { id:'Q-1051', pipeline:'sti', leadId:'RM-2089', leadName:'Karan Mehta',
-    thread:[
-      { from:'rm', text:'Student wants to switch preferred country from Germany to UK — is this possible post F2F?', date:'2026-09-06 10:05' },
-    ], unread:false },
-  { id:'Q-1063', pipeline:'revenue', leadId:'RM-2045', leadName:'Tanvir Ahmed',
-    thread:[
-      { from:'counsellor', text:'Student has raised a concern about the Prime pricing shared — can you clarify what was discussed on the call?', date:'2026-09-07 09:15' },
-    ], unread:true },
+// ─── CL TASKS (RM ⇄ Counsellor task hand-offs) ──────────────────────────────────
+// Not a chat — discrete tasks either side can raise for the other, each with a
+// type, an optional note and a due date. 'rm_to_cl' tasks are ones this RM raised
+// for the counsellor to act on; 'cl_to_rm' tasks are ones the counsellor raised
+// for this RM — those are the ones this RM can mark complete.
+const CL_TASK_TYPES = [
+  { value:'FILE_MORE_APPLICATIONS', label:'File More Applications' },
+  { value:'CONNECT_WITH_STUDENT', label:'Connect with Student' },
+  { value:'INTERESTED_FOR_IELTS_BOOKING', label:'Interested for IELTS Booking' },
+  { value:'STUDENT_DEFERRED', label:'Student Deferred' },
+  { value:'STUDENT_DROPPED', label:'Student Dropped' },
+  { value:'UPDATE_APP_PRIORITY', label:'Update App Priority' },
+  { value:'NO_ACTION_NEEDED', label:'No Action Needed' },
+];
+const RM_TASK_TYPES = [
+  { value:'BOOK_UPDATE_IELTS_EXAM', label:'Book/Update IELTS Exam' },
+  { value:'DOCUMENT_COLLECTION', label:'Document Collection' },
+];
+function clTaskTypeLabel(taskType, direction) {
+  const list = direction === 'rm_to_cl' ? CL_TASK_TYPES : RM_TASK_TYPES;
+  return (list.find(t => t.value === taskType) || {}).label || taskType;
+}
+
+let clTaskIdCounter = 1063;
+const CL_TASKS_MOCK = [
+  { id:'CT-1042', pipeline:'sti', leadId:'RM-2041', leadName:'Ananya Sharma', direction:'rm_to_cl',
+    taskType:'CONNECT_WITH_STUDENT', notes:'Student is asking if the scholarship can still be applied post CF — please confirm eligibility with them directly.',
+    dueDate:'2026-09-10', createdDate:'2026-09-05', status:'open' },
+  { id:'CT-1051', pipeline:'sti', leadId:'RM-2089', leadName:'Karan Mehta', direction:'rm_to_cl',
+    taskType:'UPDATE_APP_PRIORITY', notes:'Student wants to switch preferred country from Germany to UK post F2F — please reprioritise applications.',
+    dueDate:'2026-09-12', createdDate:'2026-09-06', status:'done' },
+  { id:'CT-1063', pipeline:'revenue', leadId:'RM-2045', leadName:'Tanvir Ahmed', direction:'cl_to_rm',
+    taskType:'BOOK_UPDATE_IELTS_EXAM', notes:'Student has raised a concern about the Prime pricing shared — please re-walk them through it and confirm the IELTS exam date.',
+    dueDate:'2026-09-14', createdDate:'2026-09-07', status:'open' },
+  { id:'CT-1071', pipeline:'loan', leadId:'RM-2051', leadName:'Rahul Jain', direction:'cl_to_rm',
+    taskType:'DOCUMENT_COLLECTION', notes:'PF portal is asking for an updated bank statement — please collect it from the student.',
+    dueDate:'2026-09-09', createdDate:'2026-09-04', status:'open' },
 ];
 
-function queryUnreadCount() { return QUERIES_MOCK.filter(q => q.unread).length; }
+function clTaskPendingCount() { return CL_TASKS_MOCK.filter(t => t.direction === 'cl_to_rm' && t.status === 'open').length; }
 
-function queryThreadCardHtml(q) {
-  return `<div class="border border-border rounded-xl p-3 mb-3 ${q.unread ? '' : 'bg-white'}" style="${q.unread ? 'background:#FFF7ED' : ''}">
+function clTaskCardHtml(t) {
+  const dirLabel = t.direction === 'rm_to_cl' ? 'You → CL' : 'CL → You';
+  const dirColor = t.direction === 'rm_to_cl' ? { bg:'#EEF2FF', text:'#4338CA', border:'#C7D2FE' } : { bg:'#FFF7ED', text:'#C2410C', border:'#FED7AA' };
+  const isOpen = t.status === 'open';
+  const highlight = isOpen && t.direction === 'cl_to_rm';
+  return `<div class="border border-border rounded-xl p-3 mb-3 ${highlight ? '' : 'bg-white'}" style="${highlight ? 'background:#FFF7ED' : ''}">
     <div class="flex items-center justify-between gap-2 mb-2">
       <div class="min-w-0">
-        <div class="text-sm font-semibold text-text-main truncate">${q.leadName}</div>
-        <div class="text-[10px] text-text-muted font-mono">${q.leadId}</div>
+        <div class="text-sm font-semibold text-text-main truncate">${t.leadName}</div>
+        <div class="text-[10px] text-text-muted font-mono">${t.leadId}</div>
       </div>
-      ${q.unread ? `<span class="text-[10px] font-bold px-2 py-0.5 rounded-full flex-shrink-0" style="background:#FFEDD5;color:#C2410C">NEW REPLY</span>` : ''}
+      <span class="text-[10px] font-bold px-2 py-0.5 rounded-full flex-shrink-0" style="background:${dirColor.bg};color:${dirColor.text};border:1px solid ${dirColor.border}">${dirLabel}</span>
     </div>
-    <div class="space-y-2 mb-2.5">
-      ${q.thread.map(m => `
-        <div class="flex ${m.from === 'rm' ? 'justify-end' : 'justify-start'}">
-          <div class="max-w-[85%] rounded-lg px-3 py-2 text-xs" style="background:${m.from === 'rm' ? '#EEF2FF' : '#F1F5F9'};color:${m.from === 'rm' ? '#4338CA' : '#334155'}">
-            <div class="font-semibold mb-0.5">${m.from === 'rm' ? 'You' : 'Counsellor'}</div>
-            <div>${m.text}</div>
-            <div class="text-[10px] opacity-70 mt-1">${m.date}</div>
-          </div>
-        </div>`).join('')}
+    <div class="flex items-center gap-2 mb-1.5 flex-wrap">
+      <span class="text-xs font-semibold text-text-main">${clTaskTypeLabel(t.taskType, t.direction)}</span>
+      ${isOpen ? `<span class="ai-badge pending">Open</span>` : `<span class="ai-badge completed">Done</span>`}
     </div>
-    <div class="flex gap-2 mb-2">
-      <button class="flex-1 text-xs font-semibold py-1.5 rounded-lg cursor-pointer" style="background:#EEF2FF;color:#4338CA;border:1px solid #C7D2FE" onclick="openTaskView('${q.pipeline}','${q.leadId}')">View Task</button>
-    </div>
+    ${t.notes ? `<div class="text-xs text-text-muted mb-2 leading-relaxed">${escHtml(t.notes)}</div>` : ''}
+    <div class="text-[10px] text-text-muted mb-2.5">${t.dueDate ? `Due ${formatDMY(t.dueDate)} · ` : ''}Created ${formatDMY(t.createdDate)}</div>
     <div class="flex gap-2">
-      <input class="flex-1 min-w-0 px-2.5 py-1.5 border border-border rounded-lg text-xs" placeholder="Reply to counsellor…" id="queryReply-${q.id}"/>
-      <button class="px-3 py-1.5 bg-accent text-white text-xs font-semibold rounded-lg cursor-pointer flex-shrink-0" onclick="replyToQuery('${q.id}')">Send</button>
+      <button class="flex-1 text-xs font-semibold py-1.5 rounded-lg cursor-pointer" style="background:#EEF2FF;color:#4338CA;border:1px solid #C7D2FE" onclick="openTaskView('${t.pipeline}','${t.leadId}')">View Task</button>
+      ${t.direction === 'cl_to_rm' && isOpen ? `<button class="flex-1 text-xs font-semibold py-1.5 rounded-lg cursor-pointer bg-accent text-white" onclick="markClTaskDone('${t.id}')">Mark Complete</button>` : ''}
     </div>
   </div>`;
 }
 
-function buildQueriesBody() {
-  if (!QUERIES_MOCK.length) return `<div class="text-center text-sm text-text-muted py-6">No queries yet.</div>`;
-  return QUERIES_MOCK.map(q => queryThreadCardHtml(q)).join('');
+function buildClTasksBody() {
+  if (!CL_TASKS_MOCK.length) return `<div class="text-center text-sm text-text-muted py-6">No tasks yet.</div>`;
+  return CL_TASKS_MOCK.map(t => clTaskCardHtml(t)).join('');
 }
 
-function replyToQuery(id) {
-  const input = document.getElementById(`queryReply-${id}`);
-  if (!input || !input.value.trim()) { showToast('Reply cannot be empty.', 'error'); return; }
-  const q = QUERIES_MOCK.find(x => x.id === id);
-  if (!q) return;
-  q.thread.push({ from:'rm', text:input.value.trim(), date:'Today' });
-  q.unread = false;
-  showToast('Reply sent to counsellor.', 'success');
+function markClTaskDone(id) {
+  const t = CL_TASKS_MOCK.find(x => x.id === id);
+  if (!t) return;
+  t.status = 'done';
+  showToast('Task marked complete.', 'success');
   openNotifPanel();
+}
+
+// ─── CREATE TASK FOR CL — MODAL (from the lead detail page) ────────────────────
+let clTaskModalCtx = null;
+function openClTaskModal(pipeline, leadId, leadName) {
+  clTaskModalCtx = { pipeline, leadId, leadName };
+  document.getElementById('clTaskLeadName').textContent = leadName;
+  document.getElementById('clTaskType').value = '';
+  document.getElementById('clTaskNotes').value = '';
+  document.getElementById('clTaskDueDate').value = '';
+  const m = document.getElementById('clTaskModal');
+  m.classList.remove('hidden');
+  m.classList.add('flex');
+}
+function closeClTaskModal() {
+  const m = document.getElementById('clTaskModal');
+  m.classList.add('hidden');
+  m.classList.remove('flex');
+  clTaskModalCtx = null;
+}
+function submitClTask() {
+  if (!clTaskModalCtx) return;
+  const typeSel = document.getElementById('clTaskType');
+  if (!typeSel.value) { showToast('Please select a task type.', 'error'); return; }
+  const notes = document.getElementById('clTaskNotes').value.trim();
+  const dueDate = document.getElementById('clTaskDueDate').value;
+  const { pipeline, leadId, leadName } = clTaskModalCtx;
+  CL_TASKS_MOCK.unshift({
+    id: `CT-${++clTaskIdCounter}`, pipeline, leadId, leadName, direction:'rm_to_cl',
+    taskType: typeSel.value, notes, dueDate: dueDate || null, createdDate: todayISO(), status:'open',
+  });
+  closeClTaskModal();
+  showToast('Task created for the counsellor.', 'success');
 }
 
 function allLeadsWithTasks() {
@@ -2622,8 +2651,8 @@ function leadOptionsHtml() {
   return `<option value="">— Select Lead ID —</option>` + leads.map(l => `<option value="${l.pipeline}|${l.id}">${l.id} — ${escHtml(l.name)}</option>`).join('');
 }
 
-function populateQueryLeadSelects() {
-  ['rmQueryLeadId', 'mgrQueryLeadId'].forEach(id => {
+function populateClTaskLeadSelects() {
+  ['rmClTaskLeadId', 'mgrClTaskLeadId'].forEach(id => {
     const sel = document.getElementById(id);
     if (sel) sel.innerHTML = leadOptionsHtml();
   });
@@ -2635,52 +2664,55 @@ function findLeadByCompoundId(compound) {
   return lead ? { ...lead, pipeline } : null;
 }
 
-function onQueryLeadChange(selectId, infoId) {
+function onClTaskLeadChange(selectId, infoId) {
   const sel = document.getElementById(selectId);
   const info = document.getElementById(infoId);
   const lead = sel.value ? findLeadByCompoundId(sel.value) : null;
   if (!lead) { info.classList.add('hidden'); info.textContent = ''; return; }
   info.classList.remove('hidden');
-  info.innerHTML = `<strong>Counsellor:</strong> ${escHtml(lead.clName)} — this query will be routed to them.`;
+  info.innerHTML = `<strong>Counsellor:</strong> ${escHtml(lead.clName)} — this task will be routed to them.`;
 }
 
-function submitStandaloneQuery(selectId, textId) {
+function submitStandaloneClTask(selectId, typeId, notesId, dueId) {
   const sel = document.getElementById(selectId);
-  const textEl = document.getElementById(textId);
+  const typeSel = document.getElementById(typeId);
+  const notesEl = document.getElementById(notesId);
+  const dueEl = document.getElementById(dueId);
   if (!sel.value) { showToast('Please select a Lead ID.', 'error'); return; }
-  if (!textEl.value.trim()) { showToast('Query cannot be empty.', 'error'); return; }
+  if (!typeSel.value) { showToast('Please select a task type.', 'error'); return; }
   const lead = findLeadByCompoundId(sel.value);
   if (!lead) { showToast('Selected lead no longer has an active task.', 'error'); return; }
-  QUERIES_MOCK.unshift({
-    id: `Q-${++queryIdCounter}`, pipeline: lead.pipeline, leadId: lead.id, leadName: lead.name,
-    thread: [{ from:'rm', text:textEl.value.trim(), date:'Today' }],
-    unread: false,
+  CL_TASKS_MOCK.unshift({
+    id: `CT-${++clTaskIdCounter}`, pipeline: lead.pipeline, leadId: lead.id, leadName: lead.name, direction:'rm_to_cl',
+    taskType: typeSel.value, notes: notesEl.value.trim(), dueDate: dueEl.value || null, createdDate: todayISO(), status:'open',
   });
   sel.value = '';
-  textEl.value = '';
-  const infoId = selectId === 'rmQueryLeadId' ? 'rmQueryCounsellorInfo' : 'mgrQueryCounsellorInfo';
+  typeSel.value = '';
+  notesEl.value = '';
+  dueEl.value = '';
+  const infoId = selectId === 'rmClTaskLeadId' ? 'rmClTaskCounsellorInfo' : 'mgrClTaskCounsellorInfo';
   document.getElementById(infoId).classList.add('hidden');
-  showToast(`Query sent to ${lead.clName}. They have 7 days to respond.`, 'success');
+  showToast(`Task created for ${lead.clName}.`, 'success');
 }
 
 // ─── NOTIFICATIONS PANEL ───────────────────────────────────────────────────────
 const NOTIF_GROUPS = [
   { key:'own', icon:'📋', title:'Own Reminders' },
   { key:'cs', icon:'💬', title:'Customer Support' },
-  { key:'queries', icon:'📨', title:'Counsellor Queries' },
+  { key:'clTasks', icon:'📋', title:'CL Tasks' },
 ];
 
 function notifCount(key) {
   if (key === 'own') return OWN_TASKS_MOCK.length;
   if (key === 'cs') return RM_ESCALATIONS.find(e => e.label === 'Customer Support')?.count || 0;
-  if (key === 'queries') return queryUnreadCount();
+  if (key === 'clTasks') return clTaskPendingCount();
   return 0;
 }
 
 function notifSubtitle(key, count) {
   if (key === 'own') return `${count} pending reminders`;
   if (key === 'cs') return `${count} students need attention`;
-  if (key === 'queries') return count ? `${count} awaiting your response` : `${QUERIES_MOCK.length} query threads · all caught up`;
+  if (key === 'clTasks') return count ? `${count} awaiting your action` : `${CL_TASKS_MOCK.length} tasks · all caught up`;
   return '';
 }
 
@@ -2718,8 +2750,8 @@ function buildNotifBody(g, count) {
         </div>
       </div>`).join('');
   }
-  if (g.key === 'queries') {
-    return `<div class="pt-3">${buildQueriesBody()}</div>`;
+  if (g.key === 'clTasks') {
+    return `<div class="pt-3">${buildClTasksBody()}</div>`;
   }
   return '';
 }
@@ -4754,7 +4786,7 @@ function boot() {
   renderIncentives();
   document.getElementById('reminderDateTime').min = nowLocalISO();
   document.getElementById('reminderDateTimeMgr').min = nowLocalISO();
-  populateQueryLeadSelects();
+  populateClTaskLeadSelects();
 }
 
 boot();
