@@ -2530,69 +2530,28 @@ function toggleWaGroup(key) {
 // type, an optional note and a due date. 'rm_to_cl' tasks are ones this RM raised
 // for the counsellor to act on; 'cl_to_rm' tasks are ones the counsellor raised
 // for this RM — those are the ones this RM can mark complete.
+// Backed by the shared CLTaskStore (shared/cl-tasks-store.js) so tasks raised
+// here show up live in Counsellor CRM too, and vice versa — same store,
+// synced across the two apps via localStorage + the storage event.
 // Retention once a task is closed out:
 //   - cl_to_rm: the RM marking it complete removes it from the list immediately.
 //   - rm_to_cl: once the counsellor closes it out, it shows as Done for 1 day
 //     (tracked via closedDate), then disappears from the list on its own.
-const CL_TASK_TYPES = [
-  { value:'FILE_MORE_APPLICATIONS', label:'File More Applications' },
-  { value:'CONNECT_WITH_STUDENT', label:'Connect with Student' },
-  { value:'STUDENT_DEFERRED', label:'Student Deferred' },
-  { value:'STUDENT_DROPPED', label:'Student Dropped' },
-  { value:'OTHERS', label:'Others' },
-];
-const RM_TASK_TYPES = [
-  { value:'BOOK_UPDATE_IELTS_EXAM', label:'Book/Update IELTS Exam' },
-  { value:'DOCUMENT_COLLECTION', label:'Document Collection' },
-  { value:'CONNECT_WITH_STUDENT', label:'Connect with Student' },
-  { value:'BOOK_LOAN_VC', label:'Book Loan VC' },
-  { value:'OTHERS', label:'Others' },
-];
-function clTaskTypeLabel(taskType, direction, otherSpecify) {
-  if (taskType === 'OTHERS') return otherSpecify ? `Others: ${otherSpecify}` : 'Others';
-  const list = direction === 'rm_to_cl' ? CL_TASK_TYPES : RM_TASK_TYPES;
-  return (list.find(t => t.value === taskType) || {}).label || taskType;
-}
+const CL_TASK_TYPES = CLTaskStore.CL_TASK_TYPES;
+const RM_TASK_TYPES = CLTaskStore.RM_TASK_TYPES;
+function clTaskTypeLabel(taskType, direction, otherSpecify) { return CLTaskStore.typeLabel(direction, taskType, otherSpecify); }
+function clTaskPendingCount() { return CLTaskStore.pendingCount('cl_to_rm'); }
+function visibleClTasks() { return CLTaskStore.visible(); }
 
-let clTaskIdCounter = 1063;
-const CL_TASKS_MOCK = [
-  { id:'CT-1042', pipeline:'sti', leadId:'RM-2041', leadName:'Ananya Sharma', direction:'rm_to_cl',
-    taskType:'CONNECT_WITH_STUDENT', notes:'Student is asking if the scholarship can still be applied post CF — please confirm eligibility with them directly.',
-    dueDate:'2026-09-10', createdDate:'2026-09-05', status:'open' },
-  { id:'CT-1051', pipeline:'sti', leadId:'RM-2089', leadName:'Karan Mehta', direction:'rm_to_cl',
-    taskType:'OTHERS', otherSpecify:'Reprioritise applications after country switch', notes:'Student wants to switch preferred country from Germany to UK post F2F — please reprioritise applications.',
-    dueDate:'2026-09-12', createdDate:'2026-09-06', status:'done', closedDate: todayISO() },
-  { id:'CT-1039', pipeline:'sti', leadId:'RM-2041', leadName:'Ananya Sharma', direction:'rm_to_cl',
-    taskType:'STUDENT_DEFERRED', notes:'Student is deferring to the next intake — please note it on the college portal.',
-    dueDate:'2026-09-08', createdDate:'2026-09-02', status:'done', closedDate:'2026-09-05' },
-  { id:'CT-1063', pipeline:'revenue', leadId:'RM-2045', leadName:'Tanvir Ahmed', direction:'cl_to_rm',
-    taskType:'BOOK_UPDATE_IELTS_EXAM', notes:'Student has raised a concern about the Prime pricing shared — please re-walk them through it and confirm the IELTS exam date.',
-    dueDate:'2026-09-14', createdDate:'2026-09-07', status:'open' },
-  { id:'CT-1071', pipeline:'loan', leadId:'RM-2051', leadName:'Rahul Jain', direction:'cl_to_rm',
-    taskType:'DOCUMENT_COLLECTION', notes:'PF portal is asking for an updated bank statement — please collect it from the student.',
-    dueDate:'2026-09-09', createdDate:'2026-09-04', status:'open' },
-  { id:'CT-1082', pipeline:'loan', leadId:'RM-2068', leadName:'Lakshmi Venkat', direction:'cl_to_rm',
-    taskType:'BOOK_LOAN_VC', notes:'College Finalised is done — please book a Loan VC slot for the student.',
-    dueDate:'2026-09-16', createdDate:'2026-09-08', status:'open' },
-];
-
-function clTaskPendingCount() { return CL_TASKS_MOCK.filter(t => t.direction === 'cl_to_rm' && t.status === 'open').length; }
-
-function daysBetween(isoA, isoB) {
-  return Math.round((new Date(isoB + 'T00:00:00') - new Date(isoA + 'T00:00:00')) / 86400000);
-}
-
-// cl_to_rm tasks never persist as 'done' — marking one complete removes it outright.
-// rm_to_cl tasks stay visible for 1 day after the counsellor closes them out (closedDate), then drop off.
-function visibleClTasks() {
-  const today = todayISO();
-  return CL_TASKS_MOCK.filter(t => {
-    if (t.status !== 'done') return true;
-    if (t.direction === 'cl_to_rm') return false;
-    if (!t.closedDate) return true;
-    return daysBetween(t.closedDate, today) < 1;
-  });
-}
+// Re-render the Notifications drawer live if it's open when the store
+// changes — including changes made from the Counsellor CRM side.
+CLTaskStore.onChange(() => {
+  const drawer = document.getElementById('drawer');
+  const title = document.getElementById('drawerTitle');
+  if (drawer && drawer.classList.contains('open') && title && title.textContent === 'Notifications') {
+    openNotifPanel();
+  }
+});
 
 function clTaskCardHtml(t) {
   const dirLabel = t.direction === 'rm_to_cl' ? 'You → CL' : 'CL → You';
@@ -2627,9 +2586,7 @@ function buildClTasksBody() {
 }
 
 function markClTaskDone(id) {
-  const idx = CL_TASKS_MOCK.findIndex(x => x.id === id);
-  if (idx === -1) return;
-  CL_TASKS_MOCK.splice(idx, 1);
+  CLTaskStore.markDone(id);
   showToast('Task marked complete.', 'success');
   openNotifPanel();
 }
@@ -2670,10 +2627,7 @@ function submitClTask() {
   const notes = document.getElementById('clTaskNotes').value.trim();
   const dueDate = document.getElementById('clTaskDueDate').value;
   const { pipeline, leadId, leadName } = clTaskModalCtx;
-  CL_TASKS_MOCK.unshift({
-    id: `CT-${++clTaskIdCounter}`, pipeline, leadId, leadName, direction:'rm_to_cl',
-    taskType: typeSel.value, otherSpecify: typeSel.value === 'OTHERS' ? otherSpecify : '', notes, dueDate: dueDate || null, createdDate: todayISO(), status:'open',
-  });
+  CLTaskStore.create({ pipeline, leadId, leadName, direction:'rm_to_cl', taskType: typeSel.value, otherSpecify, notes, dueDate });
   closeClTaskModal();
   showToast('Task created for the counsellor.', 'success');
 }
@@ -2725,10 +2679,7 @@ function submitStandaloneClTask(selectId, typeId, otherId, notesId, dueId) {
   if (typeSel.value === 'OTHERS' && !otherSpecify) { showToast('Please specify the task.', 'error'); return; }
   const lead = findLeadByCompoundId(sel.value);
   if (!lead) { showToast('Selected lead no longer has an active task.', 'error'); return; }
-  CL_TASKS_MOCK.unshift({
-    id: `CT-${++clTaskIdCounter}`, pipeline: lead.pipeline, leadId: lead.id, leadName: lead.name, direction:'rm_to_cl',
-    taskType: typeSel.value, otherSpecify: typeSel.value === 'OTHERS' ? otherSpecify : '', notes: notesEl.value.trim(), dueDate: dueEl.value || null, createdDate: todayISO(), status:'open',
-  });
+  CLTaskStore.create({ pipeline: lead.pipeline, leadId: lead.id, leadName: lead.name, direction:'rm_to_cl', taskType: typeSel.value, otherSpecify, notes: notesEl.value.trim(), dueDate: dueEl.value });
   sel.value = '';
   typeSel.value = '';
   otherEl.value = '';

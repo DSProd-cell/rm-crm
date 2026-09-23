@@ -3,9 +3,10 @@
   "configurations": [
     {
       "name": "rm-crm",
-      "runtimeExecutable": "python3",
-      "runtimeArgs": ["-m", "http.server", "3095"],
-      "port": 3095
+      "runtimeExecutable": "bash",
+      "runtimeArgs": ["-c", "python3 -m http.server \"$PORT\""],
+      "port": 3100,
+      "autoPort": true
     }
   ]
 }

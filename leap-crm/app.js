@@ -1,0 +1,11003 @@
+/* ═══════════════════════════════════════════════════════════
+   EduCRM v1 — app.js   (vanilla JS, no dependencies beyond CDNs)
+═══════════════════════════════════════════════════════════ */
+
+/* ── Mock Data ── */
+
+const TARGETS = {
+  calls: 50, leads: 30, enrolments: 5, revenue: 300000, followups: 20,
+  stis: 10, applications: 8, deposits: 6, lockins: 4,
+  revenue_target: 300000, f2f: 5, isl: 5, referral: 30, tasks: 20
+};
+
+const COUNSELORS = [
+  { id:1, name:'Priya Sharma',  team:'Alpha', role:'counselor', email:'priya@edu.in',  avatar:'PS', designation:'Senior Counselor', joiningDate:'12 Mar 2023', manager:'Sneha Kapoor', photoUrl:'',
+    today:{ calls:45, leads:26, enrolments:4, revenue:210000, followups:16, stis:7, applications:5, deposits:3, lockins:2, f2f:3, isl:4.2, referralPct:25, tasks:14, q1score:78, q2score:82, revenueCollected:210000 } },
+  { id:2, name:'Rohan Mehta',   team:'Alpha', role:'counselor', email:'rohan@edu.in',  avatar:'RM', designation:'Counselor', joiningDate:'05 Aug 2022', manager:'Sneha Kapoor', photoUrl:'',
+    today:{ calls:52, leads:31, enrolments:6, revenue:340000, followups:21, stis:9, applications:7, deposits:5, lockins:4, f2f:5, isl:4.5, referralPct:35, tasks:18, q1score:84, q2score:88, revenueCollected:340000 } },
+  { id:3, name:'Ananya Singh',  team:'Alpha', role:'counselor', email:'ananya@edu.in', avatar:'AS', designation:'Counselor', joiningDate:'20 Jan 2024', manager:'Sneha Kapoor', photoUrl:'',
+    today:{ calls:28, leads:14, enrolments:2, revenue:95000,  followups:9,  stis:4, applications:2, deposits:1, lockins:0, f2f:1, isl:3.8, referralPct:10, tasks:8,  q1score:62, q2score:58, revenueCollected:95000 } },
+  { id:4, name:'Karan Nair',    team:'Alpha', role:'counselor', email:'karan@edu.in',  avatar:'KN', designation:'Senior Counselor', joiningDate:'14 Jun 2022', manager:'Sneha Kapoor', photoUrl:'',
+    today:{ calls:50, leads:30, enrolments:5, revenue:300000, followups:20, stis:10, applications:8, deposits:6, lockins:4, f2f:5, isl:4.4, referralPct:32, tasks:20, q1score:80, q2score:85, revenueCollected:300000 } },
+  { id:5, name:'Divya Reddy',   team:'Beta',  role:'counselor', email:'divya@edu.in',  avatar:'DR', designation:'Counselor', joiningDate:'09 Sep 2023', manager:'Vijay Kumar', photoUrl:'',
+    today:{ calls:38, leads:22, enrolments:3, revenue:175000, followups:14, stis:6, applications:4, deposits:2, lockins:1, f2f:2, isl:4.0, referralPct:20, tasks:12, q1score:70, q2score:72, revenueCollected:175000 } },
+  { id:6, name:'Sahil Joshi',   team:'Beta',  role:'counselor', email:'sahil@edu.in',  avatar:'SJ', designation:'Team Lead', joiningDate:'01 Mar 2021', manager:'Vijay Kumar', photoUrl:'',
+    today:{ calls:55, leads:33, enrolments:7, revenue:390000, followups:24, stis:12, applications:10, deposits:8, lockins:6, f2f:7, isl:4.7, referralPct:45, tasks:22, q1score:91, q2score:93, revenueCollected:390000 } },
+  { id:7, name:'Meera Pillai',  team:'Beta',  role:'counselor', email:'meera@edu.in',  avatar:'MP', designation:'Counselor', joiningDate:'14 Feb 2025', manager:'Vijay Kumar', photoUrl:'',
+    today:{ calls:19, leads:9,  enrolments:1, revenue:48000,  followups:6,  stis:2, applications:1, deposits:0, lockins:0, f2f:1, isl:3.5, referralPct:5,  tasks:5,  q1score:50, q2score:45, revenueCollected:48000 } },
+  { id:8, name:'Arjun Khanna',  team:'Beta',  role:'counselor', email:'arjun@edu.in',  avatar:'AK', designation:'Counselor', joiningDate:'22 Oct 2023', manager:'Vijay Kumar', photoUrl:'',
+    today:{ calls:41, leads:24, enrolments:3, revenue:165000, followups:13, stis:6, applications:5, deposits:3, lockins:2, f2f:3, isl:4.1, referralPct:22, tasks:13, q1score:74, q2score:76, revenueCollected:165000 } },
+];
+
+const TEAM_LEADS = [
+  { id:9,  name:'Sneha Kapoor', team:'Alpha', role:'team_lead', email:'sneha@edu.in',  avatar:'SK', designation:'Team Lead', joiningDate:'01 Jan 2021', manager:'Nisha Agarwal',
+    ownTaskCounts:{ islReviews:{due:0,total:1}, docsConditionalAdmit:{due:0,total:2}, verifyProbableConditions:{due:0,total:1}, depositPaymentVerification:{due:0,total:1}, applicantFeedback:{due:0,total:5}, visaDropRequest:{due:0,total:0}, dropOffApproval:{due:0,total:9} } },
+  { id:10, name:'Vijay Kumar',  team:'Beta',  role:'team_lead', email:'vijay@edu.in',  avatar:'VK', designation:'Team Lead', joiningDate:'15 Mar 2021', manager:'Nisha Agarwal',
+    ownTaskCounts:{ islReviews:{due:0,total:0}, docsConditionalAdmit:{due:0,total:3}, verifyProbableConditions:{due:0,total:2}, depositPaymentVerification:{due:0,total:2}, applicantFeedback:{due:0,total:3}, visaDropRequest:{due:0,total:0}, dropOffApproval:{due:0,total:6} } },
+];
+
+const OPS_USERS = [
+  { id:11, name:'Nisha Agarwal', team:'Ops', role:'ops_admin', email:'nisha@edu.in', avatar:'NA', designation:'Ops Admin', joiningDate:'01 Jun 2020', manager:'—' },
+];
+
+const POD_LEADERS = [
+  { id:20, name:'Arjun Mehta',  pod:'Alpha POD', role:'pod_leader', email:'arjun.m@edu.in', avatar:'AM', designation:'POD Leader',      joiningDate:'01 Jun 2020', manager:'Nisha Agarwal',
+    ownTaskCounts:{ islReviews:{due:0,total:1}, docsConditionalAdmit:{due:0,total:120}, verifyProbableConditions:{due:0,total:25}, depositPaymentVerification:{due:0,total:18}, applicantFeedback:{due:0,total:3}, visaDropRequest:{due:0,total:0}, dropOffApproval:{due:0,total:5} } },
+  { id:21, name:'Preethi Nair', pod:'Beta POD',  role:'pod_leader', email:'preethi@edu.in',  avatar:'PN', designation:'POD Leader',      joiningDate:'15 Aug 2020', manager:'Nisha Agarwal',
+    ownTaskCounts:{ islReviews:{due:0,total:0}, docsConditionalAdmit:{due:0,total:95}, verifyProbableConditions:{due:0,total:20}, depositPaymentVerification:{due:0,total:16}, applicantFeedback:{due:0,total:2}, visaDropRequest:{due:0,total:0}, dropOffApproval:{due:0,total:4} } },
+];
+const SENIOR_MANAGERS = [
+  { id:30, name:'Nisha Agarwal', role:'senior_manager', email:'nisha.sm@edu.in', avatar:'NA', designation:'Senior Manager', joiningDate:'01 Mar 2019', manager:'Rajesh Sharma' },
+];
+const DIRECTORS = [
+  { id:40, name:'Rajesh Sharma', role:'director', email:'rajesh@edu.in', avatar:'RS', designation:'Director', joiningDate:'01 Jan 2018', manager:'—' },
+];
+
+// Org hierarchy
+const HIERARCHY = {
+  podToTLs:      { 20:[9],    21:[10]   },
+  tlToCounselors:{ 9:[1,2,3,4], 10:[5,6,7,8] },
+  smToPods:      { 30:[20,21] },
+  dirToSMs:      { 40:[30]    },
+};
+
+// Mock manager incentive data
+const MGR_INCENTIVE = {
+  9:  { monthly:52000, alltime:480000, components:[{name:'Team STI Bonus',earned:22000},{name:'Deposit Slab',earned:18000},{name:'Revenue Override',earned:12000}] },
+  10: { monthly:48000, alltime:420000, components:[{name:'Team STI Bonus',earned:20000},{name:'Deposit Slab',earned:16000},{name:'Revenue Override',earned:12000}] },
+  20: { monthly:85000, alltime:920000, components:[{name:'POD Revenue Bonus',earned:40000},{name:'Team Multiplier',earned:30000},{name:'QC Bonus',earned:15000}] },
+  21: { monthly:78000, alltime:840000, components:[{name:'POD Revenue Bonus',earned:36000},{name:'Team Multiplier',earned:28000},{name:'QC Bonus',earned:14000}] },
+  30: { monthly:140000,alltime:1800000,components:[{name:'SM Cluster Bonus',earned:70000},{name:'Org Multiplier',earned:45000},{name:'Leadership Premium',earned:25000}] },
+  40: { monthly:220000,alltime:3200000,components:[{name:'Director Cluster Bonus',earned:120000},{name:'Org Performance',earned:70000},{name:'Strategic Bonus',earned:30000}] },
+};
+
+const MGR_OFFERS = [
+  { id:'m1', title:'Team STI Accelerator', desc:'Close 20+ team STIs this month → unlock ₹15,000 leadership bonus on top of your slab.', expiry:'31 Jul 2026', tier:'team_lead' },
+  { id:'m2', title:'POD Revenue Trophy', desc:'Lead the highest revenue POD this quarter → ₹20,000 bonus + POD Excellence badge.', expiry:'30 Sep 2026', tier:'pod_leader' },
+  { id:'m3', title:'Cluster Revenue Trophy', desc:'Lead the highest revenue cluster this quarter → ₹25,000 bonus + Director\'s Club badge.', expiry:'30 Sep 2026', tier:'senior_manager' },
+  { id:'m4', title:'Zero Unhappy Challenge', desc:'Maintain 0 unresolved Unhappy flags for 30 days across your cluster → ₹10,000 QC premium.', expiry:'31 Jul 2026', tier:'senior_manager' },
+];
+
+// FY 2026-27: Apr 2026 → Mar 2027 (current month = May 2026 = index 1)
+const MONTHLY_EARNINGS = [42000, 38400, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+
+const INCENTIVE_SLABS = [
+  {
+    component:'STI', rule:'₹2,500 per STI converted', status:'7 STIs (100%)', earned:17500,
+    drivePeriod:'01 May – 31 May 2026',
+    earners:[
+      { name:'Sahil Joshi',   count:'12 STIs', earned:30000 },
+      { name:'Karan Nair',    count:'10 STIs', earned:25000 },
+      { name:'Rohan Mehta',   count:'9 STIs',  earned:22500 },
+      { name:'Priya Sharma',  count:'7 STIs',  earned:17500 },
+      { name:'Divya Reddy',   count:'6 STIs',  earned:15000 },
+    ],
+  },
+  {
+    component:'Deposits', rule:'₹5,000 per deposit collected', status:'3 deposits (75%)', earned:15000,
+    drivePeriod:'15 May – 31 May 2026',
+    earners:[
+      { name:'Sahil Joshi',   count:'8 deposits', earned:40000 },
+      { name:'Rohan Mehta',   count:'5 deposits', earned:25000 },
+      { name:'Karan Nair',    count:'4 deposits', earned:20000 },
+      { name:'Priya Sharma',  count:'3 deposits', earned:15000 },
+    ],
+  },
+  {
+    component:'Paid Service Revenue', rule:'2% of paid service revenue', status:'₹4.8L collected', earned:9600,
+    drivePeriod:'01 May – 31 May 2026',
+    earners:[
+      { name:'Sahil Joshi',   count:'₹8.2L', earned:16400 },
+      { name:'Karan Nair',    count:'₹6.1L', earned:12200 },
+      { name:'Rohan Mehta',   count:'₹5.5L', earned:11000 },
+      { name:'Priya Sharma',  count:'₹4.8L', earned:9600  },
+      { name:'Arjun Khanna',  count:'₹3.2L', earned:6400  },
+    ],
+  },
+  {
+    component:'Lock In', rule:'₹8,000 per lock-in achieved', status:'2 lock-ins (80%)', earned:16000,
+    drivePeriod:'23 May – 29 May 2026',
+    earners:[
+      { name:'Sahil Joshi',  count:'6 lock-ins', earned:48000 },
+      { name:'Rohan Mehta', count:'4 lock-ins', earned:32000 },
+      { name:'Priya Sharma',count:'2 lock-ins', earned:16000 },
+    ],
+  },
+  {
+    component:'Referrals', rule:'₹3,000 per successful referral enrolment', status:'1 referral (50%)', earned:3000,
+    drivePeriod:'01 May – 31 May 2026',
+    earners:[
+      { name:'Sahil Joshi',  count:'5 referrals', earned:15000 },
+      { name:'Karan Nair',   count:'3 referrals', earned:9000  },
+      { name:'Rohan Mehta',  count:'2 referrals', earned:6000  },
+      { name:'Priya Sharma', count:'1 referral',  earned:3000  },
+    ],
+  },
+];
+
+const TRAINING_MODULES = [
+  { id:'m1', name:'Soft Training', lessons:3, items:[
+    { title:'Cold Calling Mastery',      desc:'Master the art of opening conversations.',    type:'Video'    },
+    { title:'Objection Handling Guide',  desc:'Handling common objections with confidence.', type:'Document' },
+    { title:'Follow-up Framework',       desc:'A systematic approach to follow-up.',         type:'Link'     },
+  ]},
+  { id:'m2', name:'Domain Training', lessons:3, items:[
+    { title:'Course Catalogue 2025',     desc:'Complete overview of all courses & fees.',    type:'Document' },
+    { title:'Scholarship Matrix',        desc:'Understanding scholarship eligibility.',       type:'Link'     },
+    { title:'Demo Session Walkthrough',  desc:'How to run an effective product demo.',       type:'Video'    },
+  ]},
+  { id:'m3', name:'System Training', lessons:2, items:[
+    { title:'Using EduCRM Effectively',  desc:'Tips for logging tasks & tracking perf.',     type:'Video'    },
+    { title:'WhatsApp Communication SOP',desc:'Standard operating procedure for WA.',       type:'Document' },
+  ]},
+  { id:'m4', name:'New Features', lessons:2, items:[
+    { title:'Latest Platform Updates',   desc:'Overview of new features rolled out recently.', type:'Video'    },
+    { title:'Feature Adoption Guide',    desc:'Step-by-step guide to using new features.',     type:'Document' },
+  ]},
+];
+
+const COURSE_UPDATES = [
+  'New MBA batch starting June 2026 — update your pitch deck!',
+  'BBA scholarship deadline extended to 30 May 2026.',
+  'Engineering counselor certification exam — register by 25 May.',
+  'Q1 fee structure revision — check updated catalogue.',
+  'Alumni referral bonus increased to ₹2,000 per enrolment.',
+];
+
+const SUPPORT_TICKETS = [
+  { id:'TKT-001', subject:'Revenue figure mismatch for April', counselor:'Priya Sharma',   category:'Data Correction', status:'Open'     },
+  { id:'TKT-002', subject:'Incentive slab not applied correctly', counselor:'Rohan Mehta', category:'Incentive Query', status:'Open'     },
+  { id:'TKT-003', subject:'Cannot access training module 3',     counselor:'Meera Pillai', category:'Training Access', status:'Resolved' },
+  { id:'TKT-004', subject:'App crash on task log submit',        counselor:'Divya Reddy',  category:'Technical Issue', status:'Open'     },
+];
+
+/* ── Counsellor-facing ticket data (rich, with date/desc/update) ── */
+const COUNSELLOR_TICKETS = [
+  { id:'TKT-001', dateRaised:'20 Jun 2026', category:'Incentive Query',    status:'Resolved', resolvedDate:'25 Jun 2026', tat:5, description:'My April incentive slab was not applied correctly. The amount shown is Rs. 12,000 but based on my paid service revenue it should be Rs. 15,500.',                           update:'Incentive recalculated and updated by ops team. Rs. 15,500 has been applied to your account as of 25 June 2026.' },
+  { id:'TKT-002', dateRaised:'01 Jul 2026', category:'CRM Issues',         status:'Open',     description:'Unable to log task completion for student U1003. The Save button is unresponsive after filling all details. Happens consistently on Chrome.',                           update:'Issue escalated to the tech team. Under investigation — expected fix in 48 hours.' },
+  { id:'TKT-003', dateRaised:'05 Jul 2026', category:'SOP Issue',          status:'Open',     description:'The SOP document for Canadian university applications is outdated — it still shows 2025 deadline dates and old fee structures.',                                          update:'SOP team has been notified. Updated document will be shared within 48 hours.' },
+  { id:'TKT-004', dateRaised:'15 Jun 2026', category:'University Support', status:'Resolved', resolvedDate:'22 Jun 2026', tat:7, description:'Brock University has not responded to my student\'s (U1006) application for 3 weeks. Need escalation support from the LEAP university relations team.',                update:'LEAP university relations team followed up with Brock directly. Application reviewed and moved to shortlisting stage as of 22 June.' },
+  { id:'TKT-005', dateRaised:'07 Jul 2026', category:'APP Issue',          status:'Open',     description:'The Boost Output cards are not loading on mobile view. All four cards appear blank. Tested on Chrome mobile and Safari — same issue on both.',                         update:'Logged with dev team. Fix expected in the next release cycle.' },
+];
+
+/* ── Mock students for Priya Sharma (counselor id:1) ── */
+const STUDENTS = [
+  { id:'U1001', counselorId:1, name:'Aarav Mehta',     course:'MBA Finance',      stage:'sti',         followup:'2026-06-02', appDownloaded:true,  lastCallDate:'20 May 2026', lastCallOutcome:'Connected', qualityScore:82, lastConnected:'20 May 2026 11:42 AM', country:'UK',
+    whatsappGroups:[{ groupName:'MBA Batch A – Jun 2026', counselorJoined:true, studentJoined:true },{ groupName:'Finance Study Group', counselorJoined:true, studentJoined:false }],
+    subtasks:[{ label:'Call the student', done:true, timestamp:'20 May 11:42 AM', notes:'Discussed fees', outcome:'Connected' }, { label:'Send a WhatsApp message', done:true, timestamp:'20 May 1:00 PM', notes:'Sent brochure', outcome:'Connected' }, { label:'Follow up on payment', done:false }, { label:'Book a session / demo', done:false }, { label:'Update application status', done:false }],
+    activity:[{ type:'Call logged', time:'20 May 11:42 AM', notes:'Student interested, follow up on fee waiver' }, { type:'WhatsApp sent', time:'20 May 1:00 PM', notes:'Sent MBA brochure PDF' }] },
+  { id:'U1002', counselorId:2, name:'Sanya Kapoor',    course:'BBA Marketing',    stage:'application', followup:'2026-06-10', appDownloaded:false, lastCallDate:'19 May 2026', lastCallOutcome:'Not Reachable', qualityScore:65, lastConnected:'18 May 2026 4:15 PM', country:'Canada',
+    whatsappGroups:[{ groupName:'BBA General – Jun 2026', counselorJoined:true, studentJoined:false }],
+    subtasks:[{ label:'Call the student', done:true, timestamp:'19 May 4:15 PM', notes:'Not reachable', outcome:'Not Reachable' }, { label:'On Hold Application Drafts', done:false }, { label:'Send a WhatsApp message', done:false }, { label:'Follow up on payment', done:false }],
+    activity:[{ type:'Call logged', time:'19 May 4:15 PM', notes:'Not reachable — tried 3 times' }, { type:'Application updated', time:'19 May 5:00 PM', notes:'Marked as application submitted' }] },
+  { id:'U1003', counselorId:1, name:'Rahul Verma',     course:'B.Tech CSE',       stage:'deposit',     followup:'2026-06-02', appDownloaded:true,  lastCallDate:'21 May 2026', lastCallOutcome:'Promise to Pay', qualityScore:74, lastConnected:'21 May 2026 10:00 AM', country:'Australia',
+    whatsappGroups:[{ groupName:'CSE Batch Jun 2026', counselorJoined:true, studentJoined:true },{ groupName:'Tech Prep Group', counselorJoined:false, studentJoined:false }],
+    subtasks:[{ label:'Call the student', done:true, timestamp:'21 May 10:00 AM', notes:'Promised to pay by 23rd', outcome:'Promise to Pay' }, { label:'Follow up on payment', done:false }, { label:'Send a WhatsApp message', done:true, timestamp:'21 May 11:00 AM', notes:'Sent payment link', outcome:'Connected' }],
+    activity:[{ type:'Call logged', time:'21 May 10:00 AM', notes:'Promised deposit by 23 May' }, { type:'WhatsApp sent', time:'21 May 11:00 AM', notes:'Payment link shared' }] },
+  { id:'U1004', counselorId:3, name:'Prerna Singh',    course:'MBA HR',            stage:'sti',         followup:'2026-06-10', appDownloaded:false, lastCallDate:'22 May 2026', lastCallOutcome:'Callback Requested', qualityScore:55, lastConnected:'22 May 2026 3:00 PM', country:'USA',
+    whatsappGroups:[{ groupName:'MBA General – Jun 2026', counselorJoined:true, studentJoined:false }],
+    subtasks:[{ label:'Call the student', done:false }, { label:'Send a WhatsApp message', done:false }, { label:'Book a session / demo', done:false }, { label:'Share a document / template', done:false }, { label:'Follow up on payment', done:false }],
+    activity:[{ type:'Call logged', time:'22 May 3:00 PM', notes:'Requested callback at 5 PM tomorrow' }] },
+  { id:'U1005', counselorId:4, name:'Devansh Joshi',   course:'BCA Data Science',  stage:'lockin',      followup:'2026-06-02', appDownloaded:true,  lastCallDate:'21 May 2026', lastCallOutcome:'Connected', qualityScore:90, lastConnected:'21 May 2026 2:30 PM', country:'Germany',
+    whatsappGroups:[{ groupName:'BCA Batch A', counselorJoined:true, studentJoined:true }],
+    subtasks:[{ label:'Follow up on payment', done:true, timestamp:'21 May 2:30 PM', notes:'Received offer, finalizing', outcome:'Connected' }, { label:'Update application status', done:true, timestamp:'21 May 3:00 PM', notes:'Shortlisted — awaiting lock-in payment', outcome:'Connected' }],
+    activity:[{ type:'Call logged', time:'21 May 2:30 PM', notes:'Shortlisting offer shared, student reviewing' }, { type:'Application updated', time:'21 May 3:00 PM', notes:'Stage: Shortlisted — lock-in pending' }] },
+  { id:'U1006', counselorId:1, name:'Ishita Rawat',    course:'MBA Finance',       stage:'application', followup:'2026-06-10', appDownloaded:true,  lastCallDate:'20 May 2026', lastCallOutcome:'Connected', qualityScore:68, lastConnected:'20 May 2026 5:00 PM', country:'Ireland',
+    whatsappGroups:[{ groupName:'MBA Batch A – Jun 2026', counselorJoined:true, studentJoined:true }],
+    subtasks:[{ label:'Call the student', done:true, timestamp:'20 May 5:00 PM', notes:'Documents pending QC', outcome:'Connected' }, { label:'QC Cleared: Filing Pending', done:false }, { label:'Send a WhatsApp message', done:true, timestamp:'20 May 5:30 PM', notes:'Sent next steps doc', outcome:'Connected' }],
+    activity:[{ type:'Call logged', time:'20 May 5:00 PM', notes:'QC cleared — awaiting filing' }, { type:'WhatsApp sent', time:'20 May 5:30 PM', notes:'Next steps document shared' }] },
+  { id:'U1007', counselorId:2, name:'Karan Tiwari',    course:'B.Com',             stage:'sti',         followup:'2026-06-10', appDownloaded:false, lastCallDate:'22 May 2026', lastCallOutcome:'Not Reachable', qualityScore:40, lastConnected:'19 May 2026 11:00 AM', country:'Singapore',
+    whatsappGroups:[{ groupName:'B.Com General', counselorJoined:true, studentJoined:false },{ groupName:'Finance Study Group', counselorJoined:true, studentJoined:false }],
+    subtasks:[{ label:'Call the student', done:false }, { label:'Send a WhatsApp message', done:false }, { label:'Book a session / demo', done:false }],
+    activity:[{ type:'Call logged', time:'22 May 9:00 AM', notes:'Not reachable for 3 days' }] },
+  { id:'U1008', counselorId:3, name:'Meenal Shah',     course:'MBA Marketing',     stage:'deposit',     followup:'2026-06-02', appDownloaded:true,  lastCallDate:'22 May 2026', lastCallOutcome:'Connected', qualityScore:79, lastConnected:'22 May 2026 12:00 PM', country:'New Zealand',
+    whatsappGroups:[{ groupName:'MBA Batch B – Jun 2026', counselorJoined:true, studentJoined:true }],
+    subtasks:[{ label:'Follow up on payment', done:false }, { label:'Call the student', done:true, timestamp:'22 May 12:00 PM', notes:'Confirming deposit timeline', outcome:'Connected' }],
+    activity:[{ type:'Call logged', time:'22 May 12:00 PM', notes:'Deposit expected by 25 May' }] },
+
+  /* ── New demo students added for full card coverage ── */
+  { id:'U1009', counselorId:4, name:'Arjun Sharma',    course:'MBA Operations',    stage:'lockin',      followup:'2026-06-10', appDownloaded:true,  lastCallDate:'08 Jun 2026', lastCallOutcome:'Connected',      qualityScore:85, lastConnected:'08 Jun 2026 10:00 AM', country:'UK',
+    whatsappGroups:[{ groupName:'MBA Ops Batch Jun 2026', counselorJoined:false, studentJoined:false }],
+    subtasks:[{ label:'Follow up on payment', done:false }, { label:'Book a session / demo', done:false }, { label:'Send STI confirmation', done:false }],
+    activity:[{ type:'Call logged', time:'08 Jun 10:00 AM', notes:'Student ready to lock in — pending STI confirmation' }] },
+
+  { id:'U1010', counselorId:1, name:'Kavya Nair',      course:'B.Tech IT',         stage:'deposit',     followup:'2026-06-10', appDownloaded:false, lastCallDate:'09 Jun 2026', lastCallOutcome:'Not Reachable',  qualityScore:62, lastConnected:'07 Jun 2026 3:00 PM',  country:'Australia',
+    whatsappGroups:[{ groupName:'Tech Batch Jun 2026', counselorJoined:true, studentJoined:false }],
+    subtasks:[{ label:'Call the student', done:false }, { label:'Send a WhatsApp message', done:false }, { label:'Follow up on payment', done:false }],
+    activity:[{ type:'Call logged', time:'09 Jun 11:00 AM', notes:'Not reachable — tried twice today' }] },
+
+  { id:'U1011', counselorId:2, name:'Rohan Gupta',     course:'BBA International', stage:'application', followup:'2026-06-10', appDownloaded:false, lastCallDate:'09 Jun 2026', lastCallOutcome:'Not Reachable',  qualityScore:58, lastConnected:'06 Jun 2026 4:00 PM',  country:'Canada',
+    whatsappGroups:[],
+    subtasks:[{ label:'Call the student', done:false }, { label:'QC Rejected and On Hold', done:false }, { label:'Send a WhatsApp message', done:false }],
+    activity:[{ type:'Call logged', time:'09 Jun 2:00 PM', notes:'QC rejected — application on hold' }] },
+
+  { id:'U1012', counselorId:4, name:'Sneha Patel',     course:'MBA Marketing',     stage:'lockin',      followup:'2026-06-10', appDownloaded:true,  lastCallDate:'09 Jun 2026', lastCallOutcome:'Connected',      qualityScore:91, lastConnected:'09 Jun 2026 11:00 AM', country:'Germany',
+    whatsappGroups:[{ groupName:'MBA Europe Jun 2026', counselorJoined:true, studentJoined:true }],
+    subtasks:[{ label:'Follow up on payment', done:true, timestamp:'09 Jun 11:00 AM', notes:'Payment confirmed', outcome:'Connected' }, { label:'Lock-in confirmation', done:false }],
+    activity:[{ type:'Call logged', time:'09 Jun 11:00 AM', notes:'Lock-in almost done — awaiting final confirmation' }] },
+
+  { id:'U1013', counselorId:1, name:'Fatima Sheikh',   course:'MSc Data Analytics', stage:'sti',        followup:'2026-06-10', appDownloaded:false, lastCallDate:'09 Jun 2026', lastCallOutcome:'Connected',      qualityScore:70, lastConnected:'09 Jun 2026 9:30 AM',  country:'Ireland',
+    whatsappGroups:[{ groupName:'MSc Analytics Jun 2026', counselorJoined:true, studentJoined:false }],
+    subtasks:[{ label:'Share shortlist (ISL)', done:false }, { label:'Send a WhatsApp message', done:false }],
+    activity:[{ type:'Call logged', time:'09 Jun 9:30 AM', notes:'First call done — discussed course options, ISL pending' }] },
+
+  { id:'U1014', counselorId:2, name:'Yusuf Khan',      course:'MBA General',       stage:'application', followup:'2026-06-10', appDownloaded:false, lastCallDate:'09 Jun 2026', lastCallOutcome:'Connected',      qualityScore:66, lastConnected:'09 Jun 2026 1:15 PM',  country:'UK',
+    whatsappGroups:[],
+    subtasks:[{ label:'Share shortlist (ISL)', done:false }, { label:'Call the student', done:false }],
+    activity:[{ type:'Call logged', time:'09 Jun 1:15 PM', notes:'First call done — awaiting shortlist share' }] },
+];
+
+/* ── ISL / F2F / UC / Lead Status per student ── */
+const STUDENT_PIPELINE_DATA = {
+  // islSharedDate, secondCallDate, leadStatus, ucAssigned, englishTestGiven (IELTS/TOEFL/Duolingo/PTE)
+  U1001: { islSharedDate:'2026-06-01', secondCallDate:null,         leadStatus:null,       ucAssigned:false, englishTestGiven:false, casI20Raised:false },
+  U1002: { islSharedDate:'2026-06-03', secondCallDate:null,         leadStatus:null,       ucAssigned:true,  englishTestGiven:false, casI20Raised:false },
+  U1003: { islSharedDate:'2026-05-20', secondCallDate:'2026-05-25', leadStatus:null,       ucAssigned:true,  englishTestGiven:true,  casI20Raised:false },
+  U1004: { islSharedDate:'2026-06-05', secondCallDate:null,         leadStatus:null,       ucAssigned:false, englishTestGiven:false, casI20Raised:false },
+  U1005: { islSharedDate:'2026-05-15', secondCallDate:'2026-05-22', leadStatus:null,       ucAssigned:true,  englishTestGiven:true,  casI20Raised:false },
+  U1006: { islSharedDate:'2026-06-04', secondCallDate:null,         leadStatus:null,       ucAssigned:true,  englishTestGiven:true,  casI20Raised:false },
+  U1007: { islSharedDate:'2026-05-28', secondCallDate:null,         leadStatus:'Drop off', ucAssigned:false, englishTestGiven:false, casI20Raised:false },
+  U1008: { islSharedDate:'2026-05-18', secondCallDate:'2026-05-30', leadStatus:null,       ucAssigned:true,  englishTestGiven:true,  casI20Raised:false },
+  U1009: { islSharedDate:'2026-06-07', secondCallDate:'2026-06-08', leadStatus:null,       ucAssigned:false, englishTestGiven:false, casI20Raised:false },
+  U1010: { islSharedDate:'2026-06-02', secondCallDate:'2026-06-06', leadStatus:null,       ucAssigned:true,  englishTestGiven:false, casI20Raised:false },
+  U1011: { islSharedDate:null,         secondCallDate:null,         leadStatus:null,       ucAssigned:false, englishTestGiven:false, casI20Raised:false },
+  U1012: { islSharedDate:'2026-06-08', secondCallDate:'2026-06-09', leadStatus:null,       ucAssigned:true,  englishTestGiven:true,  casI20Raised:false },
+  U1013: { islSharedDate:null,         secondCallDate:null,         leadStatus:null,       ucAssigned:false, englishTestGiven:false, casI20Raised:false },
+  U1014: { islSharedDate:null,         secondCallDate:null,         leadStatus:null,       ucAssigned:false, englishTestGiven:false, casI20Raised:false },
+};
+STUDENTS.forEach(s => Object.assign(s, STUDENT_PIPELINE_DATA[s.id] || { islSharedDate:null, secondCallDate:null, leadStatus:null, ucAssigned:false }));
+
+/* ── Application Status (determines when student leaves Boost STI) ── */
+const STI_TERMINAL_STATUSES = ['Submitted to Institute', 'Application Dropped'];
+const ON_HOLD_TASK_LABELS   = ['qc cleared: filing pending', 'on hold application drafts', 'qc rejected and on hold'];
+
+const STUDENT_APP_STATUS = {
+  // Students whose application is submitted or dropped — should NOT appear in Boost STI
+  // U1007: 'Submitted to Institute',  // example: uncomment to test removal
+};
+STUDENTS.forEach(s => { s.applicationStatus = STUDENT_APP_STATUS[s.id] || null; });
+
+function isBoostSTIActive(s) {
+  return !STI_TERMINAL_STATUSES.includes(s.applicationStatus);
+}
+
+/* Revenue & services data per student */
+const STUDENT_REVENUE_DATA = {
+  U1001: { isQlPremium: true,  hasFinalisedUniversity: false, hasDocs: true,  specialServices: [],            hasPaidPremium: false, amountPaid: 0,      servicingType: 'partner',     nonPartnerSubType: null                    },
+  U1002: { isQlPremium: false, hasFinalisedUniversity: false, hasDocs: false, specialServices: ['SOP'],        hasPaidPremium: false, amountPaid: 0,      servicingType: 'non-partner', nonPartnerSubType: 'specialised-services'  },
+  U1003: { isQlPremium: true,  hasFinalisedUniversity: true,  hasDocs: true,  specialServices: [],            hasPaidPremium: true,  amountPaid: 85000,  servicingType: 'partner',     nonPartnerSubType: null                    },
+  U1004: { isQlPremium: false, hasFinalisedUniversity: false, hasDocs: false, specialServices: ['Visa'],       hasPaidPremium: false, amountPaid: 0,      servicingType: 'non-partner', nonPartnerSubType: 'specialised-services'  },
+  U1005: { isQlPremium: true,  hasFinalisedUniversity: true,  hasDocs: true,  specialServices: [],            hasPaidPremium: true,  amountPaid: 120000, servicingType: 'partner',     nonPartnerSubType: null                    },
+  U1006: { isQlPremium: false, hasFinalisedUniversity: false, hasDocs: false, specialServices: ['SOP','Visa'], hasPaidPremium: false, amountPaid: 0,      servicingType: 'non-partner', nonPartnerSubType: 'premium-universities'  },
+  U1007: { isQlPremium: false, hasFinalisedUniversity: false, hasDocs: false, specialServices: [],              hasPaidPremium: false, amountPaid: 0,      servicingType: 'non-partner', nonPartnerSubType: 'paid-application'      },
+  U1008: { isQlPremium: true,  hasFinalisedUniversity: false, hasDocs: false, specialServices: [],              hasPaidPremium: true,  amountPaid: 60000,  servicingType: 'partner',     nonPartnerSubType: null                   },
+  U1009: { isQlPremium: true,  hasFinalisedUniversity: true,  hasDocs: true,  specialServices: [],              hasPaidPremium: true,  amountPaid: 95000,  servicingType: 'partner',     nonPartnerSubType: null                   },
+  U1010: { isQlPremium: false, hasFinalisedUniversity: false, hasDocs: false, specialServices: ['IELTS'],       hasPaidPremium: false, amountPaid: 0,      servicingType: 'non-partner', nonPartnerSubType: 'premium-universities' },
+  U1011: { isQlPremium: false, hasFinalisedUniversity: false, hasDocs: false, specialServices: ['SOP','IELTS'], hasPaidPremium: false, amountPaid: 0,      servicingType: 'non-partner', nonPartnerSubType: 'specialised-services' },
+  U1012: { isQlPremium: true,  hasFinalisedUniversity: true,  hasDocs: true,  specialServices: [],              hasPaidPremium: true,  amountPaid: 110000, servicingType: 'partner',     nonPartnerSubType: null                   },
+  U1013: { isQlPremium: false, hasFinalisedUniversity: false, hasDocs: false, specialServices: [],              hasPaidPremium: false, amountPaid: 0,      servicingType: 'non-partner', nonPartnerSubType: 'paid-application'     },
+  U1014: { isQlPremium: false, hasFinalisedUniversity: false, hasDocs: false, specialServices: [],              hasPaidPremium: false, amountPaid: 0,      servicingType: 'non-partner', nonPartnerSubType: 'paid-application'     },
+};
+STUDENTS.forEach(s => Object.assign(s, STUDENT_REVENUE_DATA[s.id] || { isQlPremium:false, hasFinalisedUniversity:false, hasDocs:false, specialServices:[], hasPaidPremium:false }));
+
+/* ISL rating (out of 10) + escalation flag per student — used for Unhappy Cohort */
+const STUDENT_ISL = {
+  U1001: { islRating: 8.5, hasEscalation: false },
+  U1002: { islRating: 6.2, hasEscalation: false },
+  U1003: { islRating: 7.4, hasEscalation: false },
+  U1004: { islRating: 5.8, hasEscalation: true  },
+  U1005: { islRating: 9.1, hasEscalation: false },
+  U1006: { islRating: 7.0, hasEscalation: false },
+  U1007: { islRating: 4.3, hasEscalation: true  },
+  U1008: { islRating: 8.0, hasEscalation: false },
+  U1009: { islRating: 8.7, hasEscalation: false },
+  U1010: { islRating: 6.0, hasEscalation: false },
+  U1011: { islRating: 7.0, hasEscalation: true  },
+  U1012: { islRating: 9.2, hasEscalation: false },
+  U1013: { islRating: 7.5, hasEscalation: false },
+  U1014: { islRating: 7.2, hasEscalation: false },
+};
+STUDENTS.forEach(s => Object.assign(s, STUDENT_ISL[s.id] || { islRating: 8.0, hasEscalation: false }));
+
+/* Counsellor Assigned Date per student */
+const STUDENT_CA_DATES = {
+  U1001: '2026-04-10', U1002: '2026-04-15', U1003: '2026-03-20',
+  U1004: '2026-05-01', U1005: '2026-03-05', U1006: '2026-04-22',
+  U1007: '2026-05-10', U1008: '2026-04-28',
+  U1009: '2026-05-15', U1010: '2026-05-20', U1011: '2026-05-25', U1012: '2026-05-18',
+  U1013: '2026-06-01', U1014: '2026-06-03',
+};
+STUDENTS.forEach(s => { s.caDate = STUDENT_CA_DATES[s.id] || ''; });
+
+/* WA unanswered messages — student asked in group, counsellor hasn't replied */
+const WA_UNANSWERED = {
+  U1002: [
+    { question: 'Can you share details about the BBA admission process?', date: '2026-05-28', leadStatus: 'Application' },
+    { question: 'What scholarship options are available for BBA Marketing?', date: '2026-05-29', leadStatus: 'Application' },
+  ],
+  U1004: [
+    { question: 'I wanted to know more about the visa process for the USA intake.', date: '2026-05-27', leadStatus: 'STI' },
+  ],
+  U1007: [
+    { question: 'What documents do I need to submit for B.Com admission?', date: '2026-05-26', leadStatus: 'STI' },
+    { question: 'Is hostel accommodation available on campus?', date: '2026-05-28', leadStatus: 'STI' },
+  ],
+  U1010: [
+    { question: 'When is the last date to pay the deposit?', date: '2026-06-08', leadStatus: 'Deposit' },
+  ],
+  U1011: [
+    { question: 'Can you review my SOP draft before submission?', date: '2026-06-09', leadStatus: 'Application' },
+    { question: 'What is the deadline for the IELTS waiver?', date: '2026-06-09', leadStatus: 'Application' },
+  ],
+};
+
+/* Deferrals opportunity — admits with no deposit, or deposit with no visa */
+const DEFERRAL_DATA = {
+  U1002: { hasAdmitPrevIntake: true,  admitUniversity: 'London Business School',  admitIntake: 'Jan 2026', depositPaid: false, visaDone: false },
+  U1006: { hasAdmitPrevIntake: true,  admitUniversity: 'Trinity College Dublin',   admitIntake: 'Sep 2025', depositPaid: false, visaDone: false },
+  U1003: { hasAdmitPrevIntake: false, admitUniversity: 'Deakin University',        admitIntake: 'Feb 2026', depositPaid: true,  visaDone: false },
+  U1008: { hasAdmitPrevIntake: false, admitUniversity: 'Massey University NZ',     admitIntake: 'Mar 2026', depositPaid: true,  visaDone: false },
+  U1009: { hasAdmitPrevIntake: true,  admitUniversity: 'Warwick Business School',  admitIntake: 'Jan 2026', depositPaid: false, visaDone: false },
+  U1012: { hasAdmitPrevIntake: false, admitUniversity: 'TU Munich',               admitIntake: 'Oct 2026', depositPaid: true,  visaDone: false },
+};
+STUDENTS.forEach(s => { s.deferral = DEFERRAL_DATA[s.id] || null; });
+
+/* ── Extra mock fields for the Counsellor Chatbot: F2F scheduling, Admit Preference (for the
+   "admitted" cohort — DEFERRAL_DATA students; a missing Admit Preference represents the backend's
+   combined CONDITIONAL_ADMIT_RECEIVED_FILL_ADMIT_PREFERENCE_AND_DATE_OF_FULFILMENT_FROM_USER task
+   still being open), first-call timestamp + Q&A tag for the ISL-pending-shortlist list (islSharedDate
+   === null students), and agreement e-sign status for premium-paid students. f2fScheduledDate follows
+   the same "<= today = due" idiom as `followup` elsewhere. */
+const COUNSELLOR_BOT_EXTRA_DATA = {
+  U1002: { admitPreference:null },
+  U1003: { f2fScheduledDate:'2026-06-05', f2fTime:'11:00 AM', admitPreference:'Probable Deposit', agreementSigned:false, agreementPaidDate:'2 days ago' },
+  U1005: { f2fScheduledDate:'2026-06-04', f2fTime:'3:00 PM',  agreementSigned:true },
+  U1006: { admitPreference:'Confirmed' },
+  U1008: { admitPreference:'Probable Deposit', agreementSigned:false, agreementPaidDate:'1 day ago' },
+  U1009: { admitPreference:null, agreementSigned:true },
+  U1011: { firstCallAt:'2026-06-09 02:15 PM', qnaGenerated:true },
+  U1012: { f2fScheduledDate:'2026-06-09', f2fTime:'10:30 AM', admitPreference:'Confirmed', agreementSigned:true },
+  U1013: { firstCallAt:'2026-06-09 09:30 AM', qnaGenerated:true },
+  U1014: { firstCallAt:'2026-06-09 01:15 PM', qnaGenerated:false },
+};
+STUDENTS.forEach(s => Object.assign(s, COUNSELLOR_BOT_EXTRA_DATA[s.id] || {}));
+
+const BADGE_TYPES = [
+  { id:'b1', icon:'🏆', name:'Top Performer',  desc:'Achieved #1 rank in any metric for a month',  color:'#F97316' },
+  { id:'b2', icon:'🔥', name:'On Fire',         desc:'7-day streak above 100% on all metrics',       color:'#EF4444' },
+  { id:'b3', icon:'💎', name:'Diamond Closer',  desc:'Achieved 10+ lock-ins in a single month',      color:'#8B5CF6' },
+  { id:'b4', icon:'⭐', name:'Star Counselor',  desc:'Average rating above 8.5 for the month',       color:'#F59E0B' },
+  { id:'b5', icon:'🚀', name:'Revenue Rocket',  desc:'Exceeded revenue target by 20%+',              color:'#10B981' },
+  { id:'b6', icon:'🤝', name:'Referral King',   desc:'Generated 5+ referrals in a month',            color:'#3B82F6' },
+];
+
+/* Badges awarded to Priya Sharma (counselor id:1) */
+const AWARDED_BADGES = [
+  { counselorId:1, badgeId:'b1', awardedBy:'Sneha Kapoor', date:'15 Apr 2026', note:'Top in STI conversions for April!' },
+  { counselorId:1, badgeId:'b4', awardedBy:'Sneha Kapoor', date:'01 May 2026', note:'Excellent rating all month!' },
+  { counselorId:2, badgeId:'b5', awardedBy:'Sneha Kapoor', date:'01 May 2026', note:'Rohan smashed revenue targets!' },
+  { counselorId:6, badgeId:'b2', awardedBy:'Vijay Kumar',  date:'10 May 2026', note:'Sahil on a 10-day streak!' },
+];
+
+let OFFERS = [
+  { id:'o1', title:'Double Bonus on Lock-ins this week!', desc:'Close any lock-in between May 23–29 and earn ₹2,000 extra bonus per lock-in.', bucket:'lockin', expiry:'2026-05-29', active:true },
+  { id:'o2', title:'STI Sprint — Top 3 get gift vouchers', desc:'Submit the most STIs between May 23–25. Top 3 win Amazon vouchers.', bucket:'sti', expiry:'2026-05-25', active:true },
+  { id:'o3', title:'Application Accelerator Offer', desc:'Convert 5 applications this week and unlock a bonus slab upgrade.', bucket:'application', expiry:'2026-05-30', active:true },
+];
+
+/* Counsellor-specific live offers */
+const COUNSELLOR_OFFERS = [
+  {
+    id:'co1', icon:'🏆', tag:'Performance Sprint',
+    title:'Top Depositor of the Week!',
+    desc:'Collect the highest deposits this week (May 27–31) and win a ₹3,000 Amazon voucher + profile badge.',
+    reward:'₹3,000 Gift Voucher', expiry:'2026-05-31', active:true,
+    gradFrom:'#1d4ed8', gradTo:'#1e3a8a',
+    calcRows:[
+      { rank:'1st Place',        prize:'₹3,000 Gift Voucher + 🏅 Profile Badge' },
+      { rank:'2nd Place',        prize:'₹1,500 Gift Voucher' },
+      { rank:'3rd Place',        prize:'₹500 Gift Voucher' },
+      { rank:'All (5+ deposits)',prize:'₹500 bonus per deposit above target' },
+    ],
+    targetBucket:'deposit',
+    targetDesc:'Students in Deposit stage — call and push them to complete fee payment this week.',
+  },
+  {
+    id:'co2', icon:'🚀', tag:'Revenue Challenge',
+    title:'Non-Partner Revenue Blitz',
+    desc:'Collect ₹5L+ in paid service revenue before June 5 and unlock an extra 0.5% commission on your full month revenue.',
+    reward:'+0.5% Commission Upgrade', expiry:'2026-06-05', active:true,
+    gradFrom:'#1d4ed8', gradTo:'#1e3a8a',
+    calcRows:[
+      { rank:'Threshold',       prize:'₹5L paid service revenue' },
+      { rank:'Reward',          prize:'+0.5% commission on entire May revenue' },
+      { rank:'Example payout',  prize:'₹8L × 2.5% = ₹20,000 total commission' },
+      { rank:'Bonus',           prize:'₹1,000 per additional ₹50K above ₹5L' },
+    ],
+    targetBucket:'lockin',
+    targetDesc:'Students with finalised universities — push for paid service enrolment closures.',
+  },
+  {
+    id:'co3', icon:'⭐', tag:'Referral Boost',
+    title:'Referral King — Earn Extra ₹1,000',
+    desc:'Get 3+ confirmed referrals from your existing students this week. Every referral that converts earns ₹1,000 extra on top of your slab.',
+    reward:'₹1,000 per referral', expiry:'2026-06-02', active:true,
+    gradFrom:'#2563eb', gradTo:'#1e40af',
+    calcRows:[
+      { rank:'Base Slab',    prize:'Standard referral bonus applies' },
+      { rank:'Sprint Bonus', prize:'+₹1,000 per referral that converts' },
+      { rank:'3 referrals',  prize:'Extra ₹3,000 bonus this week' },
+      { rank:'5+ referrals', prize:'Extra ₹5,000 + Special Recognition Badge' },
+    ],
+    targetBucket:'sti',
+    targetDesc:'Engaged students (ISL > 8, app downloaded) — highest referral probability. Ask after positive touchpoints.',
+  },
+];
+
+/* ── Info Hub Data (12 universities) ── */
+const INFO_HUB_DATA = [
+  /* UK */
+  { id:'u1', name:'University of Manchester', country:'UK', flag:'🇬🇧', city:'Manchester', type:'Public', desc:'Top 25 global university with world-class research programs across business, science and engineering.',
+    website:'https://www.manchester.ac.uk', intake:['Sep 2026','Jan 2027'], depositInr:85000, depositCcy:'£800', depositDeadline:'2026-07-15', refundPolicy:'Full refund if visa refused', paymentNotes:'Bank transfer or card',
+    scholarship:{ name:'Manchester Global Scholarship', eligibility:['First-class degree or equivalent','IELTS 6.5+','Letter of motivation'], amount:'20% tuition fee waiver', deadline:'2026-05-31' },
+    courses:[{ name:'MSc Data Science', duration:'1 year', fee:'£28,000/yr', entry:'IELTS 6.5, 2.1 degree' },{ name:'MBA', duration:'1 year', fee:'£32,000/yr', entry:'GMAT 600+, 3 yrs exp' }],
+    docs:['SOP','2 LORs','Transcripts','IELTS/TOEFL','CV','Degree Certificate'], lastUpdatedBy:'Nisha Agarwal', lastUpdatedDate:'20 May 2026' },
+
+  { id:'u2', name:'University of Edinburgh', country:'UK', flag:'🇬🇧', city:'Edinburgh', type:'Public', desc:'Ancient research university ranked in the global top 30, known for its vibrant campus and diverse programs.',
+    website:'https://www.ed.ac.uk', intake:['Sep 2026'], depositInr:90000, depositCcy:'£850', depositDeadline:'2026-06-30', refundPolicy:'50% refund if withdrawn 60 days before start', paymentNotes:'Online payment portal',
+    scholarship:{ name:'Edinburgh Global Online Learning Scholarship', eligibility:['Academic excellence','Demonstrated financial need','Strong references'], amount:'₹1,00,000 off tuition', deadline:'2026-06-01' },
+    courses:[{ name:'MSc Artificial Intelligence', duration:'1 year', fee:'£30,500/yr', entry:'IELTS 6.5, CS background' },{ name:'MSc Finance', duration:'1 year', fee:'£27,500/yr', entry:'GMAT 650+' }],
+    docs:['SOP','2 LORs','Transcripts','IELTS','Portfolio (if applicable)','CV'], lastUpdatedBy:'Nisha Agarwal', lastUpdatedDate:'18 May 2026' },
+
+  { id:'u3', name:"King's College London", country:'UK', flag:'🇬🇧', city:'London', type:'Public', desc:'Russell Group university in the heart of London, one of the largest and oldest in the UK.',
+    website:'https://www.kcl.ac.uk', intake:['Sep 2026','Jan 2027'], depositInr:95000, depositCcy:'£900', depositDeadline:'2026-08-01', refundPolicy:'Non-refundable except visa refusal', paymentNotes:'Bank transfer only',
+    scholarship:{ name:"King's International Postgraduate Scholarship", eligibility:['Outstanding academic record','Non-EU international student','Unconditional offer holder'], amount:'£5,000 off first year', deadline:'2026-06-15' },
+    courses:[{ name:'MSc International Management', duration:'1 year', fee:'£31,500/yr', entry:'IELTS 7.0, 2.1 degree' },{ name:'MSc Computer Science', duration:'1 year', fee:'£33,500/yr', entry:'IELTS 7.0, CS degree' }],
+    docs:['SOP','2 LORs','Transcripts','IELTS/TOEFL','CV','Research proposal (for research programs)'], lastUpdatedBy:'Nisha Agarwal', lastUpdatedDate:'15 May 2026' },
+
+  { id:'u4', name:'University of Birmingham', country:'UK', flag:'🇬🇧', city:'Birmingham', type:'Public', desc:'Russell Group research university offering more than 300 taught postgraduate programs.',
+    website:'https://www.birmingham.ac.uk', intake:['Sep 2026'], depositInr:75000, depositCcy:'£700', depositDeadline:'2026-07-31', refundPolicy:'Full refund if visa refused', paymentNotes:'Card or bank transfer',
+    scholarship:{ name:'Birmingham Global Masters Scholarship', eligibility:['Merit-based','First-class or high second-class degree','Research statement required'], amount:'15% tuition waiver', deadline:'2026-05-30' },
+    courses:[{ name:'MSc Business Analytics', duration:'1 year', fee:'£24,500/yr', entry:'IELTS 6.5, quantitative background' },{ name:'MBA', duration:'1 year', fee:'£28,000/yr', entry:'GMAT 550+, 2 yrs exp' }],
+    docs:['SOP','2 LORs','Transcripts','IELTS','CV'], lastUpdatedBy:'Nisha Agarwal', lastUpdatedDate:'12 May 2026' },
+
+  /* USA */
+  { id:'u5', name:'University of Illinois Urbana-Champaign', country:'USA', flag:'🇺🇸', city:'Champaign, IL', type:'Public', desc:'Top-10 engineering school and one of the largest universities in the US, globally ranked for tech programs.',
+    website:'https://illinois.edu', intake:['Jan 2027','Sep 2026'], depositInr:60000, depositCcy:'$700', depositDeadline:'2026-12-01', refundPolicy:'Non-refundable', paymentNotes:'Online portal only',
+    scholarship:{ name:'Illinois Graduate College Fellowship', eligibility:['GPA 3.5+','GRE 320+ recommended','Research experience preferred'], amount:'$5,000/year stipend', deadline:'2026-07-01' },
+    courses:[{ name:'MS Computer Science', duration:'2 years', fee:'$18,000/yr', entry:'GRE 320+, CS background' },{ name:'MBA iMBA', duration:'2 years', fee:'$22,000 total', entry:'GMAT 600+' }],
+    docs:['SOP','3 LORs','Transcripts','GRE/GMAT','TOEFL/IELTS','CV'], lastUpdatedBy:'Nisha Agarwal', lastUpdatedDate:'19 May 2026' },
+
+  { id:'u6', name:'Northeastern University', country:'USA', flag:'🇺🇸', city:'Boston, MA', type:'Private', desc:'Co-op focused research university with exceptional industry placement and a global campus network.',
+    website:'https://www.northeastern.edu', intake:['Sep 2026','Jan 2027'], depositInr:55000, depositCcy:'$650', depositDeadline:'2026-06-15', refundPolicy:'Refundable within 30 days', paymentNotes:'Credit card or wire transfer',
+    scholarship:{ name:'Northeastern Merit Scholarship', eligibility:['GPA 3.7+','TOEFL 100+ or IELTS 7.0','Strong work experience'], amount:'Up to $15,000/year', deadline:'2026-05-31' },
+    courses:[{ name:'MS Data Analytics Engineering', duration:'1.5 years', fee:'$33,000/yr', entry:'GRE 310+, quant background' },{ name:'MS Information Systems', duration:'1.5 years', fee:'$31,000/yr', entry:'TOEFL 100+' }],
+    docs:['SOP','2 LORs','Transcripts','GRE/GMAT','TOEFL','CV','Portfolio'], lastUpdatedBy:'Nisha Agarwal', lastUpdatedDate:'17 May 2026' },
+
+  { id:'u7', name:'University of Massachusetts Amherst', country:'USA', flag:'🇺🇸', city:'Amherst, MA', type:'Public', desc:'Flagship campus of the UMass system, known for strong STEM programs and research output.',
+    website:'https://www.umass.edu', intake:['Sep 2026'], depositInr:50000, depositCcy:'$600', depositDeadline:'2026-07-01', refundPolicy:'50% refund within 45 days', paymentNotes:'Online or bank transfer',
+    scholarship:{ name:'UMass International Graduate Award', eligibility:['Academic merit','First-time enrollee','Full-time status'], amount:'$3,000 one-time award', deadline:'2026-06-01' },
+    courses:[{ name:'MS Computer Science', duration:'2 years', fee:'$16,500/yr', entry:'GRE 315+' },{ name:'MBA', duration:'2 years', fee:'$19,500/yr', entry:'GMAT 580+, 2 yrs exp' }],
+    docs:['SOP','3 LORs','Transcripts','GRE','TOEFL','CV'], lastUpdatedBy:'Nisha Agarwal', lastUpdatedDate:'14 May 2026' },
+
+  /* Canada */
+  { id:'u8', name:'University of Toronto', country:'Canada', flag:'🇨🇦', city:'Toronto, ON', type:'Public', desc:'Canada\'s #1 university and a global top-20, offering world-class research and a vibrant international community.',
+    website:'https://www.utoronto.ca', intake:['Sep 2026','Jan 2027'], depositInr:70000, depositCcy:'CA$1,000', depositDeadline:'2026-06-30', refundPolicy:'Full refund if visa refused within 30 days', paymentNotes:'Bank draft or online',
+    scholarship:{ name:'UofT International Student Award', eligibility:['Academic excellence','IELTS 7.0+','Full-time masters enrollment'], amount:'CA$5,000 per year', deadline:'2026-05-15' },
+    courses:[{ name:'MEng in Engineering', duration:'1 year', fee:'CA$28,000/yr', entry:'IELTS 7.0, relevant undergrad' },{ name:'MBA Rotman', duration:'2 years', fee:'CA$45,000/yr', entry:'GMAT 650+, 3 yrs exp' }],
+    docs:['SOP','2 LORs','Transcripts','IELTS/TOEFL','CV','Proof of funding'], lastUpdatedBy:'Nisha Agarwal', lastUpdatedDate:'21 May 2026' },
+
+  { id:'u9', name:'York University', country:'Canada', flag:'🇨🇦', city:'Toronto, ON', type:'Public', desc:'One of Canada\'s largest universities with strong business, arts, and science programs, known for diversity.',
+    website:'https://www.yorku.ca', intake:['Sep 2026','Jan 2027'], depositInr:52000, depositCcy:'CA$750', depositDeadline:'2026-08-01', refundPolicy:'Non-refundable but deferral available', paymentNotes:'Online payment only',
+    scholarship:{ name:'York University International Entrance Scholarship', eligibility:['80%+ in last 2 years of study','IELTS 6.5+','Full-time enrollment'], amount:'CA$3,000 one-time', deadline:'2026-06-30' },
+    courses:[{ name:'MBA Full-Time', duration:'2 years', fee:'CA$35,000/yr', entry:'GMAT 570+, 3 yrs exp' },{ name:'MSc Management', duration:'2 years', fee:'CA$22,000/yr', entry:'IELTS 7.0' }],
+    docs:['SOP','2 LORs','Transcripts','GMAT/GRE','IELTS','CV'], lastUpdatedBy:'Nisha Agarwal', lastUpdatedDate:'16 May 2026' },
+
+  { id:'u10', name:'University of Waterloo', country:'Canada', flag:'🇨🇦', city:'Waterloo, ON', type:'Public', desc:'Canada\'s top tech and engineering university, globally renowned for co-op programs and startup ecosystem.',
+    website:'https://uwaterloo.ca', intake:['Sep 2026'], depositInr:65000, depositCcy:'CA$900', depositDeadline:'2026-07-15', refundPolicy:'Full refund if visa refused', paymentNotes:'Bank transfer or certified cheque',
+    scholarship:{ name:'Waterloo International Masters Award of Excellence', eligibility:['90%+ GPA equivalent','Research background','Strong references'], amount:'CA$10,000/year', deadline:'2026-05-01' },
+    courses:[{ name:'MEng Systems Design', duration:'16 months', fee:'CA$30,000 total', entry:'IELTS 7.0, engineering background' },{ name:'MDS Data Science', duration:'12 months', fee:'CA$26,000 total', entry:'GRE 315+' }],
+    docs:['SOP','2 LORs','Transcripts','GRE','IELTS','CV','Research statement'], lastUpdatedBy:'Nisha Agarwal', lastUpdatedDate:'13 May 2026' },
+
+  /* Australia */
+  { id:'u11', name:'University of Melbourne', country:'Australia', flag:'🇦🇺', city:'Melbourne, VIC', type:'Public', desc:'Australia\'s #1 university and global top-35, offering research-led graduate programs across all disciplines.',
+    website:'https://www.unimelb.edu.au', intake:['Feb 2027','Jul 2026'], depositInr:80000, depositCcy:'A$1,200', depositDeadline:'2026-10-15', refundPolicy:'Refundable if cancelled 4 weeks before start', paymentNotes:'ePayment via portal',
+    scholarship:{ name:'Melbourne International Undergraduate Scholarship', eligibility:['Academic excellence','Strong English proficiency','Non-Australian citizen'], amount:'Up to 100% tuition waiver', deadline:'2026-06-01' },
+    courses:[{ name:'Master of Data Science', duration:'2 years', fee:'A$42,000/yr', entry:'IELTS 6.5, quant degree' },{ name:'Master of Business Administration', duration:'2 years', fee:'A$55,000/yr', entry:'GMAT 620+, 3 yrs exp' }],
+    docs:['SOP','2 LORs','Transcripts','IELTS/TOEFL','CV','Academic reference'], lastUpdatedBy:'Nisha Agarwal', lastUpdatedDate:'22 May 2026' },
+
+  { id:'u12', name:'University of Sydney', country:'Australia', flag:'🇦🇺', city:'Sydney, NSW', type:'Public', desc:'Australia\'s first university, consistently ranked in the global top 50 with a vibrant city campus and strong alumni network.',
+    website:'https://www.sydney.edu.au', intake:['Jul 2026','Feb 2027'], depositInr:75000, depositCcy:'A$1,100', depositDeadline:'2026-09-01', refundPolicy:'Full refund if visa refused', paymentNotes:'Credit card or bank transfer',
+    scholarship:{ name:'Sydney Scholars International Award', eligibility:['Top 10% of graduating cohort','IELTS 7.0+','Academic achievement statement'], amount:'A$5,000 per year', deadline:'2026-07-01' },
+    courses:[{ name:'Master of Information Technology', duration:'1.5 years', fee:'A$38,000/yr', entry:'IELTS 7.0, IT background' },{ name:'MBA', duration:'2 years', fee:'A$52,000/yr', entry:'GMAT 600+, 5 yrs exp' }],
+    docs:['SOP','2 LORs','Transcripts','IELTS','CV','GMAT/GRE (optional)'], lastUpdatedBy:'Nisha Agarwal', lastUpdatedDate:'20 May 2026' },
+];
+
+/* ── Bot Intent Map ── */
+const BOT_INTENT_MAP = {
+  boost_sti: {
+    keywords: ['sti','submission','how to get sti','sti low','increase sti','no sti','sti nahi'],
+    answer: `📋 **Boost STI** — Students who haven't submitted their STI yet are in this pipeline.\n\n**Top actions to get more STIs:**\n1. Call the student and walk them through the STI form step by step\n2. Share the STI template via WhatsApp\n3. Book a 15-min Zoom session to complete it together\n4. Set a follow-up date and log it in the subtask panel`,
+    navLabel: '→ Go to Boost STI',
+    navAction: () => { switchTab('tab1'); setTimeout(() => openBoostDrawer('sti'), 300); },
+  },
+  boost_application: {
+    keywords: ['application','app stuck','application nahi','apply','submit application','no application','boost app'],
+    answer: `📝 **Boost Application** — Students who have an STI but haven't submitted a full application.\n\n**Key actions:**\n1. Send the application checklist document via WhatsApp\n2. Schedule a session to walk through the form\n3. Follow up on pending documents (transcripts, LORs)\n4. Use the Activity Log to track every touchpoint`,
+    navLabel: '→ Go to Boost Application',
+    navAction: () => { switchTab('tab1'); setTimeout(() => openBoostDrawer('application'), 300); },
+  },
+  boost_deposit: {
+    keywords: ['deposit','payment nahi','fee','deposit low','collect deposit','no deposit','boost deposit','deposit stuck'],
+    answer: `💳 **Boost Deposit** — Students who applied but haven't paid a deposit.\n\n**Deposit follow-up strategy:**\n1. Create urgency — mention limited seats and fee deadlines\n2. Share the exact payment link + bank details\n3. Offer a call with the finance team if student is hesitant\n4. Log a "Promise to Pay" in the subtask outcome if they commit`,
+    navLabel: '→ Go to Boost Deposit',
+    navAction: () => { switchTab('tab1'); setTimeout(() => openBoostDrawer('deposit'), 300); },
+  },
+  boost_lockin: {
+    keywords: ['lock','lockin','lock-in','lock in','lock nahi','closing','close deal','lock nahi ho','seal the deal'],
+    answer: `🔒 **Boost Lock-in** — Students who have a shortlisting offer but haven't paid any amount for any service.\n\n**Lock-in closing tactics:**\n1. Share the offer letter and congratulate them genuinely\n2. Break down the payment into simple steps\n3. Highlight the ROI — salary data, alumni success stories\n4. Set a 48-hour deadline to maintain urgency`,
+    navLabel: '→ Go to Boost Lock-in',
+    navAction: () => { switchTab('tab1'); setTimeout(() => openBoostDrawer('lockin'), 300); },
+  },
+  raise_ticket: {
+    keywords: ['ticket','raise ticket','support','issue','problem','complaint','koi problem'],
+    answer: `🎫 **Raising a Support Ticket** — Here's how:\n\n1. Go to **Learning & Development** tab\n2. Click "Raise a Support Request" at the bottom\n3. Select a category, add subject + description\n4. Submit — ops team responds within 4 working hours\n\nUse tickets for: data corrections, incentive queries, training access, or technical issues.`,
+    navLabel: '→ Go to Support',
+    navAction: () => { switchTab('tab3'); setTimeout(openTicketModal, 400); },
+  },
+  find_student: {
+    keywords: ['student list','where student','find student','search student','my students','kaun kaun','pipeline'],
+    answer: `👥 **Finding your students:**\n\nYour full pipeline is organized in the **4 Boost Task Cards** at the top of the Tasks & Performance tab.\n\n- Each card shows students at a specific stage (STI → Application → Deposit → Lock-in)\n- Click any card to see the full student list\n- Use the search bar inside the drawer to find a specific student by name or ID`,
+    navLabel: '→ Go to Tasks & Performance',
+    navAction: () => { switchTab('tab1'); setTimeout(() => { const el = document.getElementById('boostCardsGrid'); if(el) el.classList.add('nav-pulse'); setTimeout(() => el.classList.remove('nav-pulse'), 900); }, 300); },
+  },
+  read_metrics: {
+    keywords: ['metric','conversion','what is ca','conversion %','ka matlab','mean','% kya','kya hai metric','explain metric','10 metric'],
+    answer: `📊 **Your 10 Metrics explained:**\n\n**Volume:**\n• STIs, Applications, Deposits, Lock-ins — actual count + % of students assigned (CA)\n• Tasks Completed — vs daily target\n\n**Quality:**\n• Revenue Collected — ₹ earned vs target\n• F2F Discussions — face-to-face meetings done\n• ISL Feedback Rating — post-F2F score out of 5\n• Referral % from CA — % of your students who referred someone\n• Quality Score — 1st Call + 2nd Call scores separately`,
+    navLabel: null,
+    navAction: null,
+  },
+  incentive_slabs: {
+    keywords: ['incentive details', 'incentive','slab','bonus','earning','salary','kitna milega','kitna kamaonga','paise','commission','kya milega'],
+    answer: `💰 **How your incentives work:**\n\n1. **Calls Slab** — Bonus for hitting ≥80% of daily call target\n2. **Enrolment Bonus** — Fixed ₹6,000 per confirmed enrolment\n3. **Revenue Bonus** — 1% of revenue above ₹2 Lakh threshold\n\nYour current earning: ₹38,400 this month. Projected at 100%: ₹72,000.\n\nSee the full breakdown in the Incentives tab.`,
+    navLabel: '→ See Incentive Breakdown',
+    navAction: () => { switchTab('tab2'); },
+  },
+  opportunity_size: {
+    keywords: ['opportunity','pipeline value','potential','max earn','kitna earn','opportunity size','how much can i earn'],
+    answer: `🎯 **Opportunity Size** is the total revenue possible from all students in your current pipeline who haven't fully locked in yet.\n\nIt's calculated as the sum of course fees for all assigned students who haven't paid the final lock-in amount.\n\nClick the orange Opportunity Size card on the Incentives tab to see a student-by-student breakdown.`,
+    navLabel: '→ View Opportunity Pipeline',
+    navAction: () => { switchTab('tab2'); setTimeout(openOpportunityDrawer, 400); },
+  },
+  quick_links: {
+    keywords: ['join session','video','meet','zoom','template','sheet','template kahan','quick link','session link'],
+    answer: `🔗 **Quick Links** in your L&D tab:\n\n1. **Join Session** — Opens the configured video call (Google Meet / Zoom / 100ms)\n2. **Open Templates** — Opens the shared Google Sheet with all templates and SOPs\n3. **Raise a Request** — Opens the support ticket form\n\nYour ops team sets the actual URLs from the Admin Panel.`,
+    navLabel: '→ Go to Quick Links',
+    navAction: () => { switchTab('tab3'); },
+  },
+  contact_business_head: {
+    keywords: ['business head','contact','training contact','escalate','manager contact','head kaise','reach business head'],
+    answer: null, // dynamic — filled in at render time from bot settings
+    navLabel: null,
+    navAction: null,
+  },
+  give_feedback: {
+    keywords: ['feedback','product feedback','suggestion','improve','kya sahi nahi','bug','feature request','dena chahta'],
+    answer: `💬 **Giving product feedback:**\n\n1. Go to **Learning & Development** tab\n2. Click "Raise a Support Request"\n3. Select **Category: Product Feedback** from the dropdown\n4. Describe your suggestion in the description field\n\nAll feedback goes directly to the ops team and is reviewed weekly.`,
+    navLabel: '→ Raise a Feedback Ticket',
+    navAction: () => { switchTab('tab3'); setTimeout(() => { openTicketModal(); const sel = document.getElementById('ticketCategory'); if(sel) sel.value = 'Product Feedback'; }, 400); },
+  },
+  college_info: {
+    keywords: ['university','college','manchester','edinburgh','kings','birmingham','illinois','northeastern','umass','toronto','york','waterloo','melbourne','sydney','uni','deposit for','course','scholarship','intake','fees'],
+    answer: null, // dynamic lookup
+    navLabel: '→ Browse Info Hub',
+    navAction: () => { switchTab('tab3'); setTimeout(() => { const el = document.getElementById('infoHubSection'); if (el) { el.scrollIntoView({ behavior:'smooth', block:'start' }); if (!document.getElementById('infoHubBody').classList.contains('block')) toggleInfoHub(); } }, 400); },
+  },
+  greeting: {
+    keywords: ['good morning', 'good afternoon', 'good evening', 'good night', 'hello there', 'hi there', 'hey there', 'namaste', 'hello', 'hi', 'hey', 'hii', 'helo', 'heyy'],
+    answer: null, navLabel: null, navAction: null,
+  },
+  training_help: {
+    keywords: ['training / i want to learn', 'i want to learn', 'how to get training', 'need training', 'want training', 'training chahiye', 'training karo', 'sikha do', 'learn something', 'skill improve', 'improve my skill', 'training'],
+    answer: null, navLabel: null, navAction: null,
+  },
+  live_offers_query: {
+    keywords: ['live offers running?', 'live offers running', 'what live offer', 'offers running', 'live offer running', 'kya offer chal raha', 'offer kya hai', 'what offers are running', 'current live offer'],
+    answer: null, navLabel: null, navAction: null,
+  },
+  earn_more_guide: {
+    keywords: ['how can i earn more', 'earn more money', 'increase my earnings', 'how to earn more', 'zyada earn', 'more paise', 'earn kaise karu', 'boost my income'],
+    answer: null, navLabel: null, navAction: null,
+  },
+  target_today_guide: {
+    keywords: ['target for today', 'what is target for today', 'aaj ka target', 'target today', 'what are my targets today'],
+    answer: null, navLabel: null, navAction: null,
+  },
+  who_to_call_guide: {
+    keywords: ['who should i call today', 'whom should i call', 'who to call today', 'call list today', 'aaj kise call'],
+    answer: null, navLabel: null, navAction: null,
+  },
+  start_my_day: {
+    keywords: ['start my day', 'what should i do today', 'where do i begin', 'morning routine', 'start kahan', 'how do i start', 'what to do today', 'morning'],
+    answer: null,
+    navLabel: null,
+    navAction: null,
+  },
+  connect_business_team: {
+    keywords: ['connect with business', 'business team', 'talk to business', 'business head', 'business se baat', 'connect with manager', 'business team se baat'],
+    answer: null,
+    navLabel: null,
+    navAction: null,
+  },
+  need_help: {
+    keywords: ['i need help', 'need help', 'help chahiye', 'help karo', 'mujhe help', 'help please', 'koi help', 'help karna'],
+    answer: null,
+    navLabel: null,
+    navAction: null,
+  },
+  top_performer: {
+    keywords: ['top performer in my cluster', 'top performer in org', 'top performer in the org', 'top performing counsellor', 'top performing counselor', 'who is the top performing', 'top performing', 'top performer', 'best performer', 'who is top', 'top kaun', 'highest performer', 'cluster top', 'org top', 'who performed best', 'best counsellor', 'top counsellor', 'highest calls', 'highest revenue', 'best this month', 'performing counsellor', 'performing counselor'],
+    answer: null,
+    navLabel: null,
+    navAction: null,
+  },
+  incentive_clarify: {
+    keywords: ['understand my incentive', 'incentive calculation', 'incentive samajhna', 'explain my incentive', 'how is incentive calculated', 'incentive kaise', 'incentive clarity', 'incentive explain', 'incentive details', 'how incentive works', 'mera incentive'],
+    answer: null,
+    navLabel: null,
+    navAction: null,
+  },
+  my_targets: {
+    keywords: ['my target', 'what is my target', 'target kya hai', 'today target', 'target batao', 'daily target', 'what are my targets', 'target for today', 'kitna target'],
+    answer: null, // dynamic
+    navLabel: '→ Go to My Dashboard',
+    navAction: () => { switchTab('tab1'); },
+  },
+  who_to_call: {
+    keywords: ['who to call', 'call list', 'priority students', 'should i call', 'call karo', 'whom to call', 'which student to call', 'call priority', 'kaun call', 'call sequence'],
+    answer: null, // dynamic
+    navLabel: '→ View My Pipeline',
+    navAction: () => { switchTab('tab1'); },
+  },
+  my_performance_today: {
+    keywords: ['how am i doing', 'today performance', 'aaj ka status', 'my stats today', 'performance today', 'mera performance', 'kya status', 'how is my performance', 'aaj kitna'],
+    answer: null, // dynamic
+    navLabel: '→ Go to My Dashboard',
+    navAction: () => { switchTab('tab1'); },
+  },
+  live_offers_for_me: {
+    keywords: ['live offers for me', 'what offers', 'current offers', 'counsellor offers', 'live for counsellor', 'koi offer', 'offer hai kya', 'earn more', 'sprint', 'performance sprint', 'referral offer'],
+    answer: `🎁 **Live offers for you are in the Incentives tab!**\n\nThe **Live for Counsellors** section shows all active performance drives — with the full incentive structure and exactly which students to target to earn from each.\n\nClick any offer card to see:\n• The earning milestones & prizes\n• Specific students in your pipeline to focus on`,
+    navLabel: '→ See Live Offers for Me',
+    navAction: () => { switchTab('tab2'); setTimeout(() => { const el = document.getElementById('counsellorOffersRow'); if (el) el.scrollIntoView({behavior:'smooth', block:'start'}); }, 400); },
+  },
+  view_leaderboard: {
+    keywords: ['show me the leaderboard', 'show leaderboard', 'view leaderboard', 'open leaderboard', 'leaderboard dekhna', 'top performers table', 'top performers list', 'leaderboard'],
+    answer: `🏆 **Taking you to the Top Performers leaderboard!**\n\nYou can switch between **Yesterday**, **This Month**, and **Last 3 Months** to compare across the team.`,
+    navLabel: '→ View Top Performers',
+    navAction: () => {
+      switchTab('tab1');
+      setTimeout(() => {
+        const body = document.getElementById('body-mgrTopPerf');
+        if (body && body.classList.contains('hidden')) {
+          toggleSection('mgrTopPerf');
+        }
+        const el = document.getElementById('mgrLeaderboardGrid');
+        const mc = document.getElementById('mainContent');
+        if (el && mc) mc.scrollTo({ top: el.getBoundingClientRect().top + mc.scrollTop - 80, behavior: 'smooth' });
+      }, 400);
+    },
+  },
+  clarify_before_answering: {
+    keywords: ['help me', "i'm stuck", 'im stuck', 'something wrong', "something's wrong"],
+    answer: null,
+    navLabel: null,
+    navAction: null,
+  },
+  incentive_details_guide: {
+    keywords: ['incentive details', 'how your incentives work', 'how do incentives work', 'how incentives work'],
+    answer: null, navLabel: null, navAction: null,
+  },
+  my_raised_tickets: {
+    keywords: ['my raised tickets', 'my tickets', 'support tickets', 'ticket status', 'my support', 'raised tickets'],
+    answer: null, navLabel: null, navAction: null,
+  },
+  agreement_reminders: {
+    keywords: ['agreement reminders', 'agreement reminder', 'pending agreements', 'e-agreement', 'e agreement', 'agreement status', 'who signed', 'agreement'],
+    answer: null, navLabel: null, navAction: null,
+  },
+  connect_manager_hr_ds: {
+    keywords: ['do you want to connect with manager', 'connect with reporting line', 'connect with manager/hr/ds', 'connect with manager', 'connect with hr', 'connect with ds', 'connect manager hr ds', 'connect manager', 'talk to hr', 'talk to manager', 'talk to ds'],
+    answer: null, navLabel: null, navAction: null,
+  },
+  raise_support_ticket_guide: {
+    keywords: ['raise support ticket', 'raise a ticket', 'create ticket', 'new ticket', 'support request'],
+    answer: null, navLabel: null, navAction: null,
+  },
+
+  /* ── Counsellor chatbot — new Bucket 1/2/5 options ── */
+  week_open_tasks: {
+    keywords: ['what should i do this week', 'open this week', 'this week tasks'],
+    answer: null, navLabel: null, navAction: null,
+  },
+  isl_pending_shortlist: {
+    keywords: ['leads pending shortlist (60+ mins)', 'leads pending shortlist', 'pending shortlist 60', 'shortlist not shared'],
+    answer: null, navLabel: null, navAction: null,
+  },
+  qna_ready_leads: {
+    keywords: ['leads with q&a ready', 'leads with qa ready', 'q&a ready', 'qna ready'],
+    answer: null, navLabel: null, navAction: null,
+  },
+  f2f_today: {
+    keywords: ['f2f scheduled today', 'f2f today', 'today\'s f2f', 'todays f2f'],
+    answer: null, navLabel: null, navAction: null,
+  },
+  missing_admit_info: {
+    keywords: ['missing info — students admit preference details', 'missing info students admit preference details', 'missing info post admit', 'missing admit preference', 'admit preference details'],
+    answer: null, navLabel: null, navAction: null,
+  },
+  how_am_i_performing: {
+    keywords: ['how am i performing', 'my performance snapshot'],
+    answer: null, navLabel: null, navAction: null,
+  },
+  focus_input_output: {
+    keywords: ['where should i focus (input vs output)', 'where should i focus input vs output', 'input vs output'],
+    answer: null, navLabel: null, navAction: null,
+  },
+  my_standing_vs_org: {
+    keywords: ['my standing vs org', 'how do i compare', 'my standing vs organisation'],
+    answer: null, navLabel: null, navAction: null,
+  },
+  input_output_correlation: {
+    keywords: ['how input affects output', 'input affects output', 'how does my input affect my output'],
+    answer: null, navLabel: null, navAction: null,
+  },
+  ask_tl_pl_question: {
+    keywords: ['ask tl/pl a question', 'ask tl pl a question', 'ask my tl', 'ask my pl'],
+    answer: null, navLabel: null, navAction: null,
+  },
+
+  /* ── Manager chatbot (TL/PL/SM/Director) — reduced to exactly 2 functions ── */
+  mgr_broadcast: {
+    keywords: ['send broadcast communication', 'send broadcast', 'broadcast communication'],
+    answer: null, navLabel: null, navAction: null,
+  },
+  mgr_reply_questions: {
+    keywords: ['questions from counsellors', 'question from counsellors', 'reply to counsellors'],
+    answer: null, navLabel: null, navAction: null,
+  },
+
+  fallback: {
+    keywords: [],
+    answer: `🤔 I'm not sure about that one. Here's how you can get help:\n\n• Try rephrasing your question\n• Browse the relevant tab directly\n• Raise a support ticket for ops team help`,
+    navLabel: '→ Raise a Support Ticket',
+    navAction: () => { switchTab('tab3'); setTimeout(openTicketModal, 400); },
+  },
+};
+
+/* ── Action Items (Feature C) ── */
+let ACTION_ITEMS = [
+  {
+    id: 'ai_001',
+    title: 'Complete IELTS training module',
+    description: 'Mandatory before your next cohort intake. All counselors must finish by 31 May.',
+    links: [
+      { label: 'Training Module', url: 'https://example.com/ielts-training' },
+      { label: 'FAQ Doc', url: 'https://example.com/faq' },
+    ],
+    sentAt: '2026-05-21T14:30:00Z',
+    completed: false,
+    completedAt: null,
+  },
+  {
+    id: 'ai_002',
+    title: 'Update your student pipeline — May intake',
+    description: 'Ensure all STI statuses are updated before the 29 May deadline.',
+    links: [
+      { label: 'Pipeline Template', url: 'https://docs.google.com/spreadsheets/d/example' },
+    ],
+    sentAt: '2026-05-23T09:00:00Z',
+    completed: false,
+    completedAt: null,
+  },
+  {
+    id: 'ai_003',
+    title: 'Attend team standup — 28 May 10 AM',
+    description: 'Monthly metrics review with the business head. Attendance is mandatory.',
+    links: [
+      { label: 'Join Google Meet', url: 'https://meet.google.com/abc-defg-hij' },
+    ],
+    sentAt: '2026-05-24T08:00:00Z',
+    completed: true,
+    completedAt: '2026-05-24T10:45:00Z',
+  },
+];
+
+/* ── Unhappy Alerts (Feature D) ── */
+let UNHAPPY_ALERTS = [
+  {
+    id: 'ua_001',
+    leadId: 'U1001',
+    studentName: 'Aarav Mehta',
+    reason: 'Shortlist misalignment — student requested lower-budget universities not added',
+    raisedAt: '2026-05-27T08:15:00Z',
+    resolved: false,
+  },
+  {
+    id: 'ua_002',
+    leadId: 'U1004',
+    studentName: 'Prerna Singh',
+    reason: 'Follow-up missed — student flagged lack of response after callback request',
+    raisedAt: '2026-05-27T09:00:00Z',
+    resolved: false,
+  },
+];
+
+/* ── Bot Settings state ── */
+let BOT_SETTINGS = {
+  enabled: true,
+  businessHead: { name:'Rajesh Sharma', designation:'Business Head — EdTech Division', contact:'+91 98765 43210 · rajesh@edu.in' },
+  faqs: [],
+};
+
+/* ── Info Hub filter state ── */
+let infoHubState = {
+  expanded: false,
+  search: '',
+  filters: { country:'All', courseType:'All', deposit:'All', intake:'All' },
+  searchTimer: null,
+};
+
+let QUICK_LINK_URLS = {
+  session:      'https://meet.google.com/abc-defg-hij',
+  sheet:        'https://docs.google.com/spreadsheets/d/example',
+  sop:          '',
+  offerfollowup:'',
+  leadtransfer: '',
+  infohub:      '',
+  leappay:      '',
+  premiumpay:   '',
+};
+
+/* ── Stable seeds for leaderboard ── */
+const EARNER_SEED_MONTH   = [88400,72000,45000,91000,63500,55000,38000,79000];
+const EARNER_SEED_ALLTIME = [720000,540000,380000,810000,495000,430000,290000,670000];
+const EARNER_TL_SEED_MONTH   = [142000, 118000];
+const EARNER_TL_SEED_ALLTIME = [1240000, 980000];
+const offsets = [0.95,1.08,0.72,1.00,0.88,1.15,0.62,0.91];
+const histMults = [0.82,0.91,0.74,0.88,0.95,0.79,1.00,0.86,0.93,0.77,0.90,0.84];
+
+/* ── State ── */
+let state = {
+  role: 'counselor',
+  currentUser: null,
+  viewingCounselorId: 1,
+  historyPeriod: '7d',
+  leaderPeriod: 'today',
+  currentTab: 'tab1',
+  currentAdminPanel: 'users',
+  loginAttempts: 0,
+  lockedUntil: null,
+  earningsChart: null,
+  drawerMode: null,
+  drawerBoostType: null,
+  drawerBoostSubType: null,
+  drawerBoostSubCardId: null,
+  drawerVolumeMetricKey: null,
+  drawerRevenueSubCardId: null,
+  drawerSelectedStudent: null,
+  drawerPrevMode: null,
+  selectedSubtask: null,
+  ownTasks: [],
+  boostAcknowledged: {},
+  botOpen: false,
+  botActiveTab: 'chat',
+  chatPanel: { unreadCount: 0, lastOpenedAt: null, botInputHidden: false },
+  managerFilters: { sms:[], pods:[], tls:[], counselors:[] },
+  mgrLeaderView: 'counsellor',
+  mgrLeaderPeriod: 'yesterday',
+  mgrEarnerView: 'counsellor',
+  botConversation: {
+    flow: null,
+    step: 0,
+    collected: {},
+    history: [],
+    lastIntent: null,
+    shownFollowUps: [],
+  },
+};
+
+/* ═══════════════ UTILS ═══════════════ */
+
+function fmt(n) {
+  if (n >= 100000) return '₹' + (n / 100000).toFixed(1) + 'L';
+  if (n >= 1000)   return '₹' + (n / 1000).toFixed(0) + 'K';
+  return '₹' + n.toLocaleString('en-IN');
+}
+
+function fmtPct(actual, target) {
+  return target ? Math.round((actual / target) * 100) : 0;
+}
+
+function colorClass(pct) {
+  if (pct >= 100) return 'green';
+  if (pct >= 60)  return 'amber';
+  return 'red';
+}
+
+function initials(name) {
+  return name.split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase();
+}
+
+function detectPlatform(url) {
+  if (!url) return 'Session';
+  if (url.includes('meet.google')) return 'Google Meet';
+  if (url.includes('zoom.us'))    return 'Zoom';
+  if (url.includes('100ms'))      return '100ms';
+  return 'Video Session';
+}
+
+function platformIcon(url) {
+  if (!url) return '📹';
+  if (url.includes('meet.google')) return '🎥';
+  if (url.includes('zoom.us'))    return '📹';
+  if (url.includes('100ms'))      return '📡';
+  return '🔗';
+}
+
+function daysUntil(dateStr) {
+  const target = new Date(dateStr);
+  const now = new Date('2026-05-23');
+  return Math.ceil((target - now) / (1000 * 60 * 60 * 24));
+}
+
+function bucketLabel(bucket) {
+  const map = { sti:'Boost STI', application:'Boost Application', deposit:'Boost Deposit', lockin:'Boost Lock-in' };
+  return map[bucket] || bucket;
+}
+
+function bucketEmoji(bucket) {
+  const map = { sti:'📋', application:'📝', deposit:'💳', lockin:'🔒' };
+  return map[bucket] || '🎯';
+}
+
+/* ═══════════════ LOGIN ═══════════════ */
+
+function togglePwd() {
+  const inp = document.getElementById('loginPwd');
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+}
+
+function forgotPwd() { showToast('Password reset link sent to your email.', 'info'); }
+
+function handleLogin() {
+  const btn = document.getElementById('loginBtn');
+  if (state.lockedUntil && Date.now() < state.lockedUntil) {
+    showError('Account locked. Try again after 10 minutes.'); return;
+  }
+  const email = document.getElementById('loginEmail').value.trim();
+  const pwd   = document.getElementById('loginPwd').value;
+  if (!email || !pwd) { showError('Please enter email and password.'); return; }
+  state.loginAttempts++;
+  if (state.loginAttempts >= 3) {
+    state.lockedUntil = Date.now() + 10 * 60 * 1000;
+    btn.disabled = true;
+    showError('Too many failed attempts. Account locked for 10 minutes.'); return;
+  }
+  const role = document.getElementById('loginRole').value;
+  state.role = role;
+  bootApp(role, email);
+}
+
+function showError(msg) {
+  const el = document.getElementById('loginError');
+  el.textContent = msg;
+  el.classList.remove('hidden');
+}
+
+/* ═══════════════ BOOT ═══════════════ */
+
+function bootApp(role, email) {
+  // Determine current user
+  if (role === 'counselor') {
+    state.currentUser = COUNSELORS.find(c => c.email === email) || COUNSELORS[0];
+    state.viewingCounselorId = state.currentUser.id;
+  } else if (role === 'team_lead') {
+    state.currentUser = TEAM_LEADS.find(u => u.email === email) || TEAM_LEADS[0];
+    state.viewingCounselorId = 1;
+  } else if (role === 'pod_leader') {
+    state.currentUser = POD_LEADERS.find(u => u.email === email) || POD_LEADERS[0];
+    state.viewingCounselorId = 1;
+  } else if (role === 'senior_manager') {
+    state.currentUser = SENIOR_MANAGERS.find(u => u.email === email) || SENIOR_MANAGERS[0];
+    state.viewingCounselorId = 1;
+  } else if (role === 'director') {
+    state.currentUser = DIRECTORS.find(u => u.email === email) || DIRECTORS[0];
+    state.viewingCounselorId = 1;
+  } else {
+    state.currentUser = OPS_USERS.find(u => u.email === email) || OPS_USERS[0];
+    state.viewingCounselorId = 1;
+  }
+  state.role = role;
+  // Reset manager filters on login
+  state.managerFilters = { sms:[], pods:[], tls:[], counselors:[] };
+
+  // Restore chat history for this user
+  restoreHistory();
+
+  document.getElementById('loginScreen').classList.add('hidden');
+  document.getElementById('appShell').classList.remove('hidden');
+
+  // Header
+  const u = state.currentUser;
+  document.getElementById('headerAvatar').textContent = u.avatar || initials(u.name);
+  document.getElementById('headerName').textContent   = u.name.split(' ')[0];
+
+  const isMgr = ['team_lead','pod_leader','senior_manager','director'].includes(role);
+  // Header/filter-bar tier — same top bar + filter access as Director, for TL/POD/SM/Director/Ops Admin
+  const isHeaderMgr = isMgr || role === 'ops_admin';
+
+  // Reset all role-gated elements before applying role-specific visibility
+  ['counselorSelectorWrapper', 'globalFilterBar', 'mgrCrmBar', 'mgrCallMergeWrap',
+   'tlCounsellorFilterBar', 'adminTabBtn',
+   'earnerViewToggleWrap',
+   'mgrTab1Panel', 'mgrTab2Panel', 'mgrTab3Panel'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.classList.add('hidden');
+  });
+
+  // Admin tab
+  if (role === 'ops_admin') {
+    document.getElementById('adminTabBtn').classList.remove('hidden');
+  }
+
+  // Ops admin: keep single counsellor drill-down selector, now inside the global filter row
+  if (role === 'ops_admin') {
+    const wrapper = document.getElementById('counselorSelectorWrapper');
+    if (wrapper) wrapper.classList.remove('hidden');
+    const sel = document.getElementById('counselorSelector');
+    if (sel) {
+      sel.innerHTML = '';
+      COUNSELORS.forEach(c => {
+        const opt = document.createElement('option');
+        opt.value = c.id;
+        opt.textContent = c.name + ' (' + c.team + ')';
+        sel.appendChild(opt);
+      });
+      sel.value = state.viewingCounselorId;
+    }
+    const evw = document.getElementById('earnerViewToggleWrap');
+    if (evw) evw.classList.remove('hidden');
+  }
+
+  // TL/POD/SM/Director/Ops Admin: CRM-style header bar (search + view assigned leads + call merge)
+  // and the relocated global filter row (POD/SM/TL/Counsellor) — hide the badge strip to match
+  if (isHeaderMgr) {
+    const crmBar = document.getElementById('mgrCrmBar');
+    if (crmBar) crmBar.classList.remove('hidden');
+    const callMerge = document.getElementById('mgrCallMergeWrap');
+    if (callMerge) callMerge.classList.remove('hidden');
+    const badgeStrip = document.getElementById('badgeStrip');
+    if (badgeStrip) badgeStrip.classList.add('hidden');
+
+    const gfb = document.getElementById('globalFilterBar');
+    if (gfb) { gfb.classList.remove('hidden'); gfb.classList.add('flex'); }
+    buildMgrFilterBar();
+  } else {
+    const badgeStrip = document.getElementById('badgeStrip');
+    if (badgeStrip) badgeStrip.classList.remove('hidden');
+  }
+
+  // Manager roles: show manager aggregate panels
+  if (isMgr) {
+    // Show manager-specific panels in all tabs
+    ['mgrTab1Panel','mgrTab2Panel','mgrTab3Panel'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.classList.remove('hidden');
+    });
+
+    // TL: show drill-down counsellor bar in Tab 1
+    if (role === 'team_lead') {
+      const bar = document.getElementById('tlCounsellorFilterBar');
+      if (bar) bar.classList.remove('hidden');
+      const tlSel = document.getElementById('tlCounsellorSelect');
+      if (tlSel) {
+        tlSel.innerHTML = '<option value="">View All (Aggregate)</option>';
+        COUNSELORS.filter(c => c.team === state.currentUser.team).forEach(c => {
+          const opt = document.createElement('option');
+          opt.value = c.id; opt.textContent = c.name;
+          tlSel.appendChild(opt);
+        });
+      }
+    }
+
+    // Populate assignee dropdown for reminders
+    const assignSel = document.getElementById('mgrReminderAssignee');
+    if (assignSel) {
+      assignSel.innerHTML = '<option value="self">Myself</option>';
+      getReporteeList().forEach(r => {
+        const opt = document.createElement('option');
+        opt.value = r.id; opt.textContent = r.name + ' (' + r.designation + ')';
+        assignSel.appendChild(opt);
+      });
+    }
+  }
+
+  // Role-aware Scorecard & Performance Summary visibility
+  const reportCardSection = document.getElementById('reportCardSection');
+  const standupScoreStrip = document.getElementById('standupScoreStrip');
+  // Hide the counsellor-only boost cards section for manager roles
+  const boostOutputSection = document.getElementById('boostCardsGrid')?.closest('section');
+  const boostInputSection  = document.getElementById('volumeMetrics')?.closest('section');
+  const standupSection     = document.getElementById('body-standup')?.closest('section');
+  if (isMgr) {
+    if (reportCardSection) reportCardSection.classList.add('hidden');
+    if (standupScoreStrip) standupScoreStrip.classList.add('hidden');
+    if (boostOutputSection) boostOutputSection.classList.add('hidden');
+    if (boostInputSection)  boostInputSection.classList.add('hidden');
+    // Performance Summary scorecard (Target/Achieved/Status, incl. CA->STI/LockIn 14D rows)
+    // stays visible for manager roles too — see index.html:480 "TL: standup only"
+    if (standupSection)     standupSection.classList.remove('hidden');
+  } else if (role === 'counselor') {
+    if (reportCardSection) reportCardSection.classList.add('hidden');
+    if (standupScoreStrip) standupScoreStrip.classList.remove('hidden');
+    if (boostOutputSection) boostOutputSection.classList.remove('hidden');
+    if (boostInputSection)  boostInputSection.classList.remove('hidden');
+    if (standupSection)     standupSection.classList.remove('hidden');
+  } else {
+    if (reportCardSection) reportCardSection.classList.add('hidden');
+    if (standupScoreStrip) standupScoreStrip.classList.add('hidden');
+  }
+
+  // Standup manager-only filters (SM / POD / TL / Counsellor) — same access rules as the global filter bar
+  if (role !== 'counselor') {
+    const smSel  = document.getElementById('standupSMFilter');
+    const podSel = document.getElementById('standupPODFilter');
+    const tlSel  = document.getElementById('standupTLFilter');
+    const cfSel  = document.getElementById('standupCounsellorFilter');
+
+    if (smSel) {
+      const showSM = ['director','ops_admin'].includes(role);
+      smSel.classList.toggle('hidden', !showSM);
+      if (showSM) {
+        smSel.innerHTML = '<option value="">All SM</option>';
+        const mySMIds = role === 'ops_admin' ? SENIOR_MANAGERS.map(s => s.id) : (HIERARCHY.dirToSMs[state.currentUser.id] || []);
+        SENIOR_MANAGERS.filter(s => mySMIds.includes(s.id)).forEach(s => {
+          const o = document.createElement('option'); o.value = s.id; o.textContent = s.name; smSel.appendChild(o);
+        });
+      }
+    }
+
+    if (podSel) {
+      const showPOD = ['senior_manager','director','ops_admin'].includes(role);
+      podSel.classList.toggle('hidden', !showPOD);
+      if (showPOD) {
+        podSel.innerHTML = '<option value="">All PL</option>';
+        POD_LEADERS.filter(p => getMyPodIds().includes(p.id)).forEach(p => {
+          const o = document.createElement('option'); o.value = p.id; o.textContent = p.name + ' (' + p.pod + ')'; podSel.appendChild(o);
+        });
+      }
+    }
+
+    if (tlSel) {
+      const showTL = role !== 'team_lead';
+      tlSel.classList.toggle('hidden', !showTL);
+      if (showTL) {
+        tlSel.innerHTML = '<option value="">All TL</option>';
+        TEAM_LEADS.filter(t => getMyTLIds().includes(t.id)).forEach(t => {
+          const o = document.createElement('option'); o.value = t.id; o.textContent = t.name + ' (' + t.team + ')'; tlSel.appendChild(o);
+        });
+      }
+    }
+
+    if (cfSel) {
+      cfSel.classList.remove('hidden');
+      cfSel.innerHTML = '<option value="">All CL</option>';
+      const cList = (role === 'team_lead')
+        ? COUNSELORS.filter(c => c.team === state.currentUser.team)
+        : COUNSELORS.filter(c => getMyTLIds().some(tl => (HIERARCHY.tlToCounselors[tl]||[]).includes(c.id)));
+      cList.forEach(c => {
+        const o = document.createElement('option');
+        o.value = c.id; o.textContent = c.name;
+        cfSel.appendChild(o);
+      });
+    }
+  }
+
+  // Correction counselor dropdown
+  const corrSel = document.getElementById('corrCounselor');
+  COUNSELORS.forEach(c => {
+    const opt = document.createElement('option');
+    opt.value = c.id; opt.textContent = c.name;
+    corrSel.appendChild(opt);
+  });
+  // Award badge counselor dropdown
+  const awardSel = document.getElementById('awardBadgeCounselor');
+  COUNSELORS.forEach(c => {
+    const opt = document.createElement('option');
+    opt.value = c.id; opt.textContent = c.name;
+    awardSel.appendChild(opt);
+  });
+
+  // Set corrections date default
+  document.getElementById('corrDate').valueAsDate = new Date('2026-05-23');
+
+  // Bot & WA bubbles are always visible (sticky FABs)
+
+  // Tab 3 — counsellor sees "My Tickets" instead of Info Hub
+  const ldInfoHubBtn = document.getElementById('ldTabInfoHub');
+  if (ldInfoHubBtn) {
+    ldInfoHubBtn.textContent = role === 'counselor' ? 'My Tickets' : 'Info Hub';
+  }
+  // Ensure correct panel is visible on load
+  const ticketsPanel = document.getElementById('ldPanelCounsellorTickets');
+  const infoHubPanel = document.getElementById('ldPanelInfohub');
+  const subTabBar    = document.getElementById('ldSubTabBar');
+  if (role === 'counselor') {
+    if (ticketsPanel) ticketsPanel.classList.remove('hidden');
+    if (infoHubPanel) infoHubPanel.classList.add('hidden');
+    if (subTabBar) subTabBar.classList.add('hidden');
+    renderCounsellorTicketSummary();
+  } else if (isMgr) {
+    if (ticketsPanel) ticketsPanel.classList.add('hidden');
+    if (infoHubPanel) infoHubPanel.classList.add('hidden');
+    if (subTabBar) subTabBar.classList.add('hidden');
+    // Hide counsellor-only IMP Sheet and Training Modules
+    const clImpSheet  = document.getElementById('counsellorImpSheetWrap');
+    const clTraining  = document.getElementById('counsellorTrainingWrap');
+    if (clImpSheet)  clImpSheet.classList.add('hidden');
+    if (clTraining)  clTraining.classList.add('hidden');
+  } else {
+    if (ticketsPanel) ticketsPanel.classList.add('hidden');
+    if (infoHubPanel) infoHubPanel.classList.remove('hidden');
+    if (subTabBar) subTabBar.classList.remove('hidden');
+  }
+
+  // Show Offers for Managers row for all manager roles and ops_admin
+  const mgrOffersWrap = document.getElementById('mgrManagerOffersWrap');
+  if (mgrOffersWrap) {
+    const showMgrOffers = isMgr || role === 'ops_admin';
+    mgrOffersWrap.classList.toggle('hidden', !showMgrOffers);
+  }
+
+  // Hide standalone Top Earners for manager roles (they have mgrTopEarners in Tab 2)
+  const standaloneEarners = document.getElementById('standaloneTopEarnersWrap');
+  if (standaloneEarners) standaloneEarners.classList.toggle('hidden', isMgr);
+
+  // My Earnings label — show role type
+  const myEarningsLabel = document.getElementById('mgrMyEarningsLabel');
+  if (myEarningsLabel) {
+    const roleLabels = { team_lead:'Team Lead', pod_leader:'POD Leader', senior_manager:'Senior Manager', director:'Director', ops_admin:'Ops Admin' };
+    const roleTag = roleLabels[role] || '';
+    myEarningsLabel.textContent = roleTag ? `My Earnings as ${roleTag}` : 'My Earnings';
+  }
+
+  // Earnings Summary: visible for counsellor + TL only; hidden for POD/SM/Director/ops_admin
+  const earningsWrap = document.getElementById('earningsSummaryWrap');
+  const earnedAsCounsellorBanner = document.getElementById('earnedAsCounsellorBanner');
+  if (earningsWrap) {
+    const showEarnings = role === 'counselor' || role === 'team_lead';
+    earningsWrap.classList.toggle('hidden', !showEarnings);
+    if (earnedAsCounsellorBanner) earnedAsCounsellorBanner.classList.toggle('hidden', role !== 'team_lead');
+  }
+
+  renderAll();
+  switchTab('tab1');
+  // Show 10x banner immediately on login — counsellors only, and only while 10x is live (10am–8pm IST)
+  if (role === 'counselor' && is10xLiveNow()) show10xBanner();
+  // Clear chat and show IST time-based greeting on every fresh login — counsellors only. Managers
+  // get their own greeting lazily on first bot-panel open (renderMgrBotGreeting(), in toggleBot()) —
+  // calling initBotWithGreeting() here for managers too used to pre-seed botConversation.history
+  // with the greeting message before the panel was ever opened, which made toggleBot() think the
+  // chat already "hadHistory" on first open and skip renderMgrBotGreeting() entirely, leaving
+  // managers stuck on a bare greeting bubble with no mood-check/main-menu ever appearing.
+  if (role === 'counselor') {
+    setTimeout(initBotWithGreeting, 300);
+  } else {
+    state.botConversation = { flow: null, step: 0, collected: {}, history: [], lastIntent: null, shownFollowUps: [] };
+    state.chatPanel.mgrGreeted = false;
+  }
+}
+
+function initBotWithGreeting() {
+  // Reset bot state completely
+  state.botConversation = { flow: null, step: 0, collected: {}, history: [], lastIntent: null, shownFollowUps: [] };
+  if (state.currentUser) localStorage.removeItem(`bot_history_${state.currentUser.id}`);
+
+  // Determine IST greeting by offset (UTC+5:30)
+  const now = new Date();
+  const istHour = new Date(now.getTime() + (now.getTimezoneOffset() * 60000) + (5.5 * 3600000)).getHours();
+  const greet = istHour >= 5 && istHour < 12 ? 'Good Morning'
+              : istHour >= 12 && istHour < 17 ? 'Good Afternoon'
+              : istHour >= 17 && istHour < 21 ? 'Good Evening'
+              : 'Good Night';
+
+  const firstName = (state.currentUser?.name || 'there').split(' ')[0];
+  const msg = `${greet}, ${firstName}! 👋`;
+
+  const container = document.getElementById('botMessages');
+  if (!container) return;
+  container.innerHTML = '';
+
+  const div = document.createElement('div');
+  div.className = 'flex gap-2';
+  div.innerHTML = `
+    <div class="w-6 h-6 rounded-full bg-accent flex items-center justify-center flex-shrink-0 mt-0.5">
+      <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+    </div>
+    <div class="bot-msg-bubble">
+      <p class="text-sm font-semibold text-text-main mb-0.5">Leap CRM Assistant</p>
+      <p class="text-sm">${escHtml(msg)}</p>
+    </div>
+  `;
+  container.appendChild(div);
+  addToHistory('bot', msg);
+
+  // Update input placeholder
+  const inp = document.getElementById('botInput');
+  if (inp) inp.placeholder = 'Type "Hi" or "Hello" to Start the Chat';
+}
+
+function onCounselorChange() {
+  state.viewingCounselorId = parseInt(document.getElementById('counselorSelector').value);
+  renderAll();
+}
+
+function renderAll() {
+  renderBadgeStrip();
+  renderBoostCards();
+  if (['team_lead','pod_leader','senior_manager','director'].includes(state.role)) {
+    renderMgrTab1();
+    renderMgrTab2();
+    renderMgrTicketSummary();
+    renderMgrTraining();
+  }
+  if (state.role === 'ops_admin') {
+    renderMgrManagerOffers();
+  }
+  // Top Performers (org-wide leaderboard) — shown to every role, not gated by hierarchy
+  renderMgrLeaderToggle();
+  renderMgrLeaderboard();
+  renderTeamChat();
+  renderWhatsappCoverage();
+  renderMetricCards();
+  renderHistoryTable();
+  renderSlabTable();
+  renderOffersRow();
+  renderCounsellorOffersRow();
+  renderEarnersLeaderboard();
+  renderQuickLinks();
+  renderCourseUpdates();
+  renderTrainingModules();
+  renderUsersTable();
+  renderAdminTraining();
+  renderTicketsTable();
+  renderAdminOffers();
+  renderAdminBadges();
+  renderInfoHub();
+  renderAdminInfoHub();
+  renderFaqList();
+  renderReportCard();
+  renderSummaryScoreStrip();
+  renderStandupTable();
+  renderAlertIcon();
+  updateUnreadBadge();
+}
+
+/* ═══════════════ TAB SWITCHING ═══════════════ */
+
+function toggleSection(id) {
+  const body = document.getElementById('body-' + id);
+  const chev = document.getElementById('chevron-' + id);
+  if (!body) return;
+  const isOpen = !body.classList.contains('hidden');
+  body.classList.toggle('hidden', isOpen);
+  if (chev) chev.style.transform = isOpen ? '' : 'rotate(180deg)';
+}
+
+function switchTab(tab) {
+  state.currentTab = tab;
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.add('hidden'));
+  document.getElementById(tab).classList.remove('hidden');
+
+  document.querySelectorAll('.htab').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.tab === tab);
+  });
+
+  if (tab === 'tab2' && !state.earningsChart) {
+    setTimeout(initEarningsChart, 50);
+  }
+  if (tab === 'tab2') {
+    setTimeout(() => renderReferralCards('visa'), 80);
+  }
+  if (tab === 'tab3') {
+    renderQuickLinks();
+  }
+}
+
+/* ═══════════════ REFERRAL COHORTS ═══════════════ */
+
+function getReferralCohort(type) {
+  return STUDENTS.filter(s => {
+    if (type === 'visa')    return (s.specialServices || []).includes('Visa') || s.stage === 'lockin';
+    if (type === 'premium') return s.hasPaidPremium === true;
+    if (type === 'sti')     return ['application','deposit','lockin'].includes(s.stage);
+    return false;
+  });
+}
+
+function switchReferralTab(type) {
+  const tabs = ['visa','premium','sti'];
+  tabs.forEach(t => {
+    const btn = document.getElementById(`refTab-${t}`);
+    if (!btn) return;
+    const isActive = t === type;
+    btn.classList.toggle('border-purple-600', isActive);
+    btn.classList.toggle('text-purple-700', isActive);
+    btn.classList.toggle('bg-purple-50/40', isActive);
+    btn.classList.toggle('border-transparent', !isActive);
+    btn.classList.toggle('text-text-muted', !isActive);
+    btn.classList.toggle('bg-transparent', !isActive);
+    const badge = document.getElementById(`refCount-${t}`);
+    if (badge) {
+      badge.className = isActive
+        ? 'ml-0.5 bg-purple-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full'
+        : 'ml-0.5 bg-gray-300 text-gray-700 text-[9px] font-bold px-1.5 py-0.5 rounded-full';
+    }
+  });
+  renderReferralCards(type);
+}
+
+function renderReferralCards(type) {
+  const container = document.getElementById('referralCards');
+  if (!container) return;
+
+  // Update all count badges
+  ['visa','premium','sti'].forEach(t => {
+    const el = document.getElementById(`refCount-${t}`);
+    if (el) el.textContent = getReferralCohort(t).length;
+  });
+
+  const students = getReferralCohort(type);
+  const stageLabel = { sti:'STI', application:'Application', deposit:'Deposit', lockin:'Lock-in' };
+  const stageCls   = {
+    sti:         'bg-orange-100 text-orange-700 border-orange-200',
+    application: 'bg-blue-100 text-blue-700 border-blue-200',
+    deposit:     'bg-green-100 text-green-700 border-green-200',
+    lockin:      'bg-purple-100 text-purple-700 border-purple-200',
+  };
+  const countryFlag = { UK:'🇬🇧', Canada:'🇨🇦', Australia:'🇦🇺', USA:'🇺🇸', Germany:'🇩🇪', Ireland:'🇮🇪', Singapore:'🇸🇬', 'New Zealand':'🇳🇿' };
+  const cohortTag  = {
+    visa:    { label:'Visa Approved', cls:'bg-emerald-50 text-emerald-700 border-emerald-200' },
+    premium: { label:'Premium Paid',  cls:'bg-amber-50 text-amber-700 border-amber-200' },
+    sti:     { label:'STI Done',      cls:'bg-sky-50 text-sky-700 border-sky-200' },
+  };
+
+  if (!students.length) {
+    container.innerHTML = `<p class="text-center text-text-muted text-sm py-8">No students in this cohort yet</p>`;
+    return;
+  }
+
+  container.innerHTML = students.map(s => {
+    const initials = s.name.split(' ').map(w => w[0]).join('').slice(0,2);
+    const flag     = countryFlag[s.country] || '🌍';
+    const sClsKey  = stageCls[s.stage] || 'bg-gray-100 text-gray-600 border-gray-200';
+    const tag      = cohortTag[type];
+    const amtHtml  = s.hasPaidPremium && s.amountPaid
+      ? `<span class="text-xs font-semibold text-success">₹${(s.amountPaid/1000).toFixed(0)}K paid</span>`
+      : '';
+    return `
+    <div class="flex items-center gap-3 px-4 py-3 hover:bg-purple-50/30 transition-colors cursor-pointer group" onclick="openStudentDetail('${s.id}')">
+      <!-- Avatar -->
+      <div class="w-9 h-9 rounded-full bg-primary/10 text-primary font-bold text-xs flex items-center justify-center flex-shrink-0">
+        ${initials}
+      </div>
+      <!-- Main info -->
+      <div class="flex-1 min-w-0">
+        <div class="flex items-center gap-2 flex-wrap">
+          <p class="font-semibold text-sm text-text-main">${s.name}</p>
+          <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full border ${sClsKey}">${stageLabel[s.stage] || s.stage}</span>
+          <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full border ${tag.cls}">${tag.label}</span>
+        </div>
+        <p class="text-xs text-text-muted mt-0.5 truncate">${s.course} &nbsp;·&nbsp; ${flag} ${s.country}</p>
+        <div class="flex items-center gap-3 mt-1 text-[11px] text-text-muted">
+          <span>Follow-up: <strong class="text-text-main">${s.followup}</strong></span>
+          <span>ISL: <strong class="text-text-main">${s.islRating}/10</strong></span>
+          <span>QS: <strong class="text-text-main">${s.qualityScore}</strong></span>
+          ${amtHtml}
+        </div>
+      </div>
+      <!-- Action -->
+      <button onclick="event.stopPropagation(); showToast('Referral noted for ${s.name} 👍', 'success')"
+        class="flex-shrink-0 text-[10px] font-bold text-purple-700 bg-purple-50 border border-purple-200 px-2.5 py-1.5 rounded-lg hover:bg-purple-100 transition-colors whitespace-nowrap">
+        Ask Referral →
+      </button>
+    </div>`;
+  }).join('');
+}
+
+/* ═══════════════ BADGE STRIP ═══════════════ */
+
+function renderBadgeStrip() {
+  const myBadges = getMyBadges();
+  const countEl  = document.getElementById('badgeStripCount');
+  const iconsEl  = document.getElementById('badgeStripIcons');
+  if (!myBadges.length) { countEl.textContent = ''; iconsEl.innerHTML = ''; return; }
+  const recent = myBadges.slice(0, 3);
+  iconsEl.innerHTML = recent.map(ab => {
+    const bt = BADGE_TYPES.find(b => b.id === ab.badgeId);
+    return bt ? `<span title="${bt.name}" class="text-base">${bt.icon}</span>` : '';
+  }).join('');
+  countEl.textContent = `🏅 ${myBadges.length} Badge${myBadges.length > 1 ? 's' : ''}`;
+}
+
+function getMyBadges() {
+  const cid = (state.role === 'counselor') ? state.currentUser.id : state.viewingCounselorId;
+  return AWARDED_BADGES.filter(ab => ab.counselorId === cid);
+}
+
+/* ═══════════════ BOOST CARDS ═══════════════ */
+
+function renderBoostCards() {
+  const students  = getViewingStudents();
+  const todayStr  = new Date().toISOString().split('T')[0];
+  const grid      = document.getElementById('boostCardsGrid');
+
+  function dueToday(arr) {
+    return arr.filter(s => s.followup <= todayStr && !s.subtasks.every(t => t.done)).length;
+  }
+  function urgency(due) {
+    if (due > 5)  return { pri:0, bg:'linear-gradient(135deg,#fef2f2,#fee2e2)', border:'#fca5a5', textClr:'#dc2626', badgeBg:'#fee2e2' };
+    if (due >= 1) return { pri:1, bg:'linear-gradient(135deg,#fff7ed,#ffedd5)', border:'#fdba74', textClr:'#ea580c', badgeBg:'#ffedd5' };
+    return               { pri:2, bg:'linear-gradient(135deg,#f0fdf4,#dcfce7)', border:'#bbf7d0', textClr:'#16a34a', badgeBg:'#dcfce7' };
+  }
+
+  const stiStu  = students.filter(s => s.stage === 'sti');
+  const depStu  = students.filter(s => s.stage === 'deposit');
+  const revStu  = students.filter(s => s.servicingType === 'partner' || s.servicingType === 'non-partner');
+  const refStu  = [...new Map(
+    [...getReferralCohort('visa'), ...getReferralCohort('premium'), ...getReferralCohort('sti')]
+    .map(s => [s.id, s])
+  ).values()];
+
+  const cardDefs = [
+    { label:'Boost STI',       icon:'🎯', count:stiStu.length, due:dueToday(stiStu), sub: stiStu.length + ' students need attention', onClick:"openBoostFunnelDrawer()" },
+    { label:'Boost Deposit',   icon:'💳', count:depStu.length, due:dueToday(depStu), sub: depStu.length + ' students need attention', onClick:"openBoostDrawer('deposit')" },
+    { label:'Boost Revenue',   icon:'💰', count:revStu.length, due:dueToday(revStu), sub:'Revenue opportunities',                     onClick:"openBoostRevenueDrawer()" },
+    { label:'Boost Referrals', icon:'🤝', count:refStu.length, due:dueToday(refStu), sub: refStu.length + ' students can refer',      onClick:"openBoostReferralsDrawer()" },
+  ];
+
+  cardDefs.sort((a, b) => urgency(a.due).pri - urgency(b.due).pri);
+
+  grid.innerHTML = cardDefs.map(c => {
+    const u = urgency(c.due);
+    const dueTxt = c.due > 0
+      ? `<span style="background:${u.badgeBg};color:${u.textClr}" class="text-[10px] font-bold px-2 py-0.5 rounded-full">${c.due} due today</span>`
+      : `<span style="background:${u.badgeBg};color:${u.textClr}" class="text-[10px] font-bold px-2 py-0.5 rounded-full">✓ All clear</span>`;
+    return `
+      <div class="boost-card relative cursor-pointer"
+        style="background:${u.bg};border:1px solid ${u.border};box-shadow:0 2px 8px ${u.border}55;"
+        onclick="${c.onClick}">
+        <button class="absolute top-2 right-2 p-1 rounded-full hover:bg-black/10 z-10 transition-colors"
+          onclick="event.stopPropagation(); renderBoostCards()" title="Refresh" aria-label="Refresh">
+          <svg class="w-3 h-3" style="color:${u.textClr}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+          </svg>
+        </button>
+        <div class="text-[11px] font-bold uppercase tracking-wide mb-1" style="color:${u.textClr};opacity:0.8">${c.icon} ${c.label}</div>
+        <div class="font-mono leading-none mb-1" style="font-size:2.4rem;font-weight:800;color:${u.textClr}">${c.count}</div>
+        <div class="text-xs mb-2" style="color:${u.textClr};opacity:0.7">${c.sub}</div>
+        <div class="mb-2">${dueTxt}</div>
+        <span class="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full mt-auto"
+          style="color:${u.textClr};background:${u.badgeBg}">View Pipeline →</span>
+      </div>`;
+  }).join('');
+}
+
+/* ── Boost Referrals Drawer ── */
+function openBoostReferralsDrawer() {
+  state.drawerMode = 'boostReferrals';
+  state.drawerPrevMode = null;
+
+  const todayStr    = new Date().toISOString().split('T')[0];
+  const acked       = _boostIsAcknowledged('referrals');
+  const countryFlag = { UK:'🇬🇧', Canada:'🇨🇦', Australia:'🇦🇺', USA:'🇺🇸', Germany:'🇩🇪', Ireland:'🇮🇪', Singapore:'🇸🇬', 'New Zealand':'🇳🇿' };
+  const stageLabelMap = { sti:'STI', application:'Application', deposit:'Deposit', lockin:'Lock-in' };
+  const stageClsMap   = { sti:'bg-orange-100 text-orange-700', application:'bg-blue-100 text-blue-700', deposit:'bg-green-100 text-green-700', lockin:'bg-purple-100 text-purple-700' };
+
+  const allCohorts = [
+    { key:'visa',    label:'Visa Approved',  icon:'✅', tagCls:'bg-emerald-100 text-emerald-700 border-emerald-200', students: getReferralCohort('visa')    },
+    { key:'premium', label:'Premium Paid',   icon:'⭐', tagCls:'bg-amber-100 text-amber-700 border-amber-200',     students: getReferralCohort('premium') },
+    { key:'sti',     label:'STI Done',       icon:'🎯', tagCls:'bg-sky-100 text-sky-700 border-sky-200',           students: getReferralCohort('sti')     },
+  ];
+
+  // Apply today filter when not acknowledged (isPendingToday = followup today + subtasks not all done)
+  const cohorts = allCohorts.map(c => ({
+    ...c,
+    students: acked ? c.students : c.students.filter(s => isPendingToday(s, todayStr)),
+    allStudents: c.students,
+  }));
+
+  // Deduplicate displayed students for count in header
+  const displayStudents = cohorts.flatMap(c => c.students);
+  const allUnique = [...new Map(displayStudents.map(s => [s.id, s])).values()];
+
+  // All students due today (regardless of done state) — to detect allDone
+  const allCohortStudents = [...new Map(allCohorts.flatMap(c => c.students).map(s => [s.id,s])).values()];
+  const allRefStudents    = allCohortStudents; // all referral students (for All Tasks section)
+  const todayDueRef = allCohortStudents.filter(s => s.followup === todayStr);
+  const allTodayDone = !acked && todayDueRef.length > 0 && todayDueRef.every(s => s.subtasks.every(t => t.done));
+
+  let content = `
+    ${!acked ? _renderBoostTodayHeader(allUnique.length) : _renderBoostAckHeader()}
+    <div class="mb-4 p-3.5 bg-purple-50 border border-purple-200 rounded-xl">
+      <div class="flex items-center gap-2 mb-1">
+        <span class="text-lg">🤝</span>
+        <p class="font-bold text-sm text-purple-800">Referral Boost Pipeline</p>
+      </div>
+      <p class="text-xs text-purple-600">${allUnique.length} student${allUnique.length !== 1 ? 's' : ''} ${acked ? 'identified as high-potential referrers' : 'due today across all cohorts'}</p>
+    </div>
+    <div class="space-y-2.5">
+  `;
+
+  cohorts.forEach(({ key, label, icon, tagCls, students }) => {
+    content += `
+      <div class="border border-border rounded-xl overflow-hidden shadow-sm">
+        <button onclick="toggleBoostRefCard('${key}')" class="w-full flex items-center justify-between p-3.5 bg-white hover:bg-surface transition-colors text-left">
+          <div class="flex items-center gap-3">
+            <span class="text-xl leading-none">${icon}</span>
+            <div>
+              <p class="font-semibold text-sm text-text-main">${label}</p>
+              <p class="text-xs text-text-muted">${students.length} student${students.length !== 1 ? 's' : ''}${!acked ? ' due today' : ''}</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full border ${tagCls}">${label}</span>
+            <svg id="bref-chev-${key}" class="w-4 h-4 text-text-muted transition-transform duration-200 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+            </svg>
+          </div>
+        </button>
+        <div id="bref-body-${key}" class="hidden border-t border-border">
+          ${students.length === 0
+            ? `<p class="text-xs text-text-muted text-center py-5">No students due today in this cohort</p>`
+            : `<div class="divide-y divide-border/40">${students.map(s => {
+                const initials = s.name.split(' ').map(w => w[0]).join('').slice(0,2);
+                const flag = countryFlag[s.country] || '🌍';
+                return `
+                  <div class="px-3.5 py-3 hover:bg-surface/60 transition-colors">
+                    <div class="flex items-center gap-3 mb-2.5">
+                      <div class="w-8 h-8 rounded-full bg-purple-100 text-purple-700 font-bold text-[11px] flex items-center justify-center flex-shrink-0">${initials}</div>
+                      <div class="flex-1 min-w-0">
+                        <p class="text-sm font-semibold text-text-main">${s.name} <span class="text-sm">${flag}</span></p>
+                        <p class="text-[11px] text-text-muted">${s.course}</p>
+                      </div>
+                      <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full ${stageClsMap[s.stage] || 'bg-gray-100 text-gray-600'}">${stageLabelMap[s.stage] || s.stage}</span>
+                    </div>
+                    <div class="flex gap-2">
+                      <button onclick="openReferralWAMessage('${s.id}')" class="flex-1 text-[11px] font-semibold bg-green-50 text-green-700 border border-green-200 hover:bg-green-100 px-3 py-1.5 rounded-lg transition-colors flex items-center justify-center gap-1.5">
+                        <svg class="w-3 h-3 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M11.999 0C5.373 0 0 5.373 0 12c0 2.118.555 4.107 1.523 5.832L0 24l6.335-1.524A11.946 11.946 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 11.999 0zM12 22c-1.943 0-3.779-.517-5.376-1.428l-.387-.226-3.993.96.994-3.866-.253-.4A9.975 9.975 0 012 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/></svg>
+                        Ask for Referral
+                      </button>
+                      <button onclick="openStudentDetail('${s.id}');state.drawerPrevMode='boostReferrals';" class="text-[11px] font-bold text-primary bg-primary/10 hover:bg-primary/20 px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap">Take to Task →</button>
+                    </div>
+                  </div>`;
+              }).join('')}</div>`
+          }
+        </div>
+      </div>
+    `;
+  });
+
+  content += `</div>`;
+  if (allTodayDone) content += _renderBoostAckPrompt('referrals');
+  content += _renderAllTasksSection(acked, allRefStudents, 'referrals');
+  openDrawer('Boost Referrals', content, false);
+}
+
+function toggleBoostRefCard(key) {
+  const body    = document.getElementById(`bref-body-${key}`);
+  const chevron = document.getElementById(`bref-chev-${key}`);
+  if (!body) return;
+  const isOpen = !body.classList.contains('hidden');
+  body.classList.toggle('hidden', isOpen);
+  if (chevron) chevron.style.transform = isOpen ? '' : 'rotate(180deg)';
+}
+
+/* ── Boost Referrals Drawer ── */
+function openBoostReferralsDrawer() {
+  state.drawerMode = 'boostReferrals';
+  state.drawerPrevMode = null;
+
+  const todayStr    = new Date().toISOString().split('T')[0];
+  const acked       = _boostIsAcknowledged('referrals');
+  const countryFlag = { UK:'🇬🇧', Canada:'🇨🇦', Australia:'🇦🇺', USA:'🇺🇸', Germany:'🇩🇪', Ireland:'🇮🇪', Singapore:'🇸🇬', 'New Zealand':'🇳🇿' };
+  const stageLabelMap = { sti:'STI', application:'Application', deposit:'Deposit', lockin:'Lock-in' };
+  const stageClsMap   = { sti:'bg-orange-100 text-orange-700', application:'bg-blue-100 text-blue-700', deposit:'bg-green-100 text-green-700', lockin:'bg-purple-100 text-purple-700' };
+
+  const allCohorts = [
+    { key:'visa',    label:'Visa Approved',  icon:'✅', tagCls:'bg-emerald-100 text-emerald-700 border-emerald-200', students: getReferralCohort('visa')    },
+    { key:'premium', label:'Premium Paid',   icon:'⭐', tagCls:'bg-amber-100 text-amber-700 border-amber-200',     students: getReferralCohort('premium') },
+    { key:'sti',     label:'STI Done',       icon:'🎯', tagCls:'bg-sky-100 text-sky-700 border-sky-200',           students: getReferralCohort('sti')     },
+  ];
+
+  // Apply today filter when not acknowledged (isPendingToday = followup today + subtasks not all done)
+  const cohorts = allCohorts.map(c => ({
+    ...c,
+    students: acked ? c.students : c.students.filter(s => isPendingToday(s, todayStr)),
+    allStudents: c.students,
+  }));
+
+  // Deduplicate displayed students for count in header
+  const displayStudents = cohorts.flatMap(c => c.students);
+  const allUnique = [...new Map(displayStudents.map(s => [s.id, s])).values()];
+
+  // All students due today (regardless of done state) — to detect allDone
+  const allCohortStudents = [...new Map(allCohorts.flatMap(c => c.students).map(s => [s.id,s])).values()];
+  const allRefStudents    = allCohortStudents; // all referral students (for All Tasks section)
+  const todayDueRef = allCohortStudents.filter(s => s.followup === todayStr);
+  const allTodayDone = !acked && todayDueRef.length > 0 && todayDueRef.every(s => s.subtasks.every(t => t.done));
+
+  let content = `
+    ${!acked ? _renderBoostTodayHeader(allUnique.length) : _renderBoostAckHeader()}
+    <div class="mb-4 p-3.5 bg-purple-50 border border-purple-200 rounded-xl">
+      <div class="flex items-center gap-2 mb-1">
+        <span class="text-lg">🤝</span>
+        <p class="font-bold text-sm text-purple-800">Referral Boost Pipeline</p>
+      </div>
+      <p class="text-xs text-purple-600">${allUnique.length} student${allUnique.length !== 1 ? 's' : ''} ${acked ? 'identified as high-potential referrers' : 'due today across all cohorts'}</p>
+    </div>
+    <div class="space-y-2.5">
+  `;
+
+  cohorts.forEach(({ key, label, icon, tagCls, students }) => {
+    content += `
+      <div class="border border-border rounded-xl overflow-hidden shadow-sm">
+        <button onclick="toggleBoostRefCard('${key}')" class="w-full flex items-center justify-between p-3.5 bg-white hover:bg-surface transition-colors text-left">
+          <div class="flex items-center gap-3">
+            <span class="text-xl leading-none">${icon}</span>
+            <div>
+              <p class="font-semibold text-sm text-text-main">${label}</p>
+              <p class="text-xs text-text-muted">${students.length} student${students.length !== 1 ? 's' : ''}${!acked ? ' due today' : ''}</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full border ${tagCls}">${label}</span>
+            <svg id="bref-chev-${key}" class="w-4 h-4 text-text-muted transition-transform duration-200 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+            </svg>
+          </div>
+        </button>
+        <div id="bref-body-${key}" class="hidden border-t border-border">
+          ${students.length === 0
+            ? `<p class="text-xs text-text-muted text-center py-5">No students due today in this cohort</p>`
+            : `<div class="divide-y divide-border/40">${students.map(s => {
+                const initials = s.name.split(' ').map(w => w[0]).join('').slice(0,2);
+                const flag = countryFlag[s.country] || '🌍';
+                return `
+                  <div class="px-3.5 py-3 hover:bg-surface/60 transition-colors">
+                    <div class="flex items-center gap-3 mb-2.5">
+                      <div class="w-8 h-8 rounded-full bg-purple-100 text-purple-700 font-bold text-[11px] flex items-center justify-center flex-shrink-0">${initials}</div>
+                      <div class="flex-1 min-w-0">
+                        <p class="text-sm font-semibold text-text-main">${s.name} <span class="text-sm">${flag}</span></p>
+                        <p class="text-[11px] text-text-muted">${s.course}</p>
+                      </div>
+                      <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full ${stageClsMap[s.stage] || 'bg-gray-100 text-gray-600'}">${stageLabelMap[s.stage] || s.stage}</span>
+                    </div>
+                    <div class="flex gap-2">
+                      <button onclick="openReferralWAMessage('${s.id}')" class="flex-1 text-[11px] font-semibold bg-green-50 text-green-700 border border-green-200 hover:bg-green-100 px-3 py-1.5 rounded-lg transition-colors flex items-center justify-center gap-1.5">
+                        <svg class="w-3 h-3 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M11.999 0C5.373 0 0 5.373 0 12c0 2.118.555 4.107 1.523 5.832L0 24l6.335-1.524A11.946 11.946 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 11.999 0zM12 22c-1.943 0-3.779-.517-5.376-1.428l-.387-.226-3.993.96.994-3.866-.253-.4A9.975 9.975 0 012 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/></svg>
+                        Ask for Referral
+                      </button>
+                      <button onclick="openStudentDetail('${s.id}');state.drawerPrevMode='boostReferrals';" class="text-[11px] font-bold text-primary bg-primary/10 hover:bg-primary/20 px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap">Take to Task →</button>
+                    </div>
+                  </div>`;
+              }).join('')}</div>`
+          }
+        </div>
+      </div>
+    `;
+  });
+
+  content += `</div>`;
+  if (allTodayDone) content += _renderBoostAckPrompt('referrals');
+  content += _renderAllTasksSection(acked, allRefStudents, 'referrals');
+  openDrawer('Boost Referrals', content, false);
+}
+
+function toggleBoostRefCard(key) {
+  const body    = document.getElementById(`bref-body-${key}`);
+  const chevron = document.getElementById(`bref-chev-${key}`);
+  if (!body) return;
+  const isOpen = !body.classList.contains('hidden');
+  body.classList.toggle('hidden', isOpen);
+  if (chevron) chevron.style.transform = isOpen ? '' : 'rotate(180deg)';
+}
+
+function openOwnTaskDrawer() {
+  state.drawerMode = 'ownTasks';
+  const tasks = state.ownTasks;
+  const typeIcons = {
+    call:    `<svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>`,
+    message: `<svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-4 4v-4z"/></svg>`,
+    payment: `<svg class="w-4 h-4 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>`,
+    custom:  `<svg class="w-4 h-4 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>`,
+  };
+  const typeBadge = { call:'Call to User', message:'Send Message', payment:'Payment Follow Up', custom:'Custom Task' };
+
+  const content = `
+    <div class="space-y-3">
+      <p class="text-[11px] font-bold uppercase tracking-widest text-text-muted mb-3">Your Pending Reminders</p>
+      ${tasks.length === 0 ? `
+        <div class="flex flex-col items-center justify-center py-12 text-center">
+          <svg class="w-14 h-14 text-text-muted/30 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+          <p class="font-semibold text-text-main mb-1">All caught up!</p>
+          <p class="text-sm text-text-muted">No pending reminders. Add one from Tasks &amp; Performance.</p>
+        </div>
+      ` : tasks.map((t, idx) => {
+        const dateLabel = t.date ? new Date(t.date).toLocaleString('en-IN', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' }) : '—';
+        const isPast = t.date && new Date(t.date) < new Date();
+        const isToday = t.date && new Date(t.date).toDateString() === new Date().toDateString();
+        const urgencyColor = t.done ? 'border-l-green-400' : isPast ? 'border-l-red-400' : isToday ? 'border-l-orange-400' : 'border-l-indigo-300';
+        const urgencyBg   = t.done ? 'bg-green-50' : isPast ? 'bg-red-50' : isToday ? 'bg-orange-50' : 'bg-white';
+        return `
+        <div class="border border-border rounded-xl p-3.5 border-l-4 ${urgencyColor} ${urgencyBg} ${t.done ? 'opacity-60' : ''}">
+          <div class="flex items-start gap-3">
+            <div class="mt-0.5 flex-shrink-0">${typeIcons[t.type] || typeIcons.custom}</div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2 flex-wrap mb-1">
+                <p class="font-semibold text-sm text-text-main ${t.done ? 'line-through' : ''}">${t.title}</p>
+                <span class="text-[10px] px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-600 font-semibold">${typeBadge[t.type] || 'Task'}</span>
+                ${t.userId ? `<span class="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 font-semibold flex items-center gap-1"><svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>${t.userId}</span>` : ''}
+                ${isPast && !t.done ? '<span class="text-[10px] px-2 py-0.5 rounded-full bg-red-100 text-red-600 font-semibold">Overdue</span>' : ''}
+                ${isToday && !t.done ? '<span class="text-[10px] px-2 py-0.5 rounded-full bg-orange-100 text-orange-600 font-semibold">Due Today</span>' : ''}
+              </div>
+              ${t.notes ? `<p class="text-xs text-text-muted mb-1">${t.notes}</p>` : ''}
+              <p class="text-xs text-text-muted flex items-center gap-1">
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                ${dateLabel}
+              </p>
+            </div>
+            <button onclick="markOwnTaskDone(${idx})" class="flex-shrink-0 w-7 h-7 rounded-full border-2 ${t.done ? 'bg-green-500 border-green-500 text-white' : 'border-border hover:border-green-400'} flex items-center justify-center cursor-pointer transition-all" title="${t.done ? 'Done' : 'Mark as done'}">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+            </button>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>`;
+
+  openDrawer('Own Tasks', content, false);
+}
+
+function markOwnTaskDone(idx) {
+  if (state.ownTasks[idx]) {
+    state.ownTasks[idx].done = !state.ownTasks[idx].done;
+    renderBoostCards();
+    openOwnTaskDrawer(); // re-render drawer
+  }
+}
+
+/* Funnel drawer: STI → Application → Lock-in all in one view */
+/* helpers shared by funnel + sub-card */
+function _boostMetricCard(id, label, students, todayStr, onclickFn, todayOnly) {
+  const dueToday     = students.filter(s => s.followup === todayStr).length;
+  const totalPending = students.length;
+  const clickHandler = onclickFn || `openBoostSubCard('${id}')`;
+
+  if (todayOnly) {
+    // students is already today-filtered; count = students.length
+    const count   = students.length;
+    const allDone = count === 0;
+    return `
+    <div class="boost-metric-card ${allDone ? 'opacity-70 cursor-default' : ''}" ${allDone ? '' : `onclick="${clickHandler}"`}>
+      <div class="flex items-center justify-between mb-3">
+        <span class="font-semibold text-sm text-text-main leading-snug">${label}</span>
+        ${allDone
+          ? `<span class="text-green-500 text-base ml-2">✓</span>`
+          : `<svg class="w-4 h-4 flex-shrink-0 text-indigo-400 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>`}
+      </div>
+      <div class="flex items-end gap-3">
+        <div>
+          <p class="text-2xl font-bold ${allDone ? 'text-green-500' : 'text-orange-500'} leading-none">${count}</p>
+          <p class="text-[11px] text-text-muted mt-1">${allDone ? 'All done today ✓' : 'Pending Today'}</p>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  return `
+    <div class="boost-metric-card" onclick="${clickHandler}">
+      <div class="flex items-center justify-between mb-3">
+        <span class="font-semibold text-sm text-text-main leading-snug">${label}</span>
+        <svg class="w-4 h-4 flex-shrink-0 text-indigo-400 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/>
+        </svg>
+      </div>
+      <div class="flex justify-between items-end">
+        <div>
+          <p class="text-2xl font-bold text-indigo-500 leading-none">${dueToday}</p>
+          <p class="text-[11px] text-text-muted mt-1">Due Today</p>
+        </div>
+        <div class="text-right">
+          <p class="text-2xl font-bold text-indigo-500 leading-none">${totalPending}</p>
+          <p class="text-[11px] text-text-muted mt-1">Total Pending</p>
+        </div>
+      </div>
+    </div>`;
+}
+
+/* ── Boost Today-Only UX helpers ── */
+
+/* ── Metric Definition + Task Closure banner (used in all subcards) ── */
+function _metricDefBanner(defText, closureText) {
+  return `
+    <div class="mb-3 rounded-xl overflow-hidden border border-gray-100 shadow-sm">
+      <div class="px-3 py-2.5 bg-blue-50 border-b border-blue-100">
+        <p class="text-[10px] font-bold text-blue-700 mb-0.5">ℹ️ Definition</p>
+        <p class="text-[10px] text-blue-600 leading-relaxed">${defText}</p>
+      </div>
+      <div class="px-3 py-2.5 bg-green-50">
+        <p class="text-[10px] font-bold text-green-700 mb-0.5">✅ Task Closure</p>
+        <p class="text-[10px] text-green-600 leading-relaxed">${closureText}</p>
+      </div>
+    </div>`;
+}
+
+function _boostIsAcknowledged(drawerType) {
+  return !!(state.boostAcknowledged && state.boostAcknowledged[drawerType]);
+}
+
+function acknowledgeBoostComplete(drawerType) {
+  if (!state.boostAcknowledged) state.boostAcknowledged = {};
+  state.boostAcknowledged[drawerType] = true;
+  if      (drawerType === 'funnel')    openBoostFunnelDrawer();
+  else if (drawerType === 'revenue')   openBoostRevenueDrawer();
+  else if (drawerType === 'referrals') openBoostReferralsDrawer();
+  else                                 openBoostDrawer(drawerType); // deposit, sti, etc.
+}
+
+function _renderBoostTodayHeader(count) {
+  return `
+    <div class="flex items-center gap-2 mb-3">
+      <span class="inline-flex items-center gap-1.5 text-[11px] font-bold text-orange-700 bg-orange-50 border border-orange-200 px-2.5 py-1 rounded-full">
+        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+        Today's Tasks Only
+      </span>
+      <span class="text-xs text-text-muted">${count} student${count !== 1 ? 's' : ''} due today</span>
+    </div>`;
+}
+
+function _renderBoostAckHeader() {
+  return `
+    <div class="flex items-center gap-2 mb-3">
+      <span class="inline-flex items-center gap-1.5 text-[11px] font-bold text-green-700 bg-green-50 border border-green-200 px-2.5 py-1 rounded-full">
+        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+        Acknowledged — Full Pipeline View
+      </span>
+    </div>`;
+}
+
+function _renderBoostAckPrompt(drawerType) {
+  return `
+    <div class="mt-4 p-5 bg-gradient-to-br from-green-50 to-emerald-50 border border-green-200 rounded-2xl text-center shadow-sm">
+      <div class="text-3xl mb-2">🎉</div>
+      <p class="font-bold text-base text-green-800 mb-1">All Today's Tasks Complete!</p>
+      <p class="text-xs text-green-600 mb-4">Great work! You've cleared all tasks due today.<br>Acknowledge to unlock the full pipeline view.</p>
+      <button onclick="acknowledgeBoostComplete('${drawerType}')"
+        class="bg-green-600 text-white text-sm font-semibold px-6 py-2.5 rounded-xl hover:bg-green-700 active:bg-green-800 transition-colors w-full shadow-sm">
+        ✓ Mark Acknowledged &amp; View All Tasks
+      </button>
+    </div>`;
+}
+
+/* ── Servicing Type helpers ── */
+function updateServicingType(studentId) {
+  const s = STUDENTS.find(x => x.id === studentId);
+  if (!s) return;
+  const val = document.getElementById(`st-type-${studentId}`)?.value || null;
+  s.servicingType = val;
+  if (val !== 'non-partner') { s.nonPartnerSubType = null; }
+  const subDiv = document.getElementById(`st-sub-${studentId}`);
+  if (subDiv) subDiv.classList.toggle('hidden', val !== 'non-partner');
+  renderBoostCards();
+}
+
+function updateServicingSubType(studentId) {
+  const s = STUDENTS.find(x => x.id === studentId);
+  if (!s) return;
+  s.nonPartnerSubType = document.getElementById(`st-subtype-${studentId}`)?.value || null;
+  renderBoostCards();
+}
+
+/* Returns true when a student has a follow-up today AND still has pending subtasks */
+function isPendingToday(s, todayStr) {
+  const hasOpenTasks = !s.subtasks.every(t => t.done);
+  if (s.applicationStatus !== undefined) {
+    // Student persists in Boost STI until Lead Status = Submitted to Institute / Application Dropped
+    // BUT on refresh, only show if they still have open tasks
+    return s.followup <= todayStr && isBoostSTIActive(s) && hasOpenTasks;
+  }
+  return s.followup === todayStr && hasOpenTasks;
+}
+
+/* Toggle the collapsible "All Tasks" section inside boost drawers */
+function toggleAllTasksSection(sectionId) {
+  const body    = document.getElementById(`all-tasks-body-${sectionId}`);
+  const chevron = document.getElementById(`all-tasks-chev-${sectionId}`);
+  if (!body) return;
+  const isOpen = !body.classList.contains('hidden');
+  body.classList.toggle('hidden', isOpen);
+  if (chevron) chevron.style.transform = isOpen ? '' : 'rotate(180deg)';
+}
+
+/* Renders the "All Tasks" card at the bottom of every boost drawer.
+   Locked (🔒) when not yet acknowledged; collapsible green card when acknowledged. */
+function _renderAllTasksSection(acked, allStudents, sectionId) {
+  const total = allStudents.length;
+  if (!acked) {
+    return `
+      <div class="mt-4 flex items-center gap-3 p-4 bg-gray-50 border border-gray-200 rounded-2xl">
+        <span class="text-xl flex-shrink-0">🔒</span>
+        <div class="flex-1 min-w-0">
+          <p class="font-semibold text-sm text-gray-500">All Tasks</p>
+          <p class="text-xs text-gray-400">Complete today's tasks to unlock</p>
+        </div>
+        <span class="text-[11px] font-semibold text-gray-400 bg-gray-100 px-2.5 py-0.5 rounded-full flex-shrink-0">${total} total</span>
+      </div>`;
+  }
+  return `
+    <div class="mt-4 border border-green-200 rounded-2xl overflow-hidden shadow-sm">
+      <button onclick="toggleAllTasksSection('${sectionId}')"
+        class="w-full flex items-center justify-between px-4 py-3 bg-green-50 hover:bg-green-100 transition-colors text-left">
+        <div class="flex items-center gap-2.5">
+          <span class="text-lg leading-none">✅</span>
+          <div>
+            <p class="font-semibold text-sm text-green-800">All Tasks</p>
+            <p class="text-xs text-green-600">${total} total lead${total !== 1 ? 's' : ''}</p>
+          </div>
+        </div>
+        <svg id="all-tasks-chev-${sectionId}" class="w-4 h-4 text-green-600 transition-transform duration-200 flex-shrink-0"
+          fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+        </svg>
+      </button>
+      <div id="all-tasks-body-${sectionId}" class="hidden border-t border-green-200 p-3">
+        ${total === 0
+          ? `<p class="text-xs text-text-muted italic text-center py-4">No leads in this category.</p>`
+          : `<div class="space-y-2">${renderStudentList(allStudents)}</div>`}
+      </div>
+    </div>`;
+}
+
+/* ── STI cohort tab state & helpers ── */
+let stiCohortTab = 'all';
+
+function _getSTIBuckets(all) {
+  const islAll  = getViewingStudents();
+  // Build on-hold set first so other buckets can exclude those students
+  const onholdIds = new Set(
+    all.filter(s => s.subtasks.some(t => ON_HOLD_TASK_LABELS.some(lbl => t.label.toLowerCase().includes(lbl)) && !t.done))
+       .map(s => s.id)
+  );
+  return {
+    lockin:  all.filter(s => s.stage === 'lockin' && s.subtasks.some(t => !t.done)),
+    onhold:  all.filter(s => onholdIds.has(s.id)),
+    f2f:     all.filter(s => !onholdIds.has(s.id) && s.secondCallDate && !s.hasPaidPremium && (!s.amountPaid || s.amountPaid === 0) && s.leadStatus !== 'Drop off' && !STI_TERMINAL_STATUSES.includes(s.applicationStatus)),
+    // ISL → F2F: exclude any student who is on hold — they belong only in On Hold
+    isl:     islAll.filter(s => !onholdIds.has(s.id) && s.islSharedDate && !s.secondCallDate && s.leadStatus !== 'Drop off'),
+  };
+}
+
+function getSTIActionables(s, buckets) {
+  const actions = [];
+  const isOnHold = buckets.onhold.some(x => x.id === s.id);
+  if (buckets.lockin.some(x => x.id === s.id))
+    actions.push({ label:'Submit STI', badgeCls:'bg-violet-100 text-violet-700', closure:'Student was locked in but hasn\'t done the STI yet. Please speak to the student and process the application as per the student\'s choice. Guide them through the next steps and mark STI as submitted once done.' });
+  if (isOnHold)
+    actions.push({ label:'Clear Application Hold', badgeCls:'bg-orange-100 text-orange-700', closure:'File the application or resolve the QC rejection — move status forward in the pipeline.' });
+  if (buckets.f2f.some(x => x.id === s.id))
+    actions.push({ label:'Lock the Student In', badgeCls:'bg-blue-100 text-blue-700', closure:'Student attended the F2F but hasn\'t locked in yet. Please lock in the student by enrolling them for Prime / C2I / Premium / Paid Application. Collect the payment and record it in the system.' });
+  // Only show Schedule F2F if student is NOT on hold
+  if (!isOnHold && buckets.isl.some(x => x.id === s.id))
+    actions.push({ label:'Schedule F2F Call', badgeCls:'bg-teal-100 text-teal-700', closure:'Great job sharing the ISL! Now please make the student visit the branch or schedule a call for an F2F / online discussion. Explain the ISL in detail, address all Q&A, and make the student feel confident and happy about their university choices.' });
+  return actions;
+}
+
+function _renderSTIStudentCard(s, buckets) {
+  const actions = getSTIActionables(s, buckets);
+  const badgesHtml = actions.map(a =>
+    `<span class="inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded-full ${a.badgeCls}">${a.label}</span>`
+  ).join(' ');
+  const closureHtml = actions.map(a =>
+    `<div class="flex items-start gap-1.5 mt-1">
+      <span class="text-[10px] font-bold px-1.5 py-0.5 rounded ${a.badgeCls} flex-shrink-0 whitespace-nowrap">${a.label}</span>
+      <p class="text-[10px] text-text-muted leading-snug">${a.closure}</p>
+    </div>`
+  ).join('');
+  const waIssue = (s.whatsappGroups||[]).some(g => !g.studentJoined);
+  const stageCls = s.stage === 'lockin' ? 'bg-green-100 text-green-700' : s.stage === 'deposit' ? 'bg-orange-100 text-orange-700' : 'bg-blue-50 text-blue-600';
+  return `<div class="student-card cursor-pointer" onclick="openStudentDetail('${s.id}')">
+    <div class="flex items-start justify-between gap-2 mb-2">
+      <div class="min-w-0">
+        <p class="font-semibold text-sm text-text-main truncate">${s.name}</p>
+        <p class="text-xs text-text-muted">${s.id} · ${s.course} · <span class="font-medium text-primary/80">${s.country || '—'}</span></p>
+      </div>
+      <span class="text-[10px] px-1.5 py-0.5 rounded font-semibold flex-shrink-0 ${stageCls}">${(s.stage||'').toUpperCase()}</span>
+    </div>
+    <div class="flex flex-wrap gap-1 mb-2">${badgesHtml}</div>
+    ${s.followup ? `<p class="text-[10px] text-text-muted mb-2">📅 Follow-up: ${s.followup}${waIssue ? ' · <span class="text-accent font-semibold">WA group issue</span>' : ''}</p>` : ''}
+    <div class="bg-surface rounded-lg px-3 py-2 mt-1">
+      <p class="text-[10px] font-bold text-text-muted uppercase tracking-wide mb-1">How to close</p>
+      ${closureHtml || '<p class="text-[10px] text-text-muted">Complete all pending subtasks for this student.</p>'}
+    </div>
+    <button class="mt-2 text-xs font-semibold text-accent hover:underline">Open student →</button>
+  </div>`;
+}
+
+const STI_TAB_META = [
+  { key:'all',    label:'All',            activeCls:'bg-primary text-white',          inactiveCls:'bg-surface text-text-muted hover:text-text-main' },
+  { key:'lockin', label:'Lock-in → STI',  activeCls:'bg-violet-600 text-white',        inactiveCls:'bg-violet-50 text-violet-700 hover:bg-violet-100' },
+  { key:'onhold', label:'On Hold',         activeCls:'bg-orange-500 text-white',        inactiveCls:'bg-orange-50 text-orange-700 hover:bg-orange-100' },
+  { key:'f2f',    label:'F2F → Lock',     activeCls:'bg-blue-600 text-white',           inactiveCls:'bg-blue-50 text-blue-700 hover:bg-blue-100' },
+  { key:'isl',    label:'ISL → F2F',      activeCls:'bg-teal-600 text-white',           inactiveCls:'bg-teal-50 text-teal-700 hover:bg-teal-100' },
+];
+
+function _renderSTITabs(allFunnelStudents, buckets) {
+  const counts = {
+    all:    allFunnelStudents.length,
+    lockin: buckets.lockin.length,
+    onhold: buckets.onhold.length,
+    f2f:    buckets.f2f.length,
+    isl:    buckets.isl.length,
+  };
+  return `<div class="flex flex-wrap gap-1.5 mb-3">
+    ${STI_TAB_META.map(t => {
+      const isActive = stiCohortTab === t.key;
+      return `<button onclick="switchSTICohortTab('${t.key}')"
+        class="sti-cohort-tab flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-full cursor-pointer transition-all ${isActive ? t.activeCls : t.inactiveCls}">
+        ${t.label}
+        <span class="inline-flex items-center justify-center min-w-[18px] h-[18px] text-[10px] rounded-full px-1
+          ${isActive ? 'bg-white/30 text-white' : 'bg-white/80 text-text-muted'}">${counts[t.key]}</span>
+      </button>`;
+    }).join('')}
+  </div>`;
+}
+
+function _getSTITabStudents(allFunnelStudents, buckets) {
+  if (stiCohortTab === 'all')    return allFunnelStudents;
+  if (stiCohortTab === 'lockin') return buckets.lockin;
+  if (stiCohortTab === 'onhold') return buckets.onhold;
+  if (stiCohortTab === 'f2f')    return buckets.f2f;
+  if (stiCohortTab === 'isl')    return buckets.isl;
+  return allFunnelStudents;
+}
+
+function switchSTICohortTab(key) {
+  stiCohortTab = key;
+  const all     = getViewingStudents().filter(isBoostSTIActive);
+  const acked   = _boostIsAcknowledged('funnel');
+  const todayStr = new Date().toISOString().split('T')[0];
+  const buckets  = _getSTIBuckets(all);
+  const allFunnel = [...new Map([...buckets.lockin,...buckets.onhold,...buckets.f2f,...buckets.isl].map(s=>[s.id,s])).values()];
+  const base      = acked ? allFunnel : allFunnel.filter(s => isPendingToday(s, todayStr));
+
+  const tabsEl = document.getElementById('stiCohortTabs');
+  if (tabsEl) tabsEl.innerHTML = _renderSTITabs(acked ? allFunnel : allFunnel.filter(s=>isPendingToday(s,todayStr)), {
+    lockin: acked ? buckets.lockin : buckets.lockin.filter(s=>isPendingToday(s,todayStr)),
+    onhold: acked ? buckets.onhold : buckets.onhold.filter(s=>isPendingToday(s,todayStr)),
+    f2f:    acked ? buckets.f2f    : buckets.f2f.filter(s=>isPendingToday(s,todayStr)),
+    isl:    acked ? buckets.isl    : buckets.isl.filter(s=>isPendingToday(s,todayStr)),
+  });
+
+  const q = document.getElementById('stiSearchInput')?.value || '';
+  _applySTIFilters(base, buckets, q);
+}
+
+function _applySTIFilters(baseStudents, buckets, q) {
+  let students = _getSTITabStudents(baseStudents, buckets);
+  if (q) students = students.filter(s =>
+    s.name.toLowerCase().includes(q.toLowerCase()) || s.id.toLowerCase().includes(q.toLowerCase())
+  );
+  const el = document.getElementById('stiStudentList');
+  if (el) el.innerHTML = students.length
+    ? students.map(s => _renderSTIStudentCard(s, buckets)).join('')
+    : `<div class="flex flex-col items-center justify-center py-10 text-center">
+        <div class="text-3xl mb-2">✅</div>
+        <p class="font-semibold text-text-main text-sm mb-1">No students here</p>
+        <p class="text-xs text-text-muted">Try a different tab or check back tomorrow.</p>
+      </div>`;
+}
+
+function filterSTIStudents(q) {
+  const all     = getViewingStudents().filter(isBoostSTIActive);
+  const acked   = _boostIsAcknowledged('funnel');
+  const todayStr = new Date().toISOString().split('T')[0];
+  const buckets  = _getSTIBuckets(all);
+  const allFunnel = [...new Map([...buckets.lockin,...buckets.onhold,...buckets.f2f,...buckets.isl].map(s=>[s.id,s])).values()];
+  const base      = acked ? allFunnel : allFunnel.filter(s => isPendingToday(s, todayStr));
+  _applySTIFilters(base, buckets, q);
+}
+
+function openBoostFunnelDrawer() {
+  state.drawerMode     = 'boostFunnel';
+  state.drawerPrevMode = null;
+  stiCohortTab         = 'all';
+  const all      = getViewingStudents().filter(isBoostSTIActive);
+  const todayStr = new Date().toISOString().split('T')[0];
+  const acked    = _boostIsAcknowledged('funnel');
+
+  const buckets = _getSTIBuckets(all);
+  const allFunnelStudents = [...new Map([...buckets.lockin,...buckets.onhold,...buckets.f2f,...buckets.isl].map(s=>[s.id,s])).values()];
+
+  const baseBuckets = acked ? buckets : {
+    lockin: buckets.lockin.filter(s => isPendingToday(s, todayStr)),
+    onhold: buckets.onhold.filter(s => isPendingToday(s, todayStr)),
+    f2f:    buckets.f2f.filter(s => isPendingToday(s, todayStr)),
+    isl:    buckets.isl.filter(s => isPendingToday(s, todayStr)),
+  };
+  const baseStudents = acked ? allFunnelStudents : allFunnelStudents.filter(s => isPendingToday(s, todayStr));
+  const displayStudents = _getSTITabStudents(baseStudents, baseBuckets);
+
+  const todayStudents = allFunnelStudents.filter(s => isPendingToday(s, todayStr));
+  const dueStudents   = allFunnelStudents.filter(s => s.followup === todayStr);
+  const allDone       = dueStudents.length > 0 && dueStudents.every(s => s.subtasks.every(t => t.done));
+
+  const listHtml = displayStudents.length
+    ? `<div id="stiStudentList" class="space-y-3">${displayStudents.map(s => _renderSTIStudentCard(s, baseBuckets)).join('')}</div>`
+    : `<div id="stiStudentList"><div class="flex flex-col items-center justify-center py-12 text-center">
+        <div class="text-4xl mb-3">✅</div>
+        <p class="font-semibold text-text-main mb-1">All clear today!</p>
+        <p class="text-xs text-text-muted">No students with pending STI actions due today.</p>
+      </div></div>`;
+
+  const content = `<div class="space-y-3">
+    ${!acked ? _renderBoostTodayHeader(todayStudents.length) : _renderBoostAckHeader()}
+    ${!acked && allDone ? _renderBoostAckPrompt('funnel') : ''}
+    <div id="stiCohortTabs">${_renderSTITabs(baseStudents, baseBuckets)}</div>
+    <div class="mb-1">
+      <input id="stiSearchInput" type="text" placeholder="Search by name or ID…"
+        oninput="filterSTIStudents(this.value)"
+        class="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
+    </div>
+    ${listHtml}
+    ${_renderAllTasksSection(acked, allFunnelStudents, 'funnel')}
+  </div>`;
+
+  openDrawer('Boost STI', content, false);
+}
+
+/* ── Sub-card opener (handles all three action cards + nested F2F card) ── */
+function openBoostSubCard(type) {
+  const all      = getViewingStudents();
+  const todayStr = new Date().toISOString().split('T')[0];
+  const acked    = _boostIsAcknowledged('funnel');
+
+  const configs = {
+    'lockin-sti-not-done': {
+      title:   'Lock-in Done and STI Not Done',
+      filter:  s => s.stage === 'lockin' && s.subtasks.some(t => !t.done),
+      nested:  null,
+      prevMode: 'boostFunnel',
+      def:     'Student has completed the Lock-in payment but STI (Study Abroad Training/Submission) is still pending.',
+      closure: 'STI is submitted and marked done in the system.',
+    },
+    'on-hold-drafts': {
+      title:   'On Hold Application Drafts',
+      filter:  s => s.subtasks.some(t =>
+                    ON_HOLD_TASK_LABELS.some(lbl => t.label.toLowerCase().includes(lbl)) && !t.done),
+      nested:  null,
+      prevMode: 'boostFunnel',
+      def:     'Student\'s application is on hold — QC cleared the documents and filing is pending, or the draft was rejected and needs revision (QC Rejected / On Hold).',
+      closure: 'Application is filed and status moves forward in the pipeline.',
+    },
+    'f2f-not-locked': {
+      title:   'F2F Done but Not Locked In',
+      filter:  s => s.secondCallDate &&
+                    !s.hasPaidPremium &&
+                    (!s.amountPaid || s.amountPaid === 0) &&
+                    s.leadStatus !== 'Drop off' &&
+                    !STI_TERMINAL_STATUSES.includes(s.applicationStatus),
+      nested:  null,
+      prevMode: 'boostFunnel',
+      def:     'Student attended the 2nd F2F/online discussion but hasn\'t paid any amount (Prime / Premium / C2I). Lead is active and not dropped.',
+      closure: 'Student makes a payment — Prime, Premium, or C2I amount is recorded in the system.',
+    },
+    'isl-shared-f2f-pending': {
+      title:   'ISL Shared but F2F not Done',
+      filter:  s => s.islSharedDate && !s.secondCallDate && s.leadStatus !== 'Drop off',
+      nested:  null,
+      prevMode: 'boostFunnel',
+      def:     'ISL (Institute Shortlisting) has been shared with the student but they haven\'t attended the 2nd discussion call yet. Lead is not dropped.',
+      closure: 'Student attends the 2nd discussion and second call date is recorded in the system.',
+    },
+    'c-to-uc-deposit-pending': {
+      title:   'C to UC / UC Received — Deposit Not Paid',
+      filter:  s => s.stage === 'deposit' && s.ucAssigned === true &&
+                    !s.subtasks.every(t => t.done),
+      nested:  null,
+      prevMode: 'boost-deposit',
+      def:     'Student has been assigned a University Counsellor (UC) but the deposit payment has not yet been collected.',
+      closure: 'Deposit is paid and recorded in the system.',
+    },
+    'cas-i20-review': {
+      title:   'CAS/I20 - Counsellor Review Needed',
+      filter:  s => ['deposit','lockin'].includes(s.stage) &&
+                    ['UK','USA'].includes(s.country) &&
+                    s.leadStatus !== 'Drop off' &&
+                    s.casI20Raised !== true,
+      nested:  null,
+      prevMode: 'boost-deposit',
+      def:     'Students going to the UK require a CAS (Confirmation of Acceptance for Studies) and students going to the USA require an I20 — both must be raised by the counsellor with the university after the offer is confirmed.',
+      closure: 'CAS or I20 is successfully raised with the university and updated in the system. Mark the subtask done to close this task.',
+    },
+    'c2i-enrolment': {
+      title:   'C2I Enrolment',
+      filter:  s => !s.englishTestGiven &&
+                    ['sti','application'].includes(s.stage) &&
+                    s.leadStatus !== 'Drop off',
+      nested:  null,
+      prevMode: 'boostRevenue',
+      def:     'Students eligible for English Proficiency Test (IELTS / TOEFL / Duolingo / PTE) — test not yet given and lead status is not beyond Admit Received.',
+      closure: 'English Proficiency Test is completed and updated in the system.',
+    },
+  };
+
+  const cfg = configs[type];
+  if (!cfg) return;
+
+  /* set back-nav state BEFORE opening drawer */
+  state.drawerMode          = 'boostSubCardView';
+  state.drawerBoostSubCardId = type;
+  state.drawerPrevMode      = cfg.prevMode;
+  state.drawerBoostSubType  = (cfg.prevMode === 'boostSubCard') ? 'f2f-not-locked' : null;
+
+  let students = all.filter(cfg.filter);
+  if (!acked) students = students.filter(s => isPendingToday(s, todayStr));
+
+  /* nested card shown inside F2F drawer — no student list when a nested card exists */
+  if (cfg.nested) {
+    let nestedStudents = all.filter(cfg.nested.filter);
+    if (!acked) nestedStudents = nestedStudents.filter(s => isPendingToday(s, todayStr));
+    const nestedHTML = `
+      <div class="space-y-3">
+        ${!acked ? _renderBoostTodayHeader(nestedStudents.length) : _renderBoostAckHeader()}
+        <p class="text-[11px] font-bold uppercase tracking-widest text-text-muted">Priority Actions</p>
+        ${_boostMetricCard(cfg.nested.id, cfg.nested.label, nestedStudents, todayStr, null, !acked)}
+      </div>`;
+    openDrawer(cfg.title, nestedHTML, true);
+    return;
+  }
+
+  const banner    = cfg.def ? _metricDefBanner(cfg.def, cfg.closure || '') : '';
+  const todayLabel = !acked ? `<div class="mb-3">${_renderBoostTodayHeader(students.length)}</div>` : `<div class="mb-3">${_renderBoostAckHeader()}</div>`;
+  const listHTML = students.length
+    ? `${banner}${todayLabel}<div class="space-y-2">${renderStudentList(students)}</div>`
+    : `${banner}${todayLabel}<p class="text-xs text-text-muted italic text-center py-6">No students due today for this criteria.</p>`;
+
+  openDrawer(cfg.title, listHTML, true);
+}
+
+function getViewingStudents() {
+  if (state.role === 'team_lead' || state.role === 'ops_admin') {
+    return STUDENTS.filter(s => s.counselorId === state.viewingCounselorId);
+  }
+  return STUDENTS.filter(s => s.counselorId === state.currentUser.id);
+}
+
+/* ═══════════════ TEAM CHAT ═══════════════ */
+
+const TEAM_CHAT_SEED = [
+  { author: 'Anjali M.', avatar: 'AM', time: '9:02 AM', text: 'Good morning team! Let\'s crush today\'s STI targets 💪', self: false },
+  { author: 'Rahul S.',  avatar: 'RS', time: '9:08 AM', text: 'I have 3 students ready for document review — anyone free at 11?', self: false },
+  { author: 'You',       avatar: 'P',  time: '9:15 AM', text: 'I can join at 11! Also just had a great STI call with Arjun Sharma', self: true },
+  { author: 'Manager',   avatar: 'MG', time: '9:30 AM', text: '📊 Reminder: Stand-up at 10 AM. Bring your MTD numbers!', self: false },
+];
+
+let teamChatMessages = [...TEAM_CHAT_SEED];
+
+let _internalChatOpen = false;
+let _internalChatUnread = 0;
+
+function toggleInternalChat() {
+  _internalChatOpen = !_internalChatOpen;
+  const panel = document.getElementById('internalChatPanel');
+  if (panel) {
+    panel.classList.toggle('hidden', !_internalChatOpen);
+    if (_internalChatOpen) {
+      _internalChatUnread = 0;
+      const badge = document.getElementById('internalChatBadge');
+      if (badge) badge.classList.add('hidden');
+      renderTeamChat();
+    }
+  }
+}
+
+function renderTeamChat() {
+  const container = document.getElementById('teamChatMessages');
+  if (!container) return;
+  container.innerHTML = teamChatMessages.map(msg => `
+    <div class="flex items-start gap-2.5 ${msg.self ? 'flex-row-reverse' : ''}">
+      <div class="w-7 h-7 rounded-full flex-shrink-0 flex items-center justify-center text-[10px] font-bold text-white
+        ${msg.self ? 'bg-accent' : msg.author === 'Manager' ? 'bg-slate-600' : 'bg-primary'}">
+        ${msg.avatar}
+      </div>
+      <div class="max-w-[75%] ${msg.self ? 'items-end' : 'items-start'} flex flex-col gap-0.5">
+        <div class="flex items-baseline gap-1.5 ${msg.self ? 'flex-row-reverse' : ''}">
+          <span class="text-[11px] font-semibold text-text-main">${msg.author}</span>
+          <span class="text-[10px] text-text-muted">${msg.time}</span>
+        </div>
+        <div class="px-3 py-2 rounded-2xl text-sm leading-relaxed
+          ${msg.self
+            ? 'bg-accent text-white rounded-tr-sm'
+            : msg.author === 'Manager'
+              ? 'bg-amber-50 border border-amber-200 text-amber-900 rounded-tl-sm'
+              : 'bg-surface border border-border text-text-main rounded-tl-sm'}">
+          ${msg.text}
+        </div>
+      </div>
+    </div>
+  `).join('');
+  container.scrollTop = container.scrollHeight;
+}
+
+function sendTeamChat() {
+  const input = document.getElementById('teamChatInput');
+  const text = (input.value || '').trim();
+  if (!text) return;
+  const now = new Date();
+  const time = now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+  teamChatMessages.push({ author: 'You', avatar: 'P', time, text, self: true });
+  input.value = '';
+  renderTeamChat();
+  // Simulate a reply after a short delay
+  const replies = [
+    { author: 'Anjali M.', avatar: 'AM', text: '👍 Got it!', self: false },
+    { author: 'Rahul S.',  avatar: 'RS', text: 'Thanks for the update!', self: false },
+    { author: 'Manager',   avatar: 'MG', text: 'Noted ✅', self: false },
+  ];
+  const reply = replies[Math.floor(Math.random() * replies.length)];
+  setTimeout(() => {
+    const t = new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+    teamChatMessages.push({ ...reply, time: t });
+    renderTeamChat();
+    if (!_internalChatOpen) {
+      _internalChatUnread++;
+      const badge = document.getElementById('internalChatBadge');
+      if (badge) { badge.textContent = _internalChatUnread; badge.classList.remove('hidden'); }
+    }
+  }, 1200 + Math.random() * 800);
+}
+
+/* ═══════════════ WHATSAPP COVERAGE ═══════════════ */
+
+function renderWhatsappCoverage() {
+  const students = getViewingStudents();
+  let totalGroups = 0, counselorJoined = 0, studentMissing = 0;
+  students.forEach(s => {
+    s.whatsappGroups.forEach(g => {
+      totalGroups++;
+      if (g.counselorJoined) counselorJoined++;
+      if (!g.studentJoined) studentMissing++;
+    });
+  });
+  const el = document.getElementById('whatsappCoverage');
+  if (!el) return;
+  el.innerHTML = `
+    <div class="wa-chip ok cursor-pointer hover:opacity-80 transition-opacity" onclick="openGroupsDetail('counselor')" title="Click to see group membership details">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+      Groups counselor joined: ${counselorJoined}/${totalGroups} ↗
+    </div>
+    <div class="wa-chip ${studentMissing > 0 ? 'warn' : 'ok'} cursor-pointer hover:opacity-80 transition-opacity" onclick="openGroupsDetail('students')" title="Click to see which students are missing from groups">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+      Students NOT in group: ${studentMissing} ↗
+    </div>
+  `;
+}
+
+/* ═══════════════ METRIC CARDS ═══════════════ */
+
+function getWANotRepliedStudents() {
+  return getViewingStudents().filter(s => (WA_UNANSWERED[s.id] || []).length > 0);
+}
+
+function getDeferralOpportunityStudents() {
+  return getViewingStudents().filter(s => s.deferral && (
+    (s.deferral.hasAdmitPrevIntake && !s.deferral.depositPaid) ||
+    (!s.deferral.hasAdmitPrevIntake && s.deferral.depositPaid && !s.deferral.visaDone)
+  ));
+}
+
+function getBestPerformer(field) {
+  // Returns { name, value } for the counselor with highest value in given field
+  let best = null;
+  COUNSELORS.forEach(c => {
+    const v = c.today[field];
+    if (v !== undefined && (best === null || v > best.value)) {
+      best = { name: c.name.split(' ')[0], value: v };
+    }
+  });
+  return best;
+}
+
+function getWAGroupStats() {
+  const students = getViewingStudents();
+  let active = 0, inactive = 0, notJoined = 0, notReplied = getWANotRepliedStudents().length;
+  students.forEach(s => {
+    s.whatsappGroups.forEach(g => {
+      if (g.counselorJoined && g.studentJoined) active++;
+      else if (!g.counselorJoined) inactive++;
+      if (!g.studentJoined) notJoined++;
+    });
+  });
+  return { active, inactive, notJoined, notReplied };
+}
+
+// Same aggregate the "WA Summary" panel inside the WA group details drawer uses to color itself —
+// used so the Potential Escalations tile's "Messages Not Replied" row is colored consistently.
+function computeWAIssueCount(students) {
+  const pairs = [];
+  students.forEach(s => (s.whatsappGroups || []).forEach(g => pairs.push({ student: s, group: g })));
+  const inactiveCount     = pairs.filter(p => !p.group.counselorJoined).length;
+  const notJoinedCount    = pairs.filter(p => !p.group.studentJoined).length;
+  const notRepliedCount   = students.filter(s => (WA_UNANSWERED[s.id] || []).length > 0).length;
+  const groupNotCreatedIds = new Set();
+  students.filter(s => (s.whatsappGroups || []).length === 0).forEach(s => groupNotCreatedIds.add(s.id));
+  pairs.filter(p => !p.group.counselorJoined).forEach(p => groupNotCreatedIds.add(p.student.id));
+  return inactiveCount + notJoinedCount + notRepliedCount + groupNotCreatedIds.size;
+}
+
+function renderMetricCards() {
+  const c = getCounselorData();
+  const totalStudents = getViewingStudents().length;
+
+  const allStudents = getViewingStudents();
+  const customerSupportCount = allStudents.filter(s => s.hasEscalation).length;
+  const lowISLCount = allStudents.filter(s => s.islRating < 8 && !s.hasEscalation).length;
+  const deferralCount = getDeferralOpportunityStudents().length;
+  const ownCount = state.ownTasks.filter(t => !t.done).length;
+  const waStats = getWAGroupStats();
+
+  // Best performers for quality metrics
+  const bestISL      = getBestPerformer('isl');
+  const bestQ1       = getBestPerformer('q1score');
+
+  const ownTasksCard = {
+    label:'Own Tasks', value:ownCount, target:TARGETS.tasks,
+    extra:`${ownCount === 1 ? '1 pending reminder' : ownCount + ' pending reminders'}`,
+    unit:'', key:'ownTasks',
+    overrideColor: ownCount === 0 ? 'green' : 'red',
+  };
+
+  const qualityMetrics = [
+    { label:'ISL Feedback Rating',       value:c.isl,             target:5,                  extra:`${Math.round((c.isl/5)*100)}%`, unit:'', isRating:true,
+      bestLabel: bestISL ? `🏆 Best: ${bestISL.name} · ${bestISL.value.toFixed(1)}/5` : '' },
+    { label:'Quality Score',             value:null,              target:100,                extra:'', unit:'', isDual:true, q1:c.q1score, q2:c.q2score,
+      bestLabel: bestQ1 ? `🏆 Best: ${bestQ1.name} · ${bestQ1.value}%` : '' },
+    { label:'WA Group Details',          value:null,              target:0,                  extra:'', unit:'', isWAGroups:true, waStats, customerSupportCount, lowISLCount, waIssueCount: computeWAIssueCount(allStudents) },
+  ];
+
+  // Own Tasks: Red+First if pending, Green+Last if clear
+  const orderedMetrics = ownCount > 0
+    ? [ownTasksCard, ...qualityMetrics]
+    : [...qualityMetrics, ownTasksCard];
+  renderMetricGrid('volumeMetrics', orderedMetrics);
+}
+
+function renderMetricGrid(elId, metrics) {
+  const el = document.getElementById(elId);
+  el.innerHTML = metrics.map(m => {
+    // ── Special: WA Group Details card ──
+    if (m.isWAGroups) {
+      const ws = m.waStats;
+      const csCount = m.customerSupportCount || 0;
+      const islCount = m.lowISLCount || 0;
+      const waIssues = m.waIssueCount || 0; // same aggregate the WA Summary drawer panel uses to color itself
+      const breachedCount = 0; // no SLA/breach-tracking system yet
+
+      function subRow(label, count, urgency) {
+        // urgency: 'good'=green, 'warn'=amber, 'danger'=red, 'info'=blue
+        const cfg = {
+          good:   { bg:'bg-emerald-50', border:'border-emerald-200', numCls:'text-emerald-700 bg-emerald-100', lbl:'text-emerald-700' },
+          warn:   { bg:'bg-amber-50',   border:'border-amber-200',   numCls:'text-amber-700 bg-amber-100',     lbl:'text-amber-700' },
+          danger: { bg:'bg-red-50',     border:'border-red-200',     numCls:'text-red-700 bg-red-100',         lbl:'text-red-700' },
+          info:   { bg:'bg-blue-50',    border:'border-blue-200',    numCls:'text-blue-700 bg-blue-100',       lbl:'text-blue-700' },
+        }[urgency] || {};
+        return `<div class="flex items-center justify-between px-2.5 py-1.5 rounded-lg border ${cfg.bg} ${cfg.border} mb-1 last:mb-0">
+          <span class="text-[10px] font-semibold ${cfg.lbl}">${label}</span>
+          <span class="text-[11px] font-bold px-1.5 py-0.5 rounded-full ${cfg.numCls}">${count}</span>
+        </div>`;
+      }
+
+      return `
+        <div class="metric-card rounded-xl border p-3 cursor-pointer hover:shadow-md transition-shadow"
+          style="background:linear-gradient(135deg,#ecfdf5 0%,#d1fae5 100%);border-color:#6ee7b7;"
+          onclick="openWAGroupDetailsDrawer()">
+          <div class="metric-deco"></div>
+          <p class="text-xs font-semibold uppercase tracking-wide mb-2 text-emerald-700">🎯 Potential Escalations <span class="ml-1 text-[9px] font-bold bg-red-100 text-red-600 px-1.5 py-0.5 rounded-full">IMP</span></p>
+          <div class="space-y-0.5">
+            ${subRow('Customer Support',        csCount,       csCount > 0 ? 'danger' : 'good')}
+            ${subRow('Low ISL Feedback',        islCount,      islCount > 0 ? 'danger' : 'good')}
+            ${subRow('Messages Not Replied',    ws.notReplied, waIssues > 0 ? 'danger' : 'good')}
+            ${subRow('IS Pending and Breached', breachedCount, breachedCount > 0 ? 'danger' : 'good')}
+          </div>
+          <div class="mt-2 flex items-center gap-1 text-[10px] font-semibold text-emerald-700">
+            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+            View all groups →
+          </div>
+        </div>`;
+    }
+
+    let pct, displayVal, subText;
+    if (m.isDual) {
+      pct = Math.round((m.q1 + m.q2) / 2);
+      displayVal = '';
+      subText = `1st: ${m.q1}% &nbsp;|&nbsp; 2nd: ${m.q2}%`;
+    } else if (m.isCurrency) {
+      pct = fmtPct(m.value, m.target);
+      displayVal = fmt(m.value);
+      subText = `${pct}% of target`;
+    } else if (m.isRating) {
+      pct = Math.round((m.value / m.target) * 100);
+      displayVal = m.value.toFixed(1) + ' / 5';
+      subText = m.extra;
+    } else if (m.isPct) {
+      pct = fmtPct(m.value, m.target);
+      displayVal = m.value + '%';
+      subText = m.extra;
+    } else {
+      pct = fmtPct(m.value, m.target);
+      displayVal = m.value;
+      subText = m.extra;
+    }
+    const cls = m.overrideColor ? m.overrideColor
+      : m.isOpportunity ? 'opportunity'
+      : m.isNegative
+        ? (m.value === 0 ? 'green' : m.target === 0 ? 'red' : pct < 30 ? 'amber' : 'red')
+        : colorClass(m.isDual ? pct : pct);
+    return `
+      <div class="metric-card ${cls} rounded-xl border p-4 ${m.key ? 'cursor-pointer hover:shadow-md transition-shadow' : 'cursor-default'}" ${m.key ? `onclick="openVolumeMetricDrawer('${m.key}')"` : ''}
+        ${m.isOpportunity ? 'style="background:linear-gradient(135deg,#ede9fe 0%,#ddd6fe 100%);border-color:#c4b5fd;"' : ''}>
+        <div class="metric-deco"></div>
+        <p class="text-xs font-semibold uppercase tracking-wide mb-1 ${m.isOpportunity ? 'text-violet-600' : 'text-text-muted'}">${m.label}</p>
+        ${m.isDual
+          ? `<p class="font-mono text-lg font-bold metric-value" style="line-height:1.2">${m.q1}% <span class="text-text-muted text-sm font-normal">1st</span></p>
+             <p class="font-mono text-lg font-bold metric-value" style="line-height:1.2">${m.q2}% <span class="text-text-muted text-sm font-normal">2nd</span></p>`
+          : `<p class="font-mono text-2xl font-bold ${m.isOpportunity ? 'text-violet-700' : 'metric-value'}" id="mv_${elId}_${m.label.replace(/\s/g,'_')}">${displayVal}</p>`}
+        <p class="text-xs mt-1 ${m.isOpportunity ? 'text-violet-500' : 'text-text-muted'}">${subText}</p>
+        ${m.isOpportunity
+          ? `<div class="mt-2 flex items-center gap-1 text-xs font-semibold text-violet-600"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>View list →</div>`
+          : `<div class="flex items-center justify-between mt-2">
+              <div class="flex-1 h-1.5 bg-white/50 rounded-full overflow-hidden mr-2">
+                <div class="h-full rounded-full ${cls === 'green' ? 'bg-success' : cls === 'amber' ? 'bg-accent' : 'bg-danger'}" style="width:${Math.min(m.isDual ? pct : pct, 100)}%"></div>
+              </div>
+              <span class="text-xs font-bold ${cls === 'green' ? 'text-success' : cls === 'amber' ? 'text-accent' : 'text-danger'}">${m.isDual ? pct : pct}%</span>
+            </div>`
+        }
+        ${m.bestLabel ? `<div class="mt-1.5 pt-1.5 border-t border-white/40"><p class="text-[10px] text-text-muted font-medium truncate">${m.bestLabel}</p></div>` : ''}
+      </div>
+    `;
+  }).join('');
+}
+
+function openVolumeMetricDrawer(key) {
+  if (key === 'ownTasks') { openOwnTaskDrawer(); return; }
+  const all = getViewingStudents();
+  const configs = {
+    stis:         { title: 'STIs Submitted',         filter: s => true },
+    applications: { title: 'Applications Submitted',  filter: s => ['application','deposit','lockin'].includes(s.stage) },
+    deposits:     { title: 'Deposits Collected',      filter: s => ['deposit','lockin'].includes(s.stage) },
+    lockins:      { title: 'Lock-ins Achieved',       filter: s => s.stage === 'lockin' },
+    tasks:        { title: 'Tasks Completed',         filter: s => s.subtasks.some(t => t.done) },
+    revenue:      { title: 'Revenue Collected',       filter: s => s.hasPaidPremium, showAmount: true },
+    unhappy:      { title: 'Unhappy Cohort',          filter: s => s.islRating < 8 || s.hasEscalation },
+    deferrals:    { title: 'Deferrals Opportunity',   filter: s => s.deferral && ((s.deferral.hasAdmitPrevIntake && !s.deferral.depositPaid) || (!s.deferral.hasAdmitPrevIntake && s.deferral.depositPaid && !s.deferral.visaDone)) },
+    waNotReplied: { title: 'WA Messages Not Replied', filter: s => (WA_UNANSWERED[s.id] || []).length > 0 },
+  };
+  const cfg = configs[key];
+  if (!cfg) return;
+
+  state.drawerMode = 'volumeMetric';
+  state.drawerVolumeMetricKey = key;
+  // Set prevMode so back button knows where to return
+  state.drawerPrevMode = key === 'deferrals' ? 'boost-deposit' : null;
+
+  const students = all.filter(cfg.filter);
+
+  /* ── WA Not Replied drawer ── */
+  let listHTML;
+  if (key === 'waNotReplied') {
+    listHTML = students.length
+      ? `<div class="space-y-3">${students.map(s => {
+          const msgs = WA_UNANSWERED[s.id] || [];
+          return `<div class="bg-white rounded-xl border border-border p-4 shadow-sm">
+            <div class="flex items-start justify-between mb-2">
+              <div>
+                <p class="font-semibold text-sm text-text-main">${s.name}</p>
+                <p class="text-xs text-text-muted">${s.id} · ${s.course} · <span class="font-medium text-primary/80">${s.country || '—'}</span></p>
+              </div>
+              <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-100 text-red-600">${msgs.length} unanswered</span>
+            </div>
+            <div class="space-y-2 mt-2">${msgs.map(m => `
+              <div class="bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+                <div class="flex items-center justify-between mb-1">
+                  <span class="text-[10px] font-bold text-amber-700 uppercase tracking-wide">💬 Student Question</span>
+                  <span class="text-[10px] text-text-muted">${m.date}</span>
+                </div>
+                <p class="text-xs text-text-main italic">"${m.question}"</p>
+                <div class="flex items-center gap-2 mt-1.5">
+                  <span class="text-[10px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 font-semibold">Lead: ${m.leadStatus}</span>
+                </div>
+              </div>`).join('')}
+            </div>
+            <button class="mt-2 text-xs text-primary font-semibold hover:underline cursor-pointer" onclick="openStudentDetail('${s.id}')">Open Student Profile →</button>
+          </div>`;
+        }).join('')}</div>`
+      : `<p class="text-xs text-text-muted italic text-center py-6">No unanswered WA messages 🎉</p>`;
+  }
+  /* ── Deferrals Opportunity drawer ── */
+  else if (key === 'deferrals') {
+    listHTML = students.length
+      ? `<div class="space-y-3">
+           <div class="px-3 py-2 bg-violet-50 border border-violet-200 rounded-lg text-xs text-violet-700 font-medium">
+             ${students.length} student${students.length !== 1 ? 's' : ''} with deferral opportunity identified
+           </div>
+           ${students.map(s => {
+             const d = s.deferral;
+             const isAdmitType = d.hasAdmitPrevIntake && !d.depositPaid;
+             return `<div class="bg-white rounded-xl border border-border p-4 shadow-sm">
+               <div class="flex items-start justify-between mb-2">
+                 <div>
+                   <p class="font-semibold text-sm text-text-main">${s.name}</p>
+                   <p class="text-xs text-text-muted">${s.id} · ${s.course} · <span class="font-medium text-primary/80">${s.country || '—'}</span></p>
+                 </div>
+                 <span class="text-[10px] font-bold px-2 py-0.5 rounded-full ${isAdmitType ? 'bg-orange-100 text-orange-700' : 'bg-blue-100 text-blue-700'}">
+                   ${isAdmitType ? '🎓 Admit · No Deposit' : '💳 Deposit · No Visa'}
+                 </span>
+               </div>
+               <div class="bg-surface rounded-lg px-3 py-2 mt-1 space-y-1">
+                 <div class="flex items-center gap-2 text-xs">
+                   <span class="text-text-muted font-medium w-28">University</span>
+                   <span class="text-text-main font-semibold">${d.admitUniversity}</span>
+                 </div>
+                 <div class="flex items-center gap-2 text-xs">
+                   <span class="text-text-muted font-medium w-28">Previous Intake</span>
+                   <span class="text-text-main">${d.admitIntake}</span>
+                 </div>
+                 <div class="flex items-center gap-2 text-xs">
+                   <span class="text-text-muted font-medium w-28">Status</span>
+                   <span class="font-semibold ${isAdmitType ? 'text-orange-600' : 'text-blue-600'}">
+                     ${isAdmitType ? 'Admit received — deposit pending' : 'Deposit paid — visa process pending'}
+                   </span>
+                 </div>
+               </div>
+               <button class="mt-2 text-xs text-primary font-semibold hover:underline cursor-pointer" onclick="openStudentDetail('${s.id}')">Open Student Profile →</button>
+             </div>`;
+           }).join('')}
+         </div>`
+      : `<p class="text-xs text-text-muted italic text-center py-6">No deferral opportunities right now.</p>`;
+  }
+  /* ── Unhappy cohort ── */
+  else if (key === 'unhappy') {
+    listHTML = students.length
+      ? `<div class="space-y-2">${students.map(s => {
+          const badge = s.hasEscalation
+            ? `<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-100 text-red-600 ml-1">⚠ Escalation</span>`
+            : '';
+          const islBadge = `<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">ISL ${s.islRating}/10</span>`;
+          return `<div class="student-card" onclick="openStudentDetail('${s.id}')">
+            <div class="flex items-start justify-between mb-2">
+              <div>
+                <p class="font-semibold text-sm text-text-main">${s.name}</p>
+                <p class="text-xs text-text-muted">${s.id} · ${s.course} · <span class="font-medium text-primary/80">${s.country || '—'}</span></p>
+              </div>
+              <div class="flex gap-1 flex-wrap justify-end">${islBadge}${badge}</div>
+            </div>
+            <div class="flex items-center gap-3 text-xs text-text-muted">
+              <span>📅 Follow-up: ${s.followup}</span>
+              <span class="${s.islRating < 6 ? 'text-danger font-semibold' : 'text-amber-600'}">${s.islRating < 8 ? 'Low ISL rating' : ''}${s.islRating < 8 && s.hasEscalation ? ' · ' : ''}${s.hasEscalation ? 'Escalation raised' : ''}</span>
+            </div>
+            <p class="text-xs text-primary font-semibold mt-2 cursor-pointer">Open →</p>
+          </div>`;
+        }).join('')}</div>`
+      : `<p class="text-xs text-text-muted italic text-center py-6">No unhappy students right now 🎉</p>`;
+  } else if (cfg.showAmount) {
+    const total = students.reduce((sum, s) => sum + (s.amountPaid || 0), 0);
+    const fmtAmt = v => v >= 100000 ? `₹${(v/100000).toFixed(1)}L` : `₹${(v/1000).toFixed(0)}K`;
+    listHTML = students.length
+      ? `<div class="mb-3 px-3 py-2 bg-emerald-50 border border-emerald-200 rounded-lg flex items-center justify-between">
+           <span class="text-xs font-semibold text-emerald-700">Total Collected</span>
+           <span class="text-base font-bold text-emerald-700">${fmtAmt(total)}</span>
+         </div>
+         <div class="space-y-2">${students.map(s => `
+           <div class="student-card" onclick="openStudentDetail('${s.id}')">
+             <div class="flex items-start justify-between mb-2">
+               <div>
+                 <p class="font-semibold text-sm text-text-main">${s.name}</p>
+                 <p class="text-xs text-text-muted">${s.id} · ${s.course} · <span class="font-medium text-primary/80">${s.country || '—'}</span></p>
+               </div>
+               <span class="text-sm font-bold text-emerald-600">${fmtAmt(s.amountPaid)}</span>
+             </div>
+             <div class="text-xs text-text-muted">📅 Follow-up: ${s.followup} · ${s.stage.toUpperCase()} stage</div>
+             <p class="text-xs text-primary font-semibold mt-2 cursor-pointer">Open →</p>
+           </div>`).join('')}</div>`
+      : `<p class="text-xs text-text-muted italic text-center py-6">No revenue collected yet.</p>`;
+  } else {
+    listHTML = students.length
+      ? `<div class="space-y-2">${renderStudentList(students)}</div>`
+      : `<p class="text-xs text-text-muted italic text-center py-6">No students match this criteria right now.</p>`;
+  }
+
+  openDrawer(cfg.title, listHTML, state.drawerPrevMode !== null);
+}
+
+/* ═══════════════ BOOST REVENUE ═══════════════ */
+
+/* Determine all revenue actionables for a student */
+function getRevenueActionables(s) {
+  const actions = [];
+  if (!s.englishTestGiven && ['sti','application'].includes(s.stage) && s.leadStatus !== 'Drop off') {
+    actions.push({
+      label:   'Pitch for C2I',
+      badgeCls:'bg-violet-100 text-violet-700',
+      closure: 'Discuss how Leap can support English exam prep and lock the student into an English prep SKU, or update the exam status (Given / Booked from Outside / Doesn\'t Need to Give Exam) in the Internal Portal. Always update the follow-up date after confirming with the student.'
+    });
+  }
+  if (s.servicingType === 'partner' && !s.hasPaidPremium) {
+    actions.push({
+      label:   'Pitch for Leap Prime',
+      badgeCls:'bg-blue-100 text-blue-700',
+      closure: 'Discuss how Leap Prime gives the student a higher chance at their dream admit, and how a Dream Team supports them once they\'ve paid. Task closes once the student pays for Leap Prime. Always update the follow-up date after confirming with the student.'
+    });
+  }
+  if (s.servicingType === 'non-partner' && (s.nonPartnerSubType === 'specialised-services' || s.nonPartnerSubType === 'paid-application')) {
+    const svcs = (s.specialServices || []).join(' + ') || 'Specialised Service';
+    actions.push({
+      label:   `Pitch for ${svcs}`,
+      badgeCls:'bg-amber-100 text-amber-700',
+      closure: `Discuss the exact service the student is looking for (SOP, Visa, Single Non-Partner Application, or any other paid service). Task closes once the student pays for the plan. Always update the follow-up date after confirming with the student.`
+    });
+  }
+  if (s.servicingType === 'non-partner' && s.nonPartnerSubType === 'premium-universities') {
+    actions.push({
+      label:   'Pitch for Premium Servicing',
+      badgeCls:'bg-purple-100 text-purple-700',
+      closure: 'Discuss the Dream University the student is looking for and lock them in by collecting the package amount; update the system to close the task once paid. Always update the follow-up date after confirming with the student.'
+    });
+  }
+  if (s.hasPaidPremium === true && s.agreementSigned === false) {
+    actions.push({
+      label:   'Send Agreement Reminder',
+      badgeCls:'bg-rose-100 text-rose-700',
+      closure: 'Student e-signs the agreement — confirm signature is recorded in system.'
+    });
+  }
+  return actions;
+}
+
+/* Flat revenue student list (all actionable students, deduped) */
+function getRevenueStudents() {
+  return getViewingStudents().filter(s => getRevenueActionables(s).length > 0);
+}
+
+function _renderRevenueStudentCard(s) {
+  const actions = getRevenueActionables(s);
+  const badgesHtml = actions.map(a =>
+    `<span class="inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded-full ${a.badgeCls}">${a.label}</span>`
+  ).join(' ');
+  const closureHtml = actions.map(a =>
+    `<div class="flex items-start gap-1.5 mt-1">
+      <span class="text-[10px] font-bold px-1.5 py-0.5 rounded ${a.badgeCls} flex-shrink-0">${a.label.split(' ')[2] || a.label}</span>
+      <p class="text-[10px] text-text-muted leading-snug">${a.closure}</p>
+    </div>`
+  ).join('');
+  const waIssue = (s.whatsappGroups||[]).some(g => !g.studentJoined);
+
+  return `<div class="student-card cursor-pointer" onclick="openStudentDetail('${s.id}')">
+    <div class="flex items-start justify-between gap-2 mb-2">
+      <div class="min-w-0">
+        <p class="font-semibold text-sm text-text-main truncate">${s.name}</p>
+        <p class="text-xs text-text-muted">${s.id} · ${s.course} · <span class="font-medium text-primary/80">${s.country || '—'}</span></p>
+      </div>
+      <span class="text-[10px] px-1.5 py-0.5 rounded font-semibold flex-shrink-0 ${s.stage === 'deposit' ? 'bg-orange-100 text-orange-700' : s.stage === 'lockin' ? 'bg-green-100 text-green-700' : 'bg-blue-50 text-blue-600'}">${s.stage?.toUpperCase()}</span>
+    </div>
+    <div class="flex flex-wrap gap-1 mb-2">${badgesHtml}</div>
+    ${s.followup ? `<p class="text-[10px] text-text-muted mb-2">📅 Follow-up: ${s.followup}${waIssue ? ' · <span class="text-accent font-semibold">WA group issue</span>' : ''}</p>` : ''}
+    <div class="bg-surface rounded-lg px-3 py-2 mt-1">
+      <p class="text-[10px] font-bold text-text-muted uppercase tracking-wide mb-1">How to close</p>
+      ${closureHtml}
+    </div>
+    <button class="mt-2 text-xs font-semibold text-accent hover:underline">Open student →</button>
+  </div>`;
+}
+
+let revenueCohortTab = 'all'; // 'all'|'c2i'|'leapprime'|'premium'|'specialised'|'agreementReminder'
+
+const REVENUE_COHORT_FILTERS = {
+  all:          s => true,
+  c2i:          s => !s.englishTestGiven && ['sti','application'].includes(s.stage) && s.leadStatus !== 'Drop off',
+  leapprime:    s => s.servicingType === 'partner' && !s.hasPaidPremium,
+  premium:      s => s.servicingType === 'non-partner' && s.nonPartnerSubType === 'premium-universities',
+  specialised:  s => s.servicingType === 'non-partner' && (s.nonPartnerSubType === 'specialised-services' || s.nonPartnerSubType === 'paid-application'),
+  agreementReminder: s => s.hasPaidPremium === true && s.agreementSigned === false,
+};
+
+const REVENUE_TAB_META = [
+  { key:'all',         label:'All',                  activeCls:'bg-primary text-white',         inactiveCls:'bg-surface text-text-muted hover:text-text-main' },
+  { key:'c2i',         label:'C2I',                  activeCls:'bg-violet-600 text-white',       inactiveCls:'bg-violet-50 text-violet-700 hover:bg-violet-100' },
+  { key:'leapprime',   label:'Leap Prime Services',  activeCls:'bg-blue-600 text-white',         inactiveCls:'bg-blue-50 text-blue-700 hover:bg-blue-100' },
+  { key:'premium',     label:'Premium Services',     activeCls:'bg-purple-600 text-white',       inactiveCls:'bg-purple-50 text-purple-700 hover:bg-purple-100' },
+  { key:'specialised', label:'Specialised Services', activeCls:'bg-amber-500 text-white',        inactiveCls:'bg-amber-50 text-amber-700 hover:bg-amber-100' },
+  { key:'agreementReminder', label:'Agreement Reminder', activeCls:'bg-rose-600 text-white',      inactiveCls:'bg-rose-50 text-rose-700 hover:bg-rose-100' },
+];
+
+function _getRevenueTabStudents(baseStudents) {
+  return baseStudents.filter(REVENUE_COHORT_FILTERS[revenueCohortTab] || (() => true));
+}
+
+function _renderRevenueTabs(baseStudents) {
+  return `<div class="flex flex-wrap gap-1.5 mb-3">
+    ${REVENUE_TAB_META.map(t => {
+      const count = baseStudents.filter(REVENUE_COHORT_FILTERS[t.key]).length;
+      const isActive = revenueCohortTab === t.key;
+      return `<button onclick="switchRevenueCohortTab('${t.key}')"
+        class="rev-cohort-tab flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-full cursor-pointer transition-all ${isActive ? t.activeCls : t.inactiveCls}">
+        ${t.label}
+        <span class="inline-flex items-center justify-center min-w-[18px] h-[18px] text-[10px] rounded-full px-1
+          ${isActive ? 'bg-white/30 text-white' : 'bg-white/80 text-text-muted'}">${count}</span>
+      </button>`;
+    }).join('')}
+  </div>`;
+}
+
+function switchRevenueCohortTab(key) {
+  revenueCohortTab = key;
+  const acked    = _boostIsAcknowledged('revenue');
+  const todayStr = new Date().toISOString().split('T')[0];
+  const allRevStudents = getRevenueStudents();
+  const baseStudents   = acked ? allRevStudents : allRevStudents.filter(s => isPendingToday(s, todayStr));
+
+  // Re-render tabs (update active state)
+  const tabsEl = document.getElementById('revenueCohortTabs');
+  if (tabsEl) tabsEl.innerHTML = _renderRevenueTabs(baseStudents);
+
+  // Re-render student list
+  const q = document.getElementById('revenueSearchInput')?.value || '';
+  _applyRevenueFilters(baseStudents, q);
+}
+
+function _applyRevenueFilters(baseStudents, q) {
+  let students = _getRevenueTabStudents(baseStudents);
+  if (q) students = students.filter(s =>
+    s.name.toLowerCase().includes(q.toLowerCase()) || s.id.toLowerCase().includes(q.toLowerCase())
+  );
+  const el = document.getElementById('revenueStudentList');
+  if (el) el.innerHTML = students.length
+    ? students.map(_renderRevenueStudentCard).join('')
+    : `<div class="flex flex-col items-center justify-center py-10 text-center">
+        <div class="text-3xl mb-2">✅</div>
+        <p class="font-semibold text-text-main text-sm mb-1">No students here</p>
+        <p class="text-xs text-text-muted">Try a different tab or check back tomorrow.</p>
+      </div>`;
+}
+
+function openBoostRevenueDrawer() {
+  state.drawerMode     = 'boostRevenue';
+  state.drawerPrevMode = null;
+  revenueCohortTab     = 'all'; // reset tab on open
+  const todayStr = new Date().toISOString().split('T')[0];
+  const acked    = _boostIsAcknowledged('revenue');
+
+  const allRevStudents = getRevenueStudents();
+  const todayStudents  = allRevStudents.filter(s => isPendingToday(s, todayStr));
+  const dueStudents    = allRevStudents.filter(s => s.followup === todayStr);
+  const allDone        = dueStudents.length > 0 && dueStudents.every(s => s.subtasks.every(t => t.done));
+
+  const baseStudents    = acked ? allRevStudents : todayStudents;
+  const displayStudents = _getRevenueTabStudents(baseStudents);
+
+  const listHtml = displayStudents.length
+    ? `<div id="revenueStudentList" class="space-y-3">${displayStudents.map(_renderRevenueStudentCard).join('')}</div>`
+    : `<div id="revenueStudentList"><div class="flex flex-col items-center justify-center py-12 text-center">
+        <div class="text-4xl mb-3">✅</div>
+        <p class="font-semibold text-text-main mb-1">All clear today!</p>
+        <p class="text-xs text-text-muted">No students with pending revenue actions due today.</p>
+      </div></div>`;
+
+  const content = `<div class="space-y-3">
+    ${!acked ? _renderBoostTodayHeader(todayStudents.length) : _renderBoostAckHeader()}
+    ${!acked && allDone ? _renderBoostAckPrompt('revenue') : ''}
+    <div id="revenueCohortTabs">${_renderRevenueTabs(baseStudents)}</div>
+    <div class="mb-1">
+      <input id="revenueSearchInput" type="text" placeholder="Search by name or ID…"
+        oninput="filterRevenueStudents(this.value)"
+        class="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
+    </div>
+    ${listHtml}
+    ${_renderAllTasksSection(acked, allRevStudents, 'revenue')}
+  </div>`;
+
+  openDrawer('Lock the User and Generate Revenue', content, false);
+}
+
+function filterRevenueStudents(q) {
+  const acked    = _boostIsAcknowledged('revenue');
+  const todayStr = new Date().toISOString().split('T')[0];
+  const allRevStudents = getRevenueStudents();
+  const baseStudents   = acked ? allRevStudents : allRevStudents.filter(s => isPendingToday(s, todayStr));
+  _applyRevenueFilters(baseStudents, q);
+}
+
+function openRevenueSubCard(type) {
+  const all = getViewingStudents();
+  const todayStr = new Date().toISOString().split('T')[0];
+
+  const configs = {
+    'non-partner-revenue': {
+      title:   'Paid Service Revenue',
+      filter:  s => s.servicingType === 'non-partner',
+      badge:   s => `<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700">Paid Service</span>${s.nonPartnerSubType === 'specialised-services' ? `<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 ml-1">Specialised</span>` : s.nonPartnerSubType === 'premium-universities' ? `<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-100 text-purple-700 ml-1">Premium Uni</span>` : s.nonPartnerSubType === 'paid-application' ? `<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 ml-1">Paid App</span>` : ''}`,
+      def:     'Students under Paid Service — includes Premium Universities, Specialised Services, and Paid Application tracks where the service fee has not yet been collected.',
+      closure: 'Full Paid Service fee is collected and recorded in the system.',
+    },
+    'prime-enrolments': {
+      title:   'Free Service Enrolment',
+      filter:  s => s.servicingType === 'partner',
+      badge:   s => `<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">Free Service</span>`,
+      def:     'Students enrolled under Free Service (partner university servicing) where enrolment confirmation is pending or outstanding.',
+      closure: 'Student enrolment is confirmed under Free Service and recorded in the system.',
+    },
+    'specialised-services': {
+      title:   'Specialised Services',
+      filter:  s => s.servicingType === 'non-partner' && s.nonPartnerSubType === 'specialised-services',
+      badge:   s => `<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">Specialised Services</span>`,
+      def:     'Students availing Paid Service — Specialised Services (SOP, Visa, IELTS prep etc.) where the service fee payment is pending.',
+      closure: 'Specialised service fee is paid and recorded in the system.',
+    },
+  };
+
+  const cfg = configs[type];
+  if (!cfg) return;
+
+  state.drawerMode = 'revenueSubCardView';
+  state.drawerRevenueSubCardId = type;
+  state.drawerPrevMode = 'boostRevenue';
+
+  const acked    = _boostIsAcknowledged('revenue');
+  let students   = all.filter(cfg.filter);
+  if (!acked) students = students.filter(s => isPendingToday(s, todayStr));
+
+  const headerHtml = !acked ? `<div class="mb-3">${_renderBoostTodayHeader(students.length)}</div>` : `<div class="mb-3">${_renderBoostAckHeader()}</div>`;
+
+  const revBanner = cfg.def ? _metricDefBanner(cfg.def, cfg.closure || '') : '';
+  const listHTML = students.length
+    ? `${revBanner}${headerHtml}<div class="space-y-2">${students.map(s => `
+        <div class="student-card" onclick="openStudentDetail('${s.id}')">
+          <div class="flex items-start justify-between mb-2">
+            <div>
+              <p class="font-semibold text-sm text-text-main">${s.name}</p>
+              <p class="text-xs text-text-muted">${s.id} · ${s.course} · <span class="font-medium text-primary/80">${s.country || '—'}</span></p>
+            </div>
+            <div class="flex gap-1 flex-wrap justify-end">${cfg.badge(s)}</div>
+          </div>
+          <div class="text-xs text-text-muted">📅 Follow-up: ${s.followup}</div>
+          <p class="text-xs text-primary font-semibold mt-2 cursor-pointer">Open →</p>
+        </div>`).join('')}</div>`
+    : `${revBanner}${headerHtml}<p class="text-xs text-text-muted italic text-center py-6">No students due today for this category.</p>`;
+
+  openDrawer(cfg.title, listHTML, true);
+}
+
+function getCounselorData() {
+  const c = COUNSELORS.find(x => x.id === state.viewingCounselorId) || COUNSELORS[0];
+  return c.today;
+}
+
+/* ═══════════════ LOG TASK ═══════════════ */
+
+let _reminderType = 'call';
+
+function selectReminderType(type) {
+  _reminderType = type;
+  // Update button styles
+  document.querySelectorAll('.reminder-type-btn').forEach(btn => {
+    btn.classList.remove('active', 'border-accent', 'bg-accent/5', 'text-accent');
+    btn.classList.add('border-border', 'text-text-muted');
+  });
+  const active = document.getElementById('rtype-' + type);
+  if (active) {
+    active.classList.add('border-accent', 'bg-accent/5', 'text-accent');
+    active.classList.remove('border-border', 'text-text-muted');
+  }
+  // Show/hide custom name
+  const customName = document.getElementById('reminderCustomName');
+  if (customName) customName.classList.toggle('hidden', type !== 'custom');
+}
+
+function logTask() {
+  const typeLabels = { call:'Call to User', message:'Send Message to User', payment:'Payment Follow Up', custom:'Custom Task' };
+  const label = typeLabels[_reminderType] || 'Reminder';
+  const customName = document.getElementById('taskCustomName')?.value.trim();
+  const notes    = document.getElementById('taskNotes').value.trim();
+  const date     = document.getElementById('taskDate')?.value;
+  const userId   = document.getElementById('taskUserId')?.value.trim();
+  const taskTitle = (_reminderType === 'custom' && customName) ? customName : label;
+
+  // Validate User ID — required
+  if (!userId) {
+    const el = document.getElementById('taskUserId');
+    if (el) { el.classList.add('border-danger'); el.focus(); }
+    showToast('⚠️ Please enter a User ID before saving.', 'warning');
+    return;
+  }
+  // Remove error styling if present
+  document.getElementById('taskUserId')?.classList.remove('border-danger');
+
+  // Bump counselor metrics (followups as proxy)
+  const c = COUNSELORS.find(x => x.id === state.viewingCounselorId) || COUNSELORS[0];
+  if (c.today.followups !== undefined) c.today.followups += 1;
+  if (c.today.tasks    !== undefined) c.today.tasks += 1;
+
+  const dateStr = date ? ` · ${new Date(date).toLocaleString('en-IN', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' })}` : '';
+  showToast(`✅ Reminder saved for ${userId}: ${taskTitle}${dateStr}`, 'success');
+
+  // Save to own tasks
+  state.ownTasks.push({
+    id: Date.now(),
+    type: _reminderType,
+    title: taskTitle,
+    userId: userId,
+    notes: notes || '',
+    date: date || '',
+    done: false,
+    createdAt: new Date().toISOString()
+  });
+
+  // Reset form
+  document.getElementById('taskNotes').value = '';
+  document.getElementById('taskUserId').value = '';
+  if (document.getElementById('taskCustomName')) document.getElementById('taskCustomName').value = '';
+  if (document.getElementById('taskDate')) document.getElementById('taskDate').value = '';
+  selectReminderType('call');
+  renderMetricCards();
+  renderBoostCards();
+}
+
+/* ═══════════════ HISTORY TABLE ═══════════════ */
+
+function switchHistory(period, btn) {
+  state.historyPeriod = period;
+  document.querySelectorAll('#tab1 .period-btn').forEach((b,i) => { if(i<3) b.classList.remove('active'); });
+  btn.classList.add('active');
+  renderHistoryTable();
+}
+
+function renderHistoryTable() {
+  const tbody = document.getElementById('historyTableBody');
+  if (!tbody) return;  // Achievement History replaced by Stand Up table (Feature F)
+  const c = getCounselorData();
+  const mults = { '7d': histMults[0], 'month': histMults[4], 'year': histMults[8] };
+  const mult = mults[state.historyPeriod] || 1;
+  const rows = [
+    { metric:'Calls Made',    actual: Math.round(c.calls * mult * 7), target: TARGETS.calls * 7 },
+    { metric:'STIs Submitted',actual: Math.round(c.stis * mult * 7),  target: TARGETS.stis * 7 },
+    { metric:'Applications',  actual: Math.round(c.applications * mult * 7), target: TARGETS.applications * 7 },
+    { metric:'Deposits',      actual: Math.round(c.deposits * mult * 7), target: TARGETS.deposits * 7 },
+    { metric:'Lock-ins',      actual: Math.round(c.lockins * mult * 7), target: TARGETS.lockins * 7 },
+    { metric:'Revenue',       actual: Math.round(c.revenueCollected * mult * 7), target: TARGETS.revenue_target * 7, isCurrency:true },
+  ];
+  const period = { '7d':1, 'month':4.3, 'year':52 };
+  const p = period[state.historyPeriod] || 1;
+  const adjustedRows = rows.map(r => ({ ...r, actual: Math.round(r.actual * p / 7), target: Math.round(r.target * p / 7) }));
+
+  tbody.innerHTML = adjustedRows.map(r => {
+    const pct = r.target ? Math.round((r.actual / r.target) * 100) : 0;
+    const cls = pct >= 100 ? 'text-success' : pct >= 60 ? 'text-accent' : 'text-danger';
+    const dispA = r.isCurrency ? fmt(r.actual) : r.actual;
+    const dispT = r.isCurrency ? fmt(r.target) : r.target;
+    return `<tr>
+      <td class="py-2 font-medium text-text-main">${r.metric}</td>
+      <td class="py-2 text-right font-mono">${dispA}</td>
+      <td class="py-2 text-right font-mono text-text-muted">${dispT}</td>
+      <td class="py-2 text-right font-bold ${cls}">${pct}%</td>
+    </tr>`;
+  }).join('');
+}
+
+function onTLCounsellorChange() {
+  const sel = document.getElementById('tlCounsellorSelect');
+  if (!sel) return;
+  state.viewingCounselorId = parseInt(sel.value);
+  // Sync header selector if visible
+  const hdrSel = document.getElementById('counselorSelector');
+  if (hdrSel) hdrSel.value = state.viewingCounselorId;
+  renderBoostCards();
+  renderMetricCards();
+}
+
+/* ═══════════════ SLAB TABLE ═══════════════ */
+
+function renderSlabTable() {
+  const tbody = document.getElementById('slabTableBody');
+  tbody.innerHTML = INCENTIVE_SLABS.map((s, idx) => {
+    const pctMatch = s.status.match(/(\d+)%/);
+    const pct = pctMatch ? parseInt(pctMatch[1]) : 100;
+    const badgeCls = pct >= 100 ? 'bg-orange-100 text-accent border border-orange-200'
+                   : pct >= 75  ? 'bg-blue-50 text-primary border border-blue-200'
+                   : 'bg-red-50 text-danger border border-red-200';
+    const earnCls  = pct >= 100 ? 'text-accent' : 'text-primary';
+    const earnersId = `slab-earners-${idx}`;
+    const medal = ['🥇','🥈','🥉'];
+    const earnersHTML = s.earners.map((e, i) => `
+      <div class="flex items-center justify-between py-1.5 border-b border-border/50 last:border-0">
+        <div class="flex items-center gap-2">
+          <span class="text-sm">${medal[i] || ''}</span>
+          <span class="text-xs font-semibold text-text-main">${e.name}</span>
+          <span class="text-[10px] text-text-muted">(${e.count})</span>
+        </div>
+        <span class="text-xs font-bold text-accent font-mono">${fmt(e.earned)}</span>
+      </div>`).join('');
+    return `
+    <tr class="hover:bg-surface/30 transition-colors cursor-pointer" onclick="toggleSlabEarners('${earnersId}')">
+      <td class="py-3">
+        <p class="font-semibold text-text-main text-sm">${s.component}</p>
+        <p class="text-[10px] text-text-muted mt-0.5">📅 ${s.drivePeriod}</p>
+      </td>
+      <td class="py-3 text-text-muted text-xs">${s.rule}</td>
+      <td class="py-3">
+        <span class="px-2.5 py-1 rounded-full text-xs font-semibold ${badgeCls}">${s.status}</span>
+      </td>
+      <td class="py-3 text-right">
+        <span class="font-mono font-bold ${earnCls} text-sm">${fmt(s.earned)}</span>
+        <p class="text-[10px] text-text-muted mt-0.5">👥 ${s.earners.length} earned ▾</p>
+      </td>
+    </tr>
+    <tr id="${earnersId}" class="hidden">
+      <td colspan="4" class="pb-3 px-2">
+        <div class="bg-surface rounded-xl border border-border px-4 py-3">
+          <p class="text-[10px] font-bold text-text-muted uppercase tracking-wide mb-2">Counsellors who earned — ${s.drivePeriod}</p>
+          ${earnersHTML}
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function toggleSlabEarners(id) {
+  const el = document.getElementById(id);
+  if (el) el.classList.toggle('hidden');
+}
+
+function openCounsellorOfferDrawer(offerId) {
+  const o = COUNSELLOR_OFFERS.find(x => x.id === offerId);
+  if (!o) return;
+
+  // Get target students based on bucket
+  const all = getViewingStudents();
+  const bucketMap = {
+    deposit: all.filter(s => ['deposit'].includes(s.stage)),
+    lockin:  all.filter(s => s.hasFinalisedUniversity || s.stage === 'lockin'),
+    sti:     all.filter(s => s.islRating >= 8 && s.appDownloaded),
+  };
+  const targets = bucketMap[o.targetBucket] || all.slice(0, 4);
+
+  const calcHTML = `
+    <div class="mb-5">
+      <p class="text-[11px] font-bold uppercase tracking-widest text-text-muted mb-2">💰 Incentive Structure</p>
+      <div class="bg-surface rounded-xl border border-border overflow-hidden">
+        <table class="w-full text-xs">
+          <thead><tr class="bg-surface border-b border-border">
+            <th class="text-left px-4 py-2 font-semibold text-text-muted">Milestone</th>
+            <th class="text-right px-4 py-2 font-semibold text-text-muted">Reward</th>
+          </tr></thead>
+          <tbody class="divide-y divide-border">
+            ${o.calcRows.map(r => `
+              <tr class="hover:bg-white/60">
+                <td class="px-4 py-2.5 font-semibold text-text-main">${r.rank}</td>
+                <td class="px-4 py-2.5 text-right font-medium" style="color:#ea580c">${r.prize}</td>
+              </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>`;
+
+  const targetsHTML = targets.length
+    ? `<div>
+        <p class="text-[11px] font-bold uppercase tracking-widest text-text-muted mb-2">🎯 Students to Target</p>
+        <p class="text-xs text-text-muted mb-3 italic">${o.targetDesc}</p>
+        <div class="space-y-2">
+          ${targets.map(s => `
+            <div class="student-card cursor-pointer" onclick="openStudentDetail('${s.id}')">
+              <div class="flex items-start justify-between mb-1">
+                <div>
+                  <p class="font-semibold text-sm text-text-main">${s.name}</p>
+                  <p class="text-xs text-text-muted">${s.id} · ${s.course} · ${s.country || '—'}</p>
+                </div>
+                <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-orange-100 text-accent uppercase">${s.stage}</span>
+              </div>
+              <div class="flex items-center gap-3 text-xs text-text-muted">
+                <span>📅 Follow-up: ${s.followup}</span>
+                <span>⭐ ISL: ${s.islRating}/10</span>
+              </div>
+              <p class="text-xs text-primary font-semibold mt-1.5 cursor-pointer">Open profile →</p>
+            </div>`).join('')}
+        </div>
+       </div>`
+    : `<p class="text-xs text-text-muted italic text-center py-4">No matching students for this offer right now.</p>`;
+
+  const content = calcHTML + targetsHTML;
+  openDrawer(`${o.icon} ${o.title}`, content, false);
+}
+
+/* ═══════════════ EARNINGS CHART ═══════════════ */
+
+function initEarningsChart() {
+  if (state.earningsChart) return;
+  const ctx = document.getElementById('earningsChart');
+  if (!ctx) return;
+  // FY 2026-27: Apr 2026 → Mar 2027; current month = May 2026 (index 1)
+  const months = ['Apr 26','May 26','Jun 26','Jul 26','Aug 26','Sep 26','Oct 26','Nov 26','Dec 26','Jan 27','Feb 27','Mar 27'];
+  const colors = MONTHLY_EARNINGS.map((v, i) =>
+    i === 1 ? '#16A34A'      // current month → green
+    : v === 0 ? '#E2E8F0'    // future → light grey
+    : '#1D4ED8'              // past months → blue
+  );
+  state.earningsChart = new Chart(ctx, {
+    type:'bar',
+    data:{ labels:months, datasets:[{ data:MONTHLY_EARNINGS, backgroundColor:colors, borderRadius:6, borderSkipped:false }] },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{
+        legend:{ display:false },
+        tooltip:{ callbacks:{ label: ctx => fmt(ctx.parsed.y) } },
+        annotation:{}
+      },
+      scales:{
+        y:{ ticks:{ callback:v => fmt(v), font:{family:'Fira Code',size:11} }, grid:{color:'#E2E8F0'} },
+        x:{ grid:{display:false}, ticks:{font:{family:'Poppins',size:11}} }
+      }
+    }
+  });
+}
+
+/* ═══════════════ EARNERS LEADERBOARD ═══════════════ */
+
+let earnerViewMode = 'counsellor'; // 'counsellor' | 'teamlead'
+
+function switchEarnerView(mode, btn) {
+  earnerViewMode = mode;
+  document.querySelectorAll('.earner-view-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  renderEarnersLeaderboard();
+}
+
+function renderEarnersLeaderboard() {
+  if (earnerViewMode === 'teamlead') {
+    renderEarnerList('earnerMonthList', EARNER_TL_SEED_MONTH, TEAM_LEADS);
+    renderEarnerList('earnerAllList', EARNER_TL_SEED_ALLTIME, TEAM_LEADS);
+  } else {
+    renderEarnerList('earnerMonthList', EARNER_SEED_MONTH, COUNSELORS);
+    renderEarnerList('earnerAllList', EARNER_SEED_ALLTIME, COUNSELORS);
+  }
+}
+
+function renderEarnerList(elId, seeds, pool) {
+  const ranked = (pool || COUNSELORS).map((c,i) => ({ name:c.name, avatar:c.avatar, val:seeds[i] || 0 }))
+    .sort((a,b) => b.val - a.val);
+  const max = ranked[0].val;
+  const el = document.getElementById(elId);
+  el.innerHTML = ranked.map((r,i) => {
+    const badge = i === 0 ? `<span class="rank-badge r1">🥇</span>` : i === 1 ? `<span class="rank-badge r2">🥈</span>` : i === 2 ? `<span class="rank-badge r3">🥉</span>` : `<span class="w-6 h-6 flex items-center justify-center text-xs text-text-muted">${i+1}</span>`;
+    const valPart = (state.role !== 'counselor')
+      ? `<span class="font-mono text-xs font-bold text-text-main">${fmt(r.val)}</span>`
+      : `<div class="earner-bar-track"><div class="earner-bar-fill" style="width:${Math.round((r.val/max)*100)}%"></div></div>`;
+    return `<div class="flex items-center gap-2 py-1.5">
+      ${badge}
+      <div class="w-7 h-7 rounded-full bg-accent flex items-center justify-center text-white text-xs font-bold flex-shrink-0">${r.avatar}</div>
+      <span class="flex-1 text-sm font-medium text-text-main truncate">${r.name}</span>
+      ${valPart}
+    </div>`;
+  }).join('');
+}
+
+/* ═══════════════ OFFERS ROW (Tab 2) ═══════════════ */
+
+function renderOffersRow() {
+  const activeOffers = OFFERS.filter(o => o.active).slice(0, 5);
+  const row = document.getElementById('offersRow');
+  if (!row) return;
+  if (!activeOffers.length) {
+    row.innerHTML = '<p class="text-sm text-text-muted">No live offers at the moment.</p>';
+    return;
+  }
+  row.innerHTML = activeOffers.map(o => {
+    const d = daysUntil(o.expiry);
+    const expiryClass = d <= 3 ? 'text-yellow-200 font-bold' : 'text-white/70';
+    const expiryText = d <= 0 ? 'Expires today!' : d === 1 ? 'Expires tomorrow' : `Expires ${o.expiry.split('-').reverse().join(' ').replace('-', ' ')}`;
+    return `
+      <div class="offer-banner">
+        <div class="flex items-center gap-2 mb-2">
+          <span class="text-xs px-2 py-0.5 bg-white/20 rounded-full font-semibold">${bucketEmoji(o.bucket)} ${bucketLabel(o.bucket)}</span>
+        </div>
+        <h3 class="font-bold text-base mb-1 leading-tight">${o.title}</h3>
+        <p class="text-white/80 text-xs mb-3 leading-relaxed">${o.desc}</p>
+        <div class="flex items-center justify-between">
+          <span class="text-xs ${expiryClass}">${expiryText}</span>
+          <button onclick="openOfferDrawer('${o.id}')" class="text-xs font-semibold bg-white/20 hover:bg-white/30 text-white px-3 py-1 rounded-lg cursor-pointer transition-colors">See Students →</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderCounsellorOffersRow() {
+  const row = document.getElementById('counsellorOffersRow');
+  const section = document.getElementById('counsellorOffersSection');
+  if (!row || !section) return;
+
+  const activeOffers = COUNSELLOR_OFFERS.filter(o => o.active);
+  if (!activeOffers.length) {
+    row.innerHTML = '<p class="text-sm text-text-muted">No live offers for counsellors right now.</p>';
+    return;
+  }
+  row.innerHTML = activeOffers.map(o => {
+    const d = daysUntil(o.expiry);
+    const expiryClass = d <= 3 ? 'text-yellow-200 font-bold' : 'text-white/70';
+    const expiryText = d <= 0 ? 'Expires today!' : d === 1 ? 'Expires tomorrow' : `Expires ${o.expiry.split('-').reverse().join(' ').replace('-',' ')}`;
+    return `
+      <div class="flex-shrink-0 w-72 rounded-2xl text-white p-5 flex flex-col justify-between relative overflow-hidden cursor-pointer hover:scale-[1.02] active:scale-[0.99] transition-transform"
+           style="background:linear-gradient(135deg,${o.gradFrom} 0%,${o.gradTo} 100%);min-height:175px;box-shadow:0 8px 28px rgba(0,0,0,0.22)"
+           onclick="openCounsellorOfferDrawer('${o.id}')">
+        <div class="absolute inset-0 opacity-10" style="background:radial-gradient(circle at 80% 20%, white 0%, transparent 60%)"></div>
+        <div class="absolute top-3 right-3 w-6 h-6 rounded-full bg-white/20 flex items-center justify-center">
+          <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
+        </div>
+        <div>
+          <div class="flex items-center gap-2 mb-2.5">
+            <span class="text-lg">${o.icon}</span>
+            <span class="text-xs px-2 py-0.5 bg-white/20 rounded-full font-semibold">${o.tag}</span>
+          </div>
+          <h3 class="font-bold text-base mb-1.5 leading-tight">${o.title}</h3>
+          <p class="text-white/80 text-xs leading-relaxed">${o.desc}</p>
+        </div>
+        <div class="flex items-center justify-between mt-3">
+          <div>
+            <span class="text-[10px] ${expiryClass} block">${expiryText}</span>
+            <span class="text-xs font-bold text-yellow-200 mt-0.5 block">🎁 ${o.reward}</span>
+          </div>
+          <div class="text-xs font-semibold bg-white/25 hover:bg-white/40 text-white px-3 py-1.5 rounded-lg transition-colors">
+            View Details →
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+/* ═══════════════ QUICK LINKS V1 (Tab 3) ═══════════════ */
+
+function renderQuickLinks() {
+  const links = [
+    {
+      id:'sheet', icon:'📊', color:'bg-green-50', iconColor:'text-green-600',
+      label:'IMP Sheet',
+      desc:'Access important templates, SOPs and reference documents',
+      action:`openQuickLink('sheet')`
+    },
+  ];
+  const grid = document.getElementById('ldTopCards');
+  if (!grid) return;
+  grid.innerHTML = links.map(l => `
+    <div onclick="${l.action}" class="flex items-center gap-4 p-3 rounded-xl hover:bg-green-50 cursor-pointer transition-all group border border-transparent hover:border-green-200">
+      <div class="w-10 h-10 rounded-xl ${l.color} flex items-center justify-center text-xl flex-shrink-0">${l.icon}</div>
+      <div class="min-w-0 flex-1">
+        <p class="font-semibold text-text-main text-sm group-hover:text-green-700 transition-colors">${l.label}</p>
+        <p class="text-xs text-text-muted mt-0.5 leading-snug">${l.desc}</p>
+      </div>
+      <svg class="w-4 h-4 text-text-muted group-hover:text-green-600 flex-shrink-0 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+    </div>
+  `).join('');
+}
+
+function openQuickLink(type) {
+  const url = QUICK_LINK_URLS[type];
+  if (url) showToast(`Opening ${type === 'session' ? 'video session' : 'templates sheet'}…`, 'info');
+  else showToast('URL not configured. Ask your ops admin.', 'warning');
+}
+
+/* ═══════════════ MGR CRM BAR ═══════════════ */
+
+function handleMgrGlobalSearch(query) {
+  const q = query.trim().toLowerCase();
+  if (!q) return;
+  const pool = getFilteredCounselorPool();
+  const matchedStudents = STUDENTS.filter(s =>
+    pool.some(c => c.id === s.counselorId) &&
+    (String(s.id).toLowerCase().includes(q) ||
+     (s.phone && s.phone.toLowerCase().includes(q)) ||
+     (s.email && s.email.toLowerCase().includes(q)) ||
+     (s.name  && s.name.toLowerCase().includes(q)))
+  );
+  if (!matchedStudents.length) {
+    showToast('No student found matching that search.', 'warning');
+    return;
+  }
+  if (matchedStudents.length === 1) {
+    openStudentDetail(matchedStudents[0].id);
+    document.getElementById('mgrGlobalSearch').value = '';
+    return;
+  }
+  const rows = matchedStudents.slice(0, 20).map(s => {
+    const cl = getFilteredCounselorPool().find(c => c.id === s.counselorId);
+    return `<div class="flex items-center justify-between px-4 py-3 hover:bg-surface/60 border-b border-border/50 last:border-0 cursor-pointer" onclick="openStudentDetail('${s.id}');closeDrawer()">
+      <div>
+        <p class="text-sm font-semibold text-text-main">${escHtml(s.name)}</p>
+        <p class="text-xs text-text-muted">${escHtml(s.course||'—')} · ${escHtml(cl?.name||'—')}</p>
+      </div>
+      <svg class="w-4 h-4 text-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+    </div>`;
+  }).join('');
+  openDrawer(`🔍 Search results — ${matchedStudents.length} found`, `<div class="divide-y divide-border">${rows}</div>`);
+  document.getElementById('mgrGlobalSearch').value = '';
+}
+
+function openAssignedLeadsDrawer() {
+  const pool = getFilteredCounselorPool();
+  const students = STUDENTS.filter(s => pool.some(c => c.id === s.counselorId));
+  if (!students.length) { showToast('No leads in your assigned pool.', 'info'); return; }
+  const rows = students.slice(0, 50).map(s => {
+    const cl = pool.find(c => c.id === s.counselorId);
+    const stageCls = { sti:'bg-blue-100 text-primary', deposit:'bg-yellow-100 text-yellow-700', lockin:'bg-green-100 text-success', application:'bg-purple-100 text-purple-700' };
+    const sc = stageCls[s.stage] || 'bg-gray-100 text-gray-600';
+    return `<div class="flex items-center gap-3 px-4 py-3 hover:bg-surface/60 border-b border-border/50 last:border-0 cursor-pointer" onclick="openStudentDetail('${s.id}');closeDrawer()">
+      <div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary flex-shrink-0">
+        ${escHtml((s.name||'?').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase())}
+      </div>
+      <div class="flex-1 min-w-0">
+        <p class="text-sm font-semibold text-text-main truncate">${escHtml(s.name)}</p>
+        <p class="text-xs text-text-muted truncate">${escHtml(cl?.name||'—')} · ${escHtml(s.course||'—')}</p>
+      </div>
+      <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full ${sc} flex-shrink-0">${escHtml(s.stage||'—')}</span>
+    </div>`;
+  }).join('');
+  openDrawer(`📋 Assigned Leads — ${students.length} students`, `<div class="divide-y divide-border">${rows}</div>`);
+}
+
+function updateCallMergeStatus(val) {
+  const dot = document.getElementById('callMergeDot');
+  if (!dot) return;
+  const colors = { active: 'bg-success', busy: 'bg-danger', away: 'bg-accent' };
+  dot.className = `w-2 h-2 rounded-full flex-shrink-0 ${colors[val] || 'bg-success'}`;
+}
+
+function openImpLink(type) {
+  const labels = {
+    sop: 'Raise SOP Request', offerfollowup: 'Offer Follow up',
+    leadtransfer: 'Raise Lead Transfer Request', infohub: 'Info-Hub',
+    leappay: 'LeapPay Payment Link', premiumpay: 'Premium Payment Links',
+  };
+  const url = QUICK_LINK_URLS[type];
+  if (url) { window.open(url, '_blank'); }
+  else showToast(`"${labels[type] || type}" URL not configured. Ask your ops admin.`, 'warning');
+}
+
+/* ═══════════════ IDLE 10X BANNER ═══════════════ */
+// Banner is shown immediately on login and stays visible on all tabs until dismissed.
+
+/* ═══════════════ JOIN 10X ═══════════════ */
+
+const TEN_X_URL = '#'; // Replace with actual 10x URL
+
+function is10xLiveNow() {
+  const now = new Date();
+  const istHour = new Date(now.getTime() + (now.getTimezoneOffset() * 60000) + (5.5 * 3600000)).getHours();
+  return istHour >= 10 && istHour < 20;
+}
+
+function joinTenX() {
+  if (TEN_X_URL && TEN_X_URL !== '#') {
+    window.open(TEN_X_URL, '_blank');
+  } else {
+    showToast('10x URL not configured yet. Ask your ops admin.', 'warning');
+  }
+  dismiss10xBanner();
+}
+
+function dismiss10xBanner() {
+  const banner = document.getElementById('join10xBanner');
+  const main = document.getElementById('mainContent');
+  if (banner) banner.classList.add('hidden');
+  if (main) main.style.marginTop = '104px';
+}
+
+function show10xBanner() {
+  const banner = document.getElementById('join10xBanner');
+  const main = document.getElementById('mainContent');
+  if (banner) banner.classList.remove('hidden');
+  if (main) main.style.marginTop = '126px'; // slim banner ~22px
+  // Also send bot notification message
+  setTimeout(() => {
+    appendBotMessageLive(`<p>🚀 <strong>Hey! Your 10x session is live.</strong> Don't miss it — click <strong>Join 10x</strong> in the purple banner at the top to jump in now with your team! 💪</p>`);
+    // Increment unread badge
+    state.chatPanel.unreadCount = (state.chatPanel.unreadCount || 0) + 1;
+    const badge = document.getElementById('botUnreadBadge');
+    if (badge) {
+      badge.textContent = state.chatPanel.unreadCount;
+      badge.classList.remove('hidden');
+    }
+  }, 1500);
+}
+
+/* ═══════════════ L&D INFO HUB SECTIONS ═══════════════ */
+
+function switchLDTab(tab) {
+  // Update tab button styles
+  document.querySelectorAll('.ld-subtab').forEach(btn => {
+    btn.classList.remove('border-primary', 'text-primary', 'bg-primary/5');
+    btn.classList.add('border-transparent', 'text-text-muted');
+  });
+  const activeBtn = document.getElementById(tab === 'infohub' ? 'ldTabInfoHub' : 'ldTabNewsletter');
+  if (activeBtn) {
+    activeBtn.classList.add('border-primary', 'text-primary', 'bg-primary/5');
+    activeBtn.classList.remove('border-transparent', 'text-text-muted');
+  }
+  // Show/hide panels — counsellors get ticket summary instead of info hub
+  const isCounsellor = state.currentUser && state.currentUser.role === 'counselor';
+  document.getElementById('ldPanelInfohub').classList.toggle('hidden', tab !== 'infohub' || isCounsellor);
+  document.getElementById('ldPanelCounsellorTickets').classList.toggle('hidden', tab !== 'infohub' || !isCounsellor);
+  if (tab === 'infohub' && isCounsellor) renderCounsellorTicketSummary();
+}
+
+function openTicketDetailPage(filter) {
+  const page = document.getElementById('ticketDetailPage');
+  const titleEl = document.getElementById('ticketDetailTitle');
+  const countEl = document.getElementById('ticketDetailCount');
+  const tickets = filter === 'all'
+    ? COUNSELLOR_TICKETS
+    : COUNSELLOR_TICKETS.filter(t => t.status === filter);
+
+  const label = filter === 'all' ? 'All Tickets' : filter === 'Resolved' ? 'Resolved Tickets' : 'Not Resolved';
+  titleEl.textContent = label;
+  countEl.textContent = tickets.length;
+
+  const list = document.getElementById('ticketDetailList');
+  if (!tickets.length) {
+    list.innerHTML = `<div class="text-center py-16 text-text-muted text-sm">No tickets in this category.</div>`;
+  } else {
+    list.innerHTML = tickets.map(t => {
+      const isResolved = t.status === 'Resolved';
+      const badge = isResolved
+        ? `<span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-green-50 text-green-600 border border-green-200">Resolved</span>`
+        : `<span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-red-50 text-red-600 border border-red-200">Not Resolved</span>`;
+      const tatBadge = isResolved && t.tat
+        ? `<span class="px-2 py-0.5 rounded text-xs font-semibold bg-blue-50 text-blue-600 border border-blue-200">TAT: ${t.tat} days</span>`
+        : '';
+      const clickAttr = isResolved
+        ? `onclick="openResolvedTicketDetail('${t.id}')" style="cursor:pointer"`
+        : '';
+      const hoverClass = isResolved ? 'hover:border-green-300 hover:shadow-md transition-all' : '';
+      return `
+        <div ${clickAttr} class="bg-white rounded-xl border border-border p-5 shadow-sm ${hoverClass}">
+          <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="text-xs font-mono font-semibold text-text-muted bg-surface px-2 py-0.5 rounded">${t.id}</span>
+              <span class="text-xs font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded">${t.category}</span>
+              ${badge}
+              ${tatBadge}
+            </div>
+            <span class="text-xs text-text-muted flex items-center gap-1">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+              Raised: ${t.dateRaised}
+            </span>
+          </div>
+          <p class="text-xs font-semibold text-text-muted uppercase tracking-wide mb-1">Issue Description</p>
+          <p class="text-sm text-text-main leading-relaxed mb-3">${t.description}</p>
+          <div class="bg-surface rounded-lg p-3 border-l-4 ${isResolved ? 'border-green-400' : 'border-orange-400'}">
+            <p class="text-xs font-semibold text-text-muted uppercase tracking-wide mb-1">Latest Update</p>
+            <p class="text-sm text-text-main">${t.update}</p>
+          </div>
+          ${isResolved ? `<p class="text-xs text-green-600 font-medium mt-3 text-right">Tap to view details &amp; give feedback →</p>` : ''}
+        </div>`;
+    }).join('');
+  }
+
+  page.classList.remove('hidden');
+  page.scrollTop = 0;
+}
+
+function closeTicketDetailPage() {
+  document.getElementById('ticketDetailPage').classList.add('hidden');
+}
+
+function openResolvedTicketDetail(ticketId) {
+  const t = COUNSELLOR_TICKETS.find(x => x.id === ticketId);
+  if (!t) return;
+  const content = document.getElementById('resolvedTicketDetailContent');
+  if (!content) return;
+
+  content.innerHTML = `
+    <div class="space-y-5 py-4">
+      <!-- Ticket Meta -->
+      <div class="bg-white rounded-xl border border-green-200 p-5 shadow-sm">
+        <div class="flex items-center gap-2 flex-wrap mb-4">
+          <span class="text-xs font-mono font-semibold text-text-muted bg-surface px-2 py-0.5 rounded">${t.id}</span>
+          <span class="text-xs font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded">${t.category}</span>
+          <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-green-50 text-green-600 border border-green-200">Resolved</span>
+        </div>
+        <div class="grid grid-cols-2 gap-4 text-sm">
+          <div>
+            <p class="text-xs text-text-muted font-semibold uppercase tracking-wide mb-0.5">Date Raised</p>
+            <p class="text-text-main font-medium">${t.dateRaised}</p>
+          </div>
+          <div>
+            <p class="text-xs text-text-muted font-semibold uppercase tracking-wide mb-0.5">Date Resolved</p>
+            <p class="text-green-600 font-medium">${t.resolvedDate || '—'}</p>
+          </div>
+          <div>
+            <p class="text-xs text-text-muted font-semibold uppercase tracking-wide mb-0.5">Resolution TAT</p>
+            <p class="text-blue-600 font-bold">${t.tat ? t.tat + ' day' + (t.tat !== 1 ? 's' : '') : '—'}</p>
+          </div>
+          <div>
+            <p class="text-xs text-text-muted font-semibold uppercase tracking-wide mb-0.5">Category</p>
+            <p class="text-text-main font-medium">${t.category}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Issue Description -->
+      <div class="bg-white rounded-xl border border-border p-5 shadow-sm">
+        <p class="text-xs font-semibold text-text-muted uppercase tracking-wide mb-2">Issue Description</p>
+        <p class="text-sm text-text-main leading-relaxed">${t.description}</p>
+      </div>
+
+      <!-- Resolution Update -->
+      <div class="bg-white rounded-xl border border-border p-5 shadow-sm border-l-4 border-green-400">
+        <p class="text-xs font-semibold text-text-muted uppercase tracking-wide mb-2">Resolution Update</p>
+        <p class="text-sm text-text-main leading-relaxed">${t.update}</p>
+      </div>
+
+      <!-- Feedback Section -->
+      <div class="bg-white rounded-xl border border-border p-5 shadow-sm">
+        <p class="text-sm font-bold text-text-main mb-1">Are you satisfied with the resolution?</p>
+        <p class="text-xs text-text-muted mb-4">Your feedback helps us improve support quality.</p>
+        <div class="flex gap-3">
+          <button onclick="submitTicketFeedback('${t.id}', 'happy')"
+            class="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-green-50 hover:bg-green-100 border-2 border-green-200 hover:border-green-400 text-green-700 font-semibold text-sm rounded-xl cursor-pointer transition-all">
+            😊 Happy
+          </button>
+          <button onclick="submitTicketFeedback('${t.id}', 'unhappy')"
+            class="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-red-50 hover:bg-red-100 border-2 border-red-200 hover:border-red-400 text-red-700 font-semibold text-sm rounded-xl cursor-pointer transition-all">
+            😞 Unhappy
+          </button>
+        </div>
+      </div>
+    </div>`;
+
+  document.getElementById('resolvedTicketDetailPage').classList.remove('hidden');
+  document.getElementById('resolvedTicketDetailPage').scrollTop = 0;
+}
+
+function closeResolvedTicketDetail() {
+  document.getElementById('resolvedTicketDetailPage').classList.add('hidden');
+}
+
+function submitTicketFeedback(ticketId, feedback) {
+  const t = COUNSELLOR_TICKETS.find(x => x.id === ticketId);
+  if (!t) return;
+  const content = document.getElementById('resolvedTicketDetailContent');
+
+  if (feedback === 'happy') {
+    if (content) content.innerHTML = `
+      <div class="flex flex-col items-center justify-center py-20 text-center">
+        <div class="text-6xl mb-4">😊</div>
+        <h3 class="text-xl font-bold text-green-600 mb-2">Thank you for your feedback!</h3>
+        <p class="text-sm text-text-muted mb-6">We're glad your issue was resolved satisfactorily.</p>
+        <button onclick="closeResolvedTicketDetail()" class="px-6 py-2.5 bg-green-500 hover:bg-green-600 text-white font-semibold text-sm rounded-lg cursor-pointer transition-colors">
+          Go Back
+        </button>
+      </div>`;
+  } else {
+    // Unhappy — recreate ticket as Open, notify support, update counts
+    const newId = 'TKT-' + String(COUNSELLOR_TICKETS.length + 1).padStart(3, '0');
+    const today = new Date();
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const dateStr = today.getDate() + ' ' + months[today.getMonth()] + ' ' + today.getFullYear();
+
+    COUNSELLOR_TICKETS.push({
+      id: newId,
+      dateRaised: dateStr,
+      category: t.category,
+      status: 'Open',
+      description: `[Re-opened from ${t.id}] ${t.description}`,
+      update: 'Ticket re-opened due to unsatisfactory resolution. Counsellor support team has been notified.'
+    });
+
+    renderCounsellorTicketSummary();
+
+    if (content) content.innerHTML = `
+      <div class="flex flex-col items-center justify-center py-20 text-center">
+        <div class="text-6xl mb-4">🔔</div>
+        <h3 class="text-xl font-bold text-red-600 mb-2">Ticket Re-opened</h3>
+        <p class="text-sm text-text-muted mb-2">We're sorry to hear that. Ticket <strong>${newId}</strong> has been created and moved to <strong>Not Resolved</strong>.</p>
+        <p class="text-sm text-text-muted mb-6">Our counsellor support team has been notified and will reach out to you shortly.</p>
+        <button onclick="closeResolvedTicketDetail()" class="px-6 py-2.5 bg-red-500 hover:bg-red-600 text-white font-semibold text-sm rounded-lg cursor-pointer transition-colors">
+          Go Back
+        </button>
+      </div>`;
+    showToast('Ticket re-opened. Support team notified.', 'warning');
+  }
+}
+
+function renderCounsellorTicketSummary() {
+  const total    = COUNSELLOR_TICKETS.length;
+  const resolvedTickets = COUNSELLOR_TICKETS.filter(t => t.status === 'Resolved');
+  const open     = COUNSELLOR_TICKETS.filter(t => t.status === 'Open').length;
+  const setEl = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+  setEl('ticketCountAll',      total);
+  setEl('ticketCountResolved', resolvedTickets.length);
+  setEl('ticketCountOpen',     open);
+
+  // Compute avg TAT for resolved tickets
+  const tatEl = document.getElementById('ticketAvgTat');
+  if (tatEl) {
+    const ticketsWithTat = resolvedTickets.filter(t => t.tat);
+    if (ticketsWithTat.length) {
+      const avg = Math.round(ticketsWithTat.reduce((sum, t) => sum + t.tat, 0) / ticketsWithTat.length);
+      tatEl.textContent = `Avg TAT: ${avg} day${avg !== 1 ? 's' : ''}`;
+    } else {
+      tatEl.textContent = '';
+    }
+  }
+}
+
+function filterCounsellorTickets(filter) {
+  const list = document.getElementById('counsellorTicketList');
+  if (!list) return;
+  const tickets = filter === 'all'
+    ? COUNSELLOR_TICKETS
+    : COUNSELLOR_TICKETS.filter(t => t.status === filter);
+
+  if (!tickets.length) {
+    list.innerHTML = `<div class="text-center py-12 text-text-muted text-sm">No tickets found.</div>`;
+    return;
+  }
+
+  list.innerHTML = tickets.map(t => {
+    const isResolved = t.status === 'Resolved';
+    const badge = isResolved
+      ? `<span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-green-50 text-green-600 border border-green-200">Resolved</span>`
+      : `<span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-red-50 text-red-600 border border-red-200">Not Resolved</span>`;
+    const updateBorder = isResolved ? 'border-green-400' : 'border-orange-400';
+    return `
+      <div class="bg-white rounded-xl border border-border p-5 shadow-sm hover:shadow-md transition-shadow">
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center gap-2">
+            <span class="text-xs font-mono font-semibold text-text-muted bg-surface px-2 py-0.5 rounded">${t.id}</span>
+            <span class="text-xs font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded">${t.category}</span>
+            ${badge}
+          </div>
+          <span class="text-xs text-text-muted flex items-center gap-1">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+            Raised: ${t.dateRaised}
+          </span>
+        </div>
+        <div class="mb-1">
+          <p class="text-xs font-semibold text-text-muted uppercase tracking-wide mb-1">Issue Description</p>
+          <p class="text-sm text-text-main leading-relaxed">${t.description}</p>
+        </div>
+        <div class="mt-3 bg-surface rounded-lg p-3 border-l-4 ${updateBorder}">
+          <p class="text-xs font-semibold text-text-muted uppercase tracking-wide mb-1">Latest Update</p>
+          <p class="text-sm text-text-main">${t.update}</p>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function switchInfoHubSection(section, btn) {
+  // Update nav button styles
+  document.querySelectorAll('.ih-nav-btn').forEach(b => {
+    b.classList.remove('active', 'bg-primary/10', 'text-primary', 'border-primary');
+    b.classList.add('hover:bg-surface', 'text-text-main', 'border-transparent');
+  });
+  if (btn) {
+    btn.classList.add('active', 'bg-primary/10', 'text-primary', 'border-primary');
+    btn.classList.remove('hover:bg-surface', 'text-text-main', 'border-transparent');
+  }
+  // Show/hide sections
+  document.querySelectorAll('.ih-section').forEach(s => s.classList.add('hidden'));
+  const el = document.getElementById('ihSection-' + section);
+  if (el) el.classList.remove('hidden');
+  if (section === 'training-guidelines') renderTGGrid();
+}
+
+/* ── Training and Guidelines ── */
+const TG_DOCS = [
+  { university: 'Brock University',                                          country: 'Canada',    category: 'training',      docType: 'University Training Document', filename: 'Brock University Viewbook (1).pdf',                                  ext: 'pdf'  },
+  { university: 'California State University Fullerton',                     country: 'USA',       category: 'consent',       docType: 'Consent Form',                 filename: '1770204673502-CSU_Fullerton_FERPA_advising_release_Consent_Form.pdf', ext: 'pdf'  },
+  { university: 'University of the West of Scotland',                        country: 'UK',        category: 'consent',       docType: 'Application Form',             filename: 'UWS international applicant personal statement template.docx',        ext: 'docx' },
+  { university: 'Newcastle University',                                      country: 'UK',        category: 'authorisation', docType: 'Authorisation',                filename: 'Newcastle University Agent Authorisation Form 2026.docx',            ext: 'docx' },
+  { university: 'TEG - University of the West of Scotland - London Campus',  country: 'UK',        category: 'training',      docType: 'University Training Document', filename: 'UWS London_slidedeck.pdf',                                           ext: 'pdf'  },
+  { university: 'Abu Dhabi University',                                      country: 'UAE',       category: 'training',      docType: 'University Training Document', filename: 'International Brochure 2025-2026 PG.pdf',                            ext: 'pdf'  },
+  { university: 'University of East London',                                 country: 'UK',        category: 'authorisation', docType: 'Authorisation',                filename: 'Representation Authorisation.docx',                                  ext: 'docx' },
+  { university: 'Coventry University - London',                              country: 'UK',        category: 'authorisation', docType: 'Authorisation',                filename: 'AGENT AUTHORISATION and CONSENT FORM (1).pdf',                       ext: 'pdf'  },
+  { university: 'University of Exeter',                                      country: 'UK',        category: 'authorisation', docType: 'Authorisation',                filename: 'New Agent form - Jan 26 - Exeter.pdf',                               ext: 'pdf'  },
+  { university: 'University of Manchester',                                  country: 'UK',        category: 'training',      docType: 'University Training Document', filename: 'UoM Partner Training Deck 2025.pdf',                                 ext: 'pdf'  },
+  { university: 'Northeastern University',                                   country: 'USA',       category: 'consent',       docType: 'Consent Form',                 filename: 'NEU_Agent_Consent_Form_2025.pdf',                                    ext: 'pdf'  },
+  { university: 'University of Toronto',                                     country: 'Canada',    category: 'authorisation', docType: 'Authorisation',                filename: 'UofT_Agent_Authorisation_2026.docx',                                 ext: 'docx' },
+];
+
+let tgActiveCategory = 'all';
+
+function renderTGGrid() {
+  const grid = document.getElementById('tgGrid');
+  if (!grid) return;
+  const country = (document.getElementById('tgFilterCountry')?.value || '').toLowerCase();
+  const uni     = (document.getElementById('tgFilterUniversity')?.value || '').toLowerCase();
+  const filtered = TG_DOCS.filter(d => {
+    if (tgActiveCategory !== 'all' && d.category !== tgActiveCategory) return false;
+    if (country && !d.country.toLowerCase().includes(country)) return false;
+    if (uni && !d.university.toLowerCase().includes(uni)) return false;
+    return true;
+  });
+  if (!filtered.length) {
+    grid.innerHTML = `<div class="col-span-3 flex flex-col items-center justify-center py-16 text-center">
+      <svg class="w-16 h-16 text-text-muted/30 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+      <p class="font-semibold text-text-main mb-1">No documents found</p>
+      <p class="text-sm text-text-muted">Try adjusting the filters or selecting a different category.</p>
+    </div>`;
+    return;
+  }
+  grid.innerHTML = filtered.map(d => {
+    const isPdf  = d.ext === 'pdf';
+    const fileIcon = isPdf
+      ? `<svg class="w-4 h-4 text-red-500 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zm-1 1.5L18.5 9H13V3.5zM8 17v-2h8v2H8zm0-4v-2h8v2H8z"/></svg>`
+      : `<svg class="w-4 h-4 text-blue-500 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zm-1 1.5L18.5 9H13V3.5zM8 17v-2h8v2H8zm0-4v-2h8v2H8z"/></svg>`;
+    return `<div class="bg-white rounded-xl border border-border p-4 hover:shadow-sm transition-shadow">
+      <div class="flex items-start justify-between gap-2 mb-1">
+        <p class="font-semibold text-sm text-text-main leading-snug">${d.university}</p>
+        <button class="flex-shrink-0 text-primary hover:text-primary-light" title="Download">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+        </button>
+      </div>
+      <p class="text-xs text-text-muted mb-3">${d.docType}</p>
+      <div class="flex items-center gap-2 bg-surface rounded-lg px-3 py-2">
+        ${fileIcon}
+        <span class="text-xs text-text-main truncate">${d.filename}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function switchTGCategory(cat, btn) {
+  tgActiveCategory = cat;
+  document.querySelectorAll('.tg-cat-btn').forEach(b => {
+    b.classList.remove('bg-primary/10', 'text-primary', 'border-primary');
+    b.classList.add('border-border', 'text-text-muted', 'hover:bg-surface');
+  });
+  if (btn) {
+    btn.classList.add('bg-primary/10', 'text-primary', 'border-primary');
+    btn.classList.remove('border-border', 'text-text-muted', 'hover:bg-surface');
+  }
+  renderTGGrid();
+}
+
+function filterTrainingGuidelines() { renderTGGrid(); }
+
+function resetTrainingGuidelines() {
+  document.getElementById('tgFilterCountry').value    = '';
+  document.getElementById('tgFilterUniversity').value = '';
+  tgActiveCategory = 'all';
+  document.querySelectorAll('.tg-cat-btn').forEach((b, i) => {
+    if (i === 0) { b.classList.add('bg-primary/10','text-primary','border-primary'); b.classList.remove('border-border','text-text-muted','hover:bg-surface'); }
+    else         { b.classList.remove('bg-primary/10','text-primary','border-primary'); b.classList.add('border-border','text-text-muted','hover:bg-surface'); }
+  });
+  renderTGGrid();
+}
+
+function switchDeadlineTab(tab, btn) {
+  document.querySelectorAll('.deadline-tab-btn').forEach(b => {
+    b.classList.remove('bg-primary', 'text-white');
+    b.classList.add('border', 'border-border', 'text-text-muted', 'hover:bg-surface');
+  });
+  if (btn) {
+    btn.classList.add('bg-primary', 'text-white');
+    btn.classList.remove('border', 'border-border', 'text-text-muted', 'hover:bg-surface');
+  }
+}
+
+/* ═══════════════ NEWSLETTER TABLE ═══════════════ */
+
+const NEWSLETTER_DATA = [
+  { id:1,  country:'USA', date:'21 Aug 2025', related:'Pending Deferral Applications - Fall 2025', category:'Important Update', summary:'Deferral requests need to be submitted before August 31, 2025. Applications deferred beyond this date will be re-evaluated, and scholarships will not be carried forward as it will go for re-evaluation.', link:'https://docs.google.com/spreadsheets/sample1', remarks:'', admitProb:'', imRelated:'No' },
+  { id:2,  country:'USA', date:'21 Aug 2025', related:'Bangor University', category:'Important Update', summary:'Please find enclosed our January 2026 intake flyer. I would be grateful if you could circulate the flyer to your colleagues. Should you have any questions or require any further information or advice about the January intake please do not hesitate to contact me.', link:'https://docs.google.com/document/sample2', remarks:'Circulate to all counsellors', admitProb:'High', imRelated:'Yes' },
+  { id:3,  country:'UK',  date:'21 Aug 2025', related:'London South Bank University', category:'Important Update', summary:'We are pleased to inform you that applications for the January 2026 intake are now open. Please find attached the list of courses available for this intake for your reference.', link:'https://docs.google.com/document/sample3', remarks:'', admitProb:'Medium', imRelated:'Yes' },
+  { id:4,  country:'UK',  date:'21 Aug 2025', related:'Swansea University', category:'Important Update', summary:'We are aware that there was an issue with deposit payments. This has now been resolved, and you should be able to make your payment as normal. Many of you have already paid your deposit — thank you.', link:'https://docs.google.com/document/sample4', remarks:'Payment issue resolved', admitProb:'', imRelated:'No' },
+  { id:5,  country:'Canada', date:'15 Aug 2025', related:'University of Toronto', category:'Scholarship Alert', summary:'University of Toronto has announced the Global Excellence Scholarship for 2026 intake. Eligibility: 85%+ in last 2 years, IELTS 7.0+. Deadline: October 31, 2025.', link:'https://docs.google.com/document/sample5', remarks:'High priority — share with all UG students', admitProb:'High', imRelated:'Yes' },
+  { id:6,  country:'Australia', date:'10 Aug 2025', related:'University of Melbourne', category:'Deadline Reminder', summary:'Reminder: The application deadline for Semester 1 2026 at University of Melbourne is approaching. All applications must be submitted by September 30, 2025.', link:'https://docs.google.com/document/sample6', remarks:'', admitProb:'Medium', imRelated:'No' },
+  { id:7,  country:'Germany', date:'05 Aug 2025', related:'TU Munich', category:'Important Update', summary:'TU Munich has introduced a new English-medium MBA program starting Winter 2026. No tuition fee for admitted students. IELTS 6.5+ required.', link:'https://docs.google.com/document/sample7', remarks:'Great for budget-conscious students', admitProb:'Medium', imRelated:'Yes' },
+  { id:8,  country:'Ireland', date:'01 Aug 2025', related:'University College Dublin', category:'Event', summary:'UCD will host a virtual counsellor webinar on August 20, 2025 covering 2026 intake updates, scholarship opportunities and application tips.', link:'https://docs.google.com/document/sample8', remarks:'Register counsellors before Aug 18', admitProb:'', imRelated:'Yes' },
+  { id:9,  country:'Singapore', date:'28 Jul 2025', related:'NUS Business School', category:'Important Update', summary:'NUS Business School has revised its English proficiency requirements. IELTS minimum is now 6.5 (from 6.0). Existing applicants with 6.0 must retest.', link:'https://docs.google.com/document/sample9', remarks:'Inform all Singapore-bound students', admitProb:'Low', imRelated:'No' },
+  { id:10, country:'UK',  date:'25 Jul 2025', related:'University of Hertfordshire', category:'Scholarship Alert', summary:'Hertfordshire International Scholarship offering up to £3,000 for September 2026 intake. Merit-based. Applications open from September 1, 2025.', link:'https://docs.google.com/document/sample10', remarks:'', admitProb:'High', imRelated:'Yes' },
+  { id:11, country:'USA', date:'20 Jul 2025', related:'Northeastern University', category:'Deadline Reminder', summary:'Final reminder: Northeastern Early Action deadline is November 1, 2025. Students applying under Early Action receive decisions by December 15, 2025.', link:'https://docs.google.com/document/sample11', remarks:'Prioritise NU applicants', admitProb:'Medium', imRelated:'Yes' },
+  { id:12, country:'Canada', date:'15 Jul 2025', related:'York University', category:'Important Update', summary:'York University has updated its conditional admission policy. Students with IELTS 6.0 overall (no band below 5.5) can now receive conditional offers with English pathway.', link:'https://docs.google.com/document/sample12', remarks:'Good for borderline students', admitProb:'High', imRelated:'No' },
+];
+
+function renderNewsletterTable() {
+  const tbody = document.getElementById('newsletterTableBody');
+  if (!tbody) return;
+  // Apply filters
+  const country = document.getElementById('nlFilterCountry')?.value || '';
+  const related  = document.getElementById('nlFilterRelated')?.value  || '';
+  const category = document.getElementById('nlFilterCategory')?.value || '';
+  const from = document.getElementById('nlFilterDateFrom')?.value || '';
+  const to   = document.getElementById('nlFilterDateTo')?.value   || '';
+
+  let rows = NEWSLETTER_DATA;
+  if (country) rows = rows.filter(r => r.country === country);
+  if (related)  rows = rows.filter(r => r.related.toLowerCase().includes(related.toLowerCase()));
+  if (category) rows = rows.filter(r => r.category === category);
+
+  tbody.innerHTML = rows.map(r => `
+    <tr class="hover:bg-surface/50 transition-colors">
+      <td class="px-3 py-3 text-text-muted font-mono">${r.id}</td>
+      <td class="px-3 py-3 font-medium">${r.country}</td>
+      <td class="px-3 py-3 text-text-muted whitespace-nowrap">${r.date}</td>
+      <td class="px-3 py-3 text-text-main">${r.related}</td>
+      <td class="px-3 py-3"><span class="px-2 py-0.5 rounded-full text-[10px] font-semibold ${r.category==='Scholarship Alert'?'bg-green-100 text-green-700':r.category==='Deadline Reminder'?'bg-red-100 text-red-700':r.category==='Event'?'bg-blue-100 text-blue-700':'bg-orange-100 text-orange-700'}">${r.category}</span></td>
+      <td class="px-3 py-3 text-text-muted max-w-[300px]"><p class="line-clamp-3">${r.summary}</p></td>
+      <td class="px-3 py-3"><a href="${r.link}" target="_blank" class="text-primary text-[10px] hover:underline break-all">${r.link ? 'View Doc →' : '—'}</a></td>
+      <td class="px-3 py-3 text-text-muted">${r.remarks || '—'}</td>
+      <td class="px-3 py-3"><span class="font-semibold ${r.admitProb==='High'?'text-success':r.admitProb==='Medium'?'text-amber-600':r.admitProb==='Low'?'text-danger':'text-text-muted'}">${r.admitProb || '—'}</span></td>
+      <td class="px-3 py-3 text-center"><span class="px-2 py-0.5 rounded-full text-[10px] font-semibold ${r.imRelated==='Yes'?'bg-accent/10 text-accent':'bg-surface text-text-muted'}">${r.imRelated}</span></td>
+    </tr>
+  `).join('');
+}
+
+function resetNewsletterFilters() {
+  ['nlFilterCountry','nlFilterRelated','nlFilterCategory','nlFilterDateFrom','nlFilterDateTo'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  renderNewsletterTable();
+}
+
+/* ═══════════════ COURSE UPDATES ═══════════════ */
+
+function renderCourseUpdates() {
+  const el = document.getElementById('courseUpdates');
+  el.innerHTML = COURSE_UPDATES.map(u => `
+    <div class="flex items-start gap-3 p-3 bg-blue-50 border border-blue-100 rounded-xl">
+      <svg class="w-4 h-4 text-primary flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      <p class="text-sm text-text-main">${u}</p>
+    </div>
+  `).join('');
+}
+
+/* ═══════════════ TRAINING MODULES ═══════════════ */
+
+function _buildModuleHTML(modules, prefix) {
+  return modules.map(m => {
+    const pid = prefix + m.id;
+    return `
+    <div class="border border-border rounded-xl overflow-hidden">
+      <button onclick="toggleModule('${pid}')"
+        class="w-full flex items-center justify-between px-4 py-4 bg-surface/60 hover:bg-surface transition-colors cursor-pointer">
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+            <svg class="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"/></svg>
+          </div>
+          <span class="font-bold text-sm text-text-main">${m.name}</span>
+          <span class="text-xs text-text-muted font-normal">${m.lessons} lessons</span>
+        </div>
+        <svg id="chevron-${pid}" class="w-4 h-4 text-text-muted transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+      </button>
+      <div id="module-${pid}" class="module-body">
+        <div class="divide-y divide-border">
+          ${m.items.map(item => {
+            const typeColors = { Video:'bg-red-100 text-red-700', Document:'bg-blue-100 text-primary', Link:'bg-green-100 text-success' };
+            const tc = typeColors[item.type] || 'bg-gray-100 text-gray-700';
+            return `<div class="flex items-center gap-3 px-4 py-3 bg-white">
+              <div class="flex-1">
+                <p class="text-sm font-medium text-text-main">${item.title}</p>
+                <p class="text-xs text-text-muted mt-0.5">${item.desc}</p>
+              </div>
+              <span class="text-xs font-semibold px-2 py-0.5 rounded-full ${tc}">${item.type}</span>
+              <button onclick="openLesson('${item.title}')" class="text-xs font-semibold text-accent hover:underline cursor-pointer">Open</button>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderTrainingModules() {
+  const el = document.getElementById('trainingModules');
+  if (el) el.innerHTML = _buildModuleHTML(TRAINING_MODULES, '');
+  const elLD = document.getElementById('trainingModulesLD');
+  if (elLD) elLD.innerHTML = _buildModuleHTML(TRAINING_MODULES, 'ld-');
+  const elMgr = document.getElementById('mgrTrainingModules');
+  if (elMgr) elMgr.innerHTML = _buildModuleHTML(TRAINING_MODULES, 'mgr-');
+}
+
+function toggleImpSheetSection() {
+  const body = document.getElementById('impSheetBody');
+  const chev = document.getElementById('impSheetChevron');
+  if (!body) return;
+  const isOpen = !body.classList.contains('hidden');
+  body.classList.toggle('hidden', isOpen);
+  if (chev) chev.style.transform = isOpen ? '' : 'rotate(180deg)';
+}
+
+function toggleMgrImpSheetSection() {
+  const body = document.getElementById('mgrImpSheetBody');
+  const chev = document.getElementById('mgrImpSheetChevron');
+  if (!body) return;
+  const isOpen = !body.classList.contains('hidden');
+  body.classList.toggle('hidden', isOpen);
+  if (chev) chev.style.transform = isOpen ? '' : 'rotate(180deg)';
+}
+
+function toggleTrainingModulesSection() {
+  const body = document.getElementById('trainingModulesSectionBody');
+  const chev = document.getElementById('trainingModulesSectionChevron');
+  if (!body) return;
+  const isOpen = !body.classList.contains('hidden');
+  body.classList.toggle('hidden', isOpen);
+  if (chev) chev.style.transform = isOpen ? '' : 'rotate(180deg)';
+}
+
+function toggleModule(id) {
+  const body = document.getElementById('module-' + id);
+  const chev = document.getElementById('chevron-' + id);
+  if (!body || !chev) return;
+  const isOpening = !body.classList.contains('open');
+  // Collapse all modules first (accordion behaviour)
+  document.querySelectorAll('.module-body').forEach(el => el.classList.remove('open'));
+  document.querySelectorAll('[id^="chevron-"]').forEach(el => el.style.transform = '');
+  // Then open the clicked one if it was closed
+  if (isOpening) {
+    body.classList.add('open');
+    chev.style.transform = 'rotate(180deg)';
+  }
+}
+
+function openLesson(title) {
+  showToast(`Opening: ${title}`, 'info');
+}
+
+/* ═══════════════ ADMIN PANEL ═══════════════ */
+
+function switchAdmin(panel, btn) {
+  state.currentAdminPanel = panel;
+  document.querySelectorAll('.admin-panel').forEach(p => p.classList.add('hidden'));
+  document.getElementById('adminPanel-' + panel).classList.remove('hidden');
+  document.querySelectorAll('.adm-nav').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+/* Users */
+function renderUsersTable() {
+  const all = [...COUNSELORS, ...TEAM_LEADS, ...OPS_USERS];
+  const tbody = document.getElementById('usersTableBody');
+  tbody.innerHTML = all.map(u => `
+    <tr class="hover:bg-surface transition-colors">
+      <td class="px-4 py-3">
+        <div class="flex items-center gap-2">
+          <div class="w-7 h-7 rounded-full bg-accent flex items-center justify-center text-white text-xs font-bold">${u.avatar}</div>
+          <span class="font-medium text-sm">${u.name}</span>
+        </div>
+      </td>
+      <td class="px-4 py-3 text-sm text-text-muted capitalize">${u.role.replace('_',' ')}</td>
+      <td class="px-4 py-3 text-sm text-text-muted">${u.team}</td>
+      <td class="px-4 py-3 text-sm text-text-muted">${u.email}</td>
+      <td class="px-4 py-3 text-right">
+        <div class="flex gap-2 justify-end">
+          <button onclick="showToast('Password reset sent to ${u.email}','info')" class="text-xs text-primary hover:underline cursor-pointer">Reset Pwd</button>
+          <button onclick="showToast('${u.name} deactivated.','warning')" class="text-xs text-danger hover:underline cursor-pointer">Deactivate</button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function openAddUserModal() { document.getElementById('addUserModal').classList.remove('hidden'); }
+
+function submitAddUser() {
+  const name  = document.getElementById('newUserName').value.trim();
+  const email = document.getElementById('newUserEmail').value.trim();
+  if (!name || !email) { showToast('Please fill in name and email.', 'error'); return; }
+  showToast(`User "${name}" added successfully!`, 'success');
+  closeModal('addUserModal');
+  document.getElementById('newUserName').value = '';
+  document.getElementById('newUserEmail').value = '';
+}
+
+function submitCorrection() {
+  const cid    = document.getElementById('corrCounselor').value;
+  const metric = document.getElementById('corrMetric').value;
+  const val    = document.getElementById('corrValue').value;
+  const reason = document.getElementById('corrReason').value.trim();
+  if (!cid || !metric || !val || !reason) { showToast('All fields are required.', 'error'); return; }
+  showToast('Correction submitted successfully!', 'success');
+}
+
+/* Slabs */
+function handleCsvFile(e) { processCsv(e.target.files[0]); }
+function handleCsvDrop(e) { e.preventDefault(); document.getElementById('csvDropZone').classList.remove('drag-over'); processCsv(e.dataTransfer.files[0]); }
+function processCsv(file) {
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const lines = e.target.result.split('\n').filter(l => l.trim());
+    const headers = lines[0].split(',');
+    const rows = lines.slice(1,6).map(l => l.split(','));
+    const table = document.getElementById('csvPreviewTable');
+    table.innerHTML = `<thead class="bg-surface border-b border-border"><tr>${headers.map(h => `<th class="px-3 py-2 text-left font-semibold text-text-muted">${h.trim()}</th>`).join('')}</tr></thead>
+      <tbody class="divide-y divide-border">${rows.map(r => `<tr>${r.map(c => `<td class="px-3 py-2">${c.trim()}</td>`).join('')}</tr>`).join('')}</tbody>`;
+    document.getElementById('csvPreview').classList.remove('hidden');
+  };
+  reader.readAsText(file);
+}
+function confirmCsvUpload() { showToast('Incentive slabs uploaded and applied!', 'success'); document.getElementById('csvPreview').classList.add('hidden'); }
+
+/* Quick Links (Admin) */
+function saveQuickLinks() {
+  QUICK_LINK_URLS.session = document.getElementById('qlSessionUrl').value || QUICK_LINK_URLS.session;
+  QUICK_LINK_URLS.sheet   = document.getElementById('qlSheetUrl').value   || QUICK_LINK_URLS.sheet;
+  showToast('Quick links saved!', 'success');
+  renderQuickLinks();
+}
+
+/* Admin Training */
+function renderAdminTraining() {
+  const tbody = document.getElementById('adminTrainingBody');
+  tbody.innerHTML = TRAINING_MODULES.map(m => `
+    <tr class="hover:bg-surface">
+      <td class="px-4 py-3 font-medium text-sm">${m.name}</td>
+      <td class="px-4 py-3 text-sm text-text-muted text-right">${m.lessons}</td>
+      <td class="px-4 py-3 text-right">
+        <div class="flex gap-2 justify-end">
+          <button onclick="showToast('Edit module: ${m.name}','info')" class="text-xs text-primary hover:underline cursor-pointer">Edit</button>
+          <button onclick="showToast('Add lesson to: ${m.name}','info')" class="text-xs text-accent hover:underline cursor-pointer">+ Lesson</button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+}
+
+/* Tickets */
+function renderTicketsTable() {
+  const tbody = document.getElementById('ticketsTableBody');
+  tbody.innerHTML = SUPPORT_TICKETS.map(t => `
+    <tr class="hover:bg-surface">
+      <td class="px-4 py-3 text-sm">
+        <p class="font-medium text-text-main">${t.id}</p>
+        <p class="text-xs text-text-muted">${t.subject}</p>
+      </td>
+      <td class="px-4 py-3 text-sm text-text-muted">${t.counselor}</td>
+      <td class="px-4 py-3 text-sm text-text-muted">${t.category}</td>
+      <td class="px-4 py-3">
+        <span class="px-2 py-0.5 rounded-full text-xs font-semibold ${t.status === 'Open' ? 'bg-orange-100 text-accent' : 'bg-green-100 text-success'}">${t.status}</span>
+      </td>
+      <td class="px-4 py-3 text-right">
+        ${t.status === 'Open'
+          ? `<button onclick="resolveTicket('${t.id}')" class="text-xs font-semibold text-success hover:underline cursor-pointer">Mark Resolved</button>`
+          : `<span class="text-xs text-text-muted">—</span>`}
+      </td>
+    </tr>
+  `).join('');
+}
+
+function resolveTicket(id) {
+  const t = SUPPORT_TICKETS.find(x => x.id === id);
+  if (t) { t.status = 'Resolved'; renderTicketsTable(); showToast(`Ticket ${id} resolved!`, 'success'); }
+}
+
+/* Offers Admin */
+function renderAdminOffers() {
+  const tbody = document.getElementById('offersTableBody');
+  tbody.innerHTML = OFFERS.map(o => {
+    const d = daysUntil(o.expiry);
+    return `
+      <tr class="hover:bg-surface">
+        <td class="px-4 py-3 text-sm font-medium text-text-main">${o.title}</td>
+        <td class="px-4 py-3"><span class="text-xs px-2 py-0.5 bg-orange-100 text-accent rounded-full">${bucketLabel(o.bucket)}</span></td>
+        <td class="px-4 py-3 text-sm ${d <= 3 ? 'text-danger font-semibold' : 'text-text-muted'}">${o.expiry}</td>
+        <td class="px-4 py-3"><span class="text-xs px-2 py-0.5 rounded-full font-semibold ${o.active ? 'bg-green-100 text-success' : 'bg-gray-100 text-text-muted'}">${o.active ? 'Active' : 'Inactive'}</span></td>
+        <td class="px-4 py-3 text-right">
+          <div class="flex gap-2 justify-end">
+            <button onclick="toggleOffer('${o.id}')" class="text-xs ${o.active ? 'text-danger' : 'text-success'} hover:underline cursor-pointer">${o.active ? 'Deactivate' : 'Activate'}</button>
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function openCreateOfferModal() {
+  const activeCount = OFFERS.filter(o => o.active).length;
+  if (activeCount >= 5) { showToast('Maximum 5 active offers allowed. Deactivate one first.', 'error'); return; }
+  document.getElementById('createOfferModal').classList.remove('hidden');
+}
+
+function submitCreateOffer() {
+  const title  = document.getElementById('offerTitle').value.trim();
+  const desc   = document.getElementById('offerDesc').value.trim();
+  const bucket = document.getElementById('offerBucket').value;
+  const expiry = document.getElementById('offerExpiry').value;
+  if (!title || !desc || !expiry) { showToast('Please fill in all fields.', 'error'); return; }
+  OFFERS.push({ id:'o' + Date.now(), title, desc, bucket, expiry, active:true });
+  showToast('Offer published!', 'success');
+  closeModal('createOfferModal');
+  renderAdminOffers();
+  renderOffersRow();
+}
+
+function toggleOffer(id) {
+  const o = OFFERS.find(x => x.id === id);
+  if (!o) return;
+  if (!o.active) {
+    const activeCount = OFFERS.filter(x => x.active).length;
+    if (activeCount >= 5) { showToast('Maximum 5 active offers reached.', 'error'); return; }
+  }
+  o.active = !o.active;
+  renderAdminOffers();
+  renderOffersRow();
+  showToast(`Offer ${o.active ? 'activated' : 'deactivated'}.`, o.active ? 'success' : 'warning');
+}
+
+/* Badges Admin */
+function renderAdminBadges() {
+  const el = document.getElementById('adminBadgeList');
+  el.innerHTML = BADGE_TYPES.map(b => `
+    <div class="flex items-center gap-3 p-3 border border-border rounded-xl">
+      <div class="w-10 h-10 rounded-full flex items-center justify-center text-xl" style="background:${b.color}20">${b.icon}</div>
+      <div class="flex-1">
+        <p class="font-semibold text-sm text-text-main">${b.name}</p>
+        <p class="text-xs text-text-muted">${b.desc}</p>
+      </div>
+      <button onclick="openAwardModal('${b.id}')" class="text-xs font-semibold text-accent hover:underline cursor-pointer">Award</button>
+    </div>
+  `).join('');
+
+  const logEl = document.getElementById('awardLogList');
+  logEl.innerHTML = AWARDED_BADGES.map(ab => {
+    const bt = BADGE_TYPES.find(b => b.id === ab.badgeId);
+    const c  = COUNSELORS.find(c => c.id === ab.counselorId);
+    return `<div class="flex items-center gap-2 py-2 border-b border-border last:border-0">
+      <span class="text-xl">${bt ? bt.icon : '🏅'}</span>
+      <div class="flex-1">
+        <p class="font-medium text-sm">${c ? c.name : '—'}</p>
+        <p class="text-xs text-text-muted">${bt ? bt.name : '—'} • ${ab.date} • by ${ab.awardedBy}</p>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+let currentAwardBadgeId = null;
+function openAwardModal(badgeId) {
+  currentAwardBadgeId = badgeId;
+  const bt = BADGE_TYPES.find(b => b.id === badgeId);
+  document.getElementById('awardBadgeTitle').textContent = `Award: ${bt ? bt.icon + ' ' + bt.name : 'Badge'}`;
+  document.getElementById('awardBadgeNote').value = '';
+  document.getElementById('awardBadgeModal').classList.remove('hidden');
+}
+
+function submitAwardBadge() {
+  const cid  = parseInt(document.getElementById('awardBadgeCounselor').value);
+  const note = document.getElementById('awardBadgeNote').value.trim();
+  if (!cid || !currentAwardBadgeId) { showToast('Select a counselor.', 'error'); return; }
+  const c  = COUNSELORS.find(x => x.id === cid);
+  const bt = BADGE_TYPES.find(b => b.id === currentAwardBadgeId);
+  AWARDED_BADGES.push({ counselorId:cid, badgeId:currentAwardBadgeId, awardedBy:state.currentUser.name, date:'23 May 2026', note });
+  showToast(`${bt ? bt.icon + ' ' + bt.name : 'Badge'} awarded to ${c ? c.name : 'counselor'}!`, 'success');
+  closeModal('awardBadgeModal');
+  renderAdminBadges();
+  renderBadgeStrip();
+}
+
+/* ═══════════════ DRAWER ═══════════════ */
+
+function openDrawer(title, content, showBack) {
+  document.getElementById('drawerTitle').textContent   = title;
+  document.getElementById('drawerContent').innerHTML   = content;
+  document.getElementById('drawerBack').classList.toggle('hidden', !showBack);
+  document.getElementById('drawerBackdrop').classList.remove('hidden');
+  const drawer = document.getElementById('rightDrawer');
+  drawer.classList.remove('hidden');
+  void drawer.offsetWidth; // force reflow so CSS transition fires (fixes Vercel)
+  drawer.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeDrawer() {
+  const drawer = document.getElementById('rightDrawer');
+  drawer.classList.remove('open');
+  setTimeout(() => {
+    drawer.classList.add('hidden');
+    document.getElementById('drawerBackdrop').classList.add('hidden');
+    document.body.style.overflow = '';
+    state.drawerMode = null;
+    state.drawerSelectedStudent = null;
+    state.drawerPrevMode = null;
+  }, 300);
+}
+
+function closeDrawerAndGoHome() {
+  closeDrawer();
+  setTimeout(() => switchTab('tab1'), 50);
+}
+
+function refreshCurrentDrawer() {
+  const mode = state.drawerMode;
+  if (!mode) return;
+  if (mode === 'boost')            openBoostDrawer(state.drawerBoostType);
+  else if (mode === 'boostFunnel') openBoostFunnelDrawer();
+  else if (mode === 'boostSubCard' || mode === 'boostSubCardView') openBoostSubCard(state.drawerBoostSubCardId || state.drawerBoostSubType);
+  else if (mode === 'boostRevenue') openBoostRevenueDrawer();
+  else if (mode === 'revenueSubCardView') openRevenueSubCard(state.drawerRevenueSubCardId);
+  else if (mode === 'boostReferrals') openBoostReferralsDrawer();
+  else if (mode === 'opportunity')  openOpportunityDrawer();
+  else if (mode === 'waGroup')      openWAGroupDetailsDrawer();
+  else if (mode === 'standupDrillDown') { closeDrawer(); renderStandupTable(); }
+  else showToast('Refreshed', 'success');
+}
+
+function drawerGoBack() {
+  if (state.drawerPrevMode === 'boost') {
+    openBoostDrawer(state.drawerBoostType);
+  } else if (state.drawerPrevMode === 'boostFunnel') {
+    openBoostFunnelDrawer();
+  } else if (state.drawerPrevMode === 'boostSubCard') {
+    openBoostSubCard(state.drawerBoostSubType);
+  } else if (state.drawerPrevMode === 'boostSubCardView') {
+    openBoostSubCard(state.drawerBoostSubCardId);
+  } else if (state.drawerPrevMode === 'boostRevenue') {
+    openBoostRevenueDrawer();
+  } else if (state.drawerPrevMode === 'revenueSubCardView') {
+    openRevenueSubCard(state.drawerRevenueSubCardId);
+  } else if (state.drawerPrevMode === 'offer') {
+    openOfferDrawer(state.drawerOfferId);
+  } else if (state.drawerPrevMode === 'opportunity') {
+    openOpportunityDrawer();
+  } else if (state.drawerPrevMode === 'boostReferrals') {
+    openBoostReferralsDrawer();
+  } else if (state.drawerPrevMode === 'waGroup') {
+    openWAGroupDetailsDrawer();
+  } else if (state.drawerPrevMode === 'standup') {
+    closeDrawer();
+  } else if (state.drawerPrevMode === 'boost-deposit') {
+    openBoostDrawer('deposit');
+  }
+}
+
+/* Boost Drawer */
+function openBoostDrawer(type) {
+  state.drawerMode      = 'boost';
+  state.drawerBoostType = type;
+  state.drawerPrevMode  = null;
+  const todayStr = new Date().toISOString().split('T')[0];
+  const all      = getViewingStudents().filter(s => s.stage === type);
+  const labels   = { sti:'Boost STI', application:'Boost Application', deposit:'Boost Deposit', lockin:'Boost Lock-in' };
+  const acked    = _boostIsAcknowledged(type);
+
+  // ── Boost Deposit: show only subcards (no flat student list) ──
+  if (type === 'deposit') {
+    const cToUcStudents  = getViewingStudents().filter(s => s.stage === 'deposit' && s.ucAssigned === true);
+    const casI20Students = getViewingStudents().filter(s =>
+      ['deposit','lockin'].includes(s.stage) &&
+      ['UK','USA'].includes(s.country) &&
+      s.leadStatus !== 'Drop off' &&
+      s.casI20Raised !== true
+    );
+    const content = `
+      <div class="space-y-3">
+        <p class="text-[11px] font-bold uppercase tracking-widest text-text-muted mb-2">Priority Actions</p>
+        ${_boostMetricCard('c-to-uc-deposit-pending', 'C to UC / UC Received — Deposit Not Paid', cToUcStudents, todayStr)}
+        ${_boostMetricCard('cas-i20-review', 'CAS/I20 - Counsellor Review Needed', casI20Students, todayStr)}
+        <p class="text-[11px] font-bold uppercase tracking-widest text-text-muted mt-4 mb-2">Less Efforts High Output</p>
+        ${_boostMetricCard('deferrals-opp', 'Deferrals Opportunity', getDeferralOpportunityStudents(), todayStr,
+          "openVolumeMetricDrawer('deferrals')")}
+      </div>`;
+    openDrawer('Boost Deposit', content, false);
+    return;
+  }
+
+  let content;
+  if (!acked) {
+    const pendingToday  = all.filter(s => isPendingToday(s, todayStr));
+    const dueToday      = all.filter(s => s.followup === todayStr);
+    const allDone       = dueToday.length > 0 && dueToday.every(s => s.subtasks.every(t => t.done));
+    const title = `${labels[type] || type} — Today (${pendingToday.length})`;
+
+    content = `
+      ${_renderBoostTodayHeader(pendingToday.length)}
+      ${allDone ? _renderBoostAckPrompt(type) : pendingToday.length === 0 ? `
+        <div class="flex flex-col items-center justify-center py-10 text-center">
+          <div class="text-4xl mb-3">✅</div>
+          <p class="font-semibold text-text-main mb-1">No tasks due today!</p>
+          <p class="text-xs text-text-muted">All caught up — no students have a follow-up today.</p>
+        </div>` : `
+        <div class="mb-3">
+          <input type="text" placeholder="Search by name or ID…" oninput="filterStudentList(this.value, '${type}')"
+            class="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
+        </div>
+        <div id="studentListInner" class="space-y-3">${renderStudentList(pendingToday)}</div>`}
+      ${_renderAllTasksSection(false, all, type)}
+    `;
+    openDrawer(title, content, false);
+  } else {
+    const title = `${labels[type] || type} — All Tasks (${all.length})`;
+    content = `
+      ${_renderBoostAckHeader()}
+      <div class="mb-3">
+        <input type="text" placeholder="Search by name or ID…" oninput="filterStudentList(this.value, '${type}')"
+          class="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
+      </div>
+      <div id="studentListInner" class="space-y-3">${renderStudentList(all)}</div>
+      ${_renderAllTasksSection(true, all, type)}
+    `;
+    openDrawer(title, content, false);
+  }
+}
+
+function filterStudentList(q, type) {
+  const todayStr = new Date().toISOString().split('T')[0];
+  const acked    = _boostIsAcknowledged(type);
+  let students   = getViewingStudents().filter(s => s.stage === type);
+  if (!acked) students = students.filter(s => isPendingToday(s, todayStr));
+  students = students.filter(s =>
+    s.name.toLowerCase().includes(q.toLowerCase()) || s.id.toLowerCase().includes(q.toLowerCase())
+  );
+  document.getElementById('studentListInner').innerHTML = renderStudentList(students);
+}
+
+function renderStudentList(students) {
+  if (!students.length) return '<p class="text-text-muted text-sm text-center py-8">No students found.</p>';
+  return students.map(s => {
+    const waIssue = s.whatsappGroups.some(g => !g.studentJoined);
+    const waSummary = `${s.whatsappGroups.length} group${s.whatsappGroups.length !== 1 ? 's' : ''} — student missing from ${s.whatsappGroups.filter(g => !g.studentJoined).length}`;
+    return `<div class="student-card" onclick="openStudentDetail('${s.id}')">
+      <div class="flex items-start justify-between mb-2">
+        <div>
+          <p class="font-semibold text-sm text-text-main">${s.name}</p>
+          <p class="text-xs text-text-muted">${s.id} · ${s.course}</p>
+        </div>
+        <span class="app-badge ${s.appDownloaded ? 'downloaded' : 'not-downloaded'}">${s.appDownloaded ? '📱 Downloaded' : '📵 Not Downloaded'}</span>
+      </div>
+      <div class="flex items-center gap-4 text-xs text-text-muted">
+        ${s.followup ? `<span>📅 Follow-up: ${s.followup}</span>` : ''}
+        <span class="${waIssue ? 'text-accent' : 'text-success'}">${waSummary}</span>
+      </div>
+      <button class="mt-2 text-xs font-semibold text-accent hover:underline">Open →</button>
+    </div>`;
+  }).join('');
+}
+
+/* Student Detail */
+function openStudentDetail(studentId) {
+  // Only update prevMode when navigating INTO student detail for the first time.
+  // Do NOT overwrite it when re-rendering from saveSubtask / toggleSubtask (already 'student').
+  if (state.drawerMode !== 'student') {
+    state.drawerPrevMode = state.drawerMode || null;
+  }
+  state.drawerMode = 'student';
+  state.drawerOfferId = state.drawerOfferId || null;
+  const s = STUDENTS.find(x => x.id === studentId);
+  if (!s) return;
+  state.drawerSelectedStudent = s;
+
+  const stageOrder = ['sti','application','deposit','lockin'];
+  const stageIdx   = stageOrder.indexOf(s.stage);
+  const stageLabels = ['STI','Application','Deposit','Lock-in'];
+  const stageBar = stageLabels.map((l,i) => `
+    <div class="flex-1">
+      <div class="stage-step ${i < stageIdx ? 'done' : i === stageIdx ? 'current' : ''}"></div>
+      <p class="text-[10px] text-center mt-1 ${i <= stageIdx ? 'font-semibold text-text-main' : 'text-text-muted'}">${l}</p>
+    </div>
+  `).join('');
+
+  const waRows = s.whatsappGroups.map(g => `
+    <div class="text-xs flex gap-4 py-1 border-b border-border last:border-0">
+      <span class="font-medium text-text-main flex-1">${g.groupName}</span>
+      <span>${g.counselorJoined ? '✅ You' : '❌ You'}</span>
+      <span>${g.studentJoined ? '✅ Student' : '❌ Student'}</span>
+    </div>
+  `).join('');
+
+  const activityHtml = `
+    <div class="activity-log pl-5">
+      ${s.activity.map(a => `
+        <div class="activity-item">
+          <div class="activity-dot"></div>
+          <div class="activity-content">
+            <p class="activity-time">${a.time}</p>
+            <p class="activity-action">${a.type}</p>
+            ${a.notes ? `<p class="activity-notes">${a.notes}</p>` : ''}
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+
+  const subtaskHtml = s.subtasks.map((t,idx) => `
+    <div class="subtask-item ${t.done ? 'done' : ''}" onclick="toggleSubtask('${s.id}',${idx})">
+      <input type="checkbox" ${t.done ? 'checked' : ''} onclick="event.stopPropagation();toggleSubtask('${s.id}',${idx})" />
+      <div class="flex-1">
+        <p class="text-sm font-medium ${t.done ? 'line-through text-text-muted' : 'text-text-main'}">${t.label}</p>
+        ${t.done && t.timestamp ? `<p class="text-xs text-text-muted">${t.timestamp}${t.notes ? ' — ' + t.notes : ''}</p>` : ''}
+      </div>
+    </div>
+    <div id="stform-${s.id}-${idx}" class="subtask-form hidden">
+      <textarea id="stnotes-${s.id}-${idx}" placeholder="Notes… (required)" rows="2" class="w-full text-xs px-2 py-1.5 border border-border rounded-lg mb-2 resize-none focus:outline-none"></textarea>
+      <div class="flex gap-2 mb-2">
+        <select id="stoutcome-${s.id}-${idx}" class="flex-1 text-xs px-2 py-1.5 border border-border rounded-lg bg-white focus:outline-none">
+          <option>Connected</option><option>Not Reachable</option><option>Callback Requested</option><option>Promise to Pay</option><option>Closed</option>
+        </select>
+        <input id="stdate-${s.id}-${idx}" type="date" placeholder="Follow-up date (required)" class="text-xs px-2 py-1.5 border border-border rounded-lg focus:outline-none" />
+      </div>
+      <p class="text-[10px] text-red-500 mb-1">* Notes and Follow-up Date are required</p>
+      <button onclick="saveSubtask('${s.id}',${idx})" class="mt-1 px-3 py-1 bg-accent text-white text-xs font-semibold rounded-lg cursor-pointer">Save</button>
+    </div>
+  `).join('');
+
+  const content = `
+    <!-- Stage Bar -->
+    <div class="mb-4">
+      <p class="text-xs text-text-muted mb-2 font-semibold uppercase tracking-wide">Current Stage</p>
+      <div class="stage-bar">${stageBar}</div>
+    </div>
+
+    <!-- Info Grid -->
+    <div class="grid grid-cols-2 gap-2 mb-4 text-xs">
+      <div class="bg-surface rounded-lg p-2"><p class="text-text-muted">User ID</p><p class="font-semibold">${s.id}</p></div>
+      <div class="bg-surface rounded-lg p-2"><p class="text-text-muted">Course</p><p class="font-semibold">${s.course}</p></div>
+      <div class="bg-surface rounded-lg p-2"><p class="text-text-muted">Country</p><p class="font-semibold text-primary">${s.country || '—'}</p></div>
+      <div class="bg-surface rounded-lg p-2"><p class="text-text-muted">Last Call</p><p class="font-semibold">${s.lastCallDate} — ${s.lastCallOutcome}</p></div>
+      <div class="bg-surface rounded-lg p-2"><p class="text-text-muted">Follow-up</p>
+        <p class="font-semibold ${s.followup <= '2026-05-23' ? 'text-danger' : 'text-text-main'}">${s.followup}</p></div>
+      <div class="bg-surface rounded-lg p-2"><p class="text-text-muted">App Status</p>
+        <p><span class="app-badge ${s.appDownloaded ? 'downloaded' : 'not-downloaded'}">${s.appDownloaded ? '📱 Downloaded' : '📵 Not Downloaded'}</span></p></div>
+      <div class="bg-surface rounded-lg p-2"><p class="text-text-muted">Quality Score</p><p class="font-semibold">${s.qualityScore}/100</p></div>
+      <div class="bg-surface rounded-lg p-2 col-span-2"><p class="text-text-muted">Last Connected</p><p class="font-semibold">${s.lastConnected}</p></div>
+    </div>
+
+    <!-- WhatsApp Groups -->
+    <div class="mb-4">
+      <p class="text-xs text-text-muted mb-1 font-semibold uppercase tracking-wide">WhatsApp Groups</p>
+      <div class="bg-surface rounded-lg p-2">${waRows}</div>
+    </div>
+
+    <!-- Servicing Type -->
+    <div class="mb-4">
+      <p class="text-xs text-text-muted mb-2 font-semibold uppercase tracking-wide">Servicing Type</p>
+      <div class="bg-surface rounded-xl p-3 space-y-2">
+        <div>
+          <label class="text-[11px] text-text-muted font-medium">Type <span class="text-red-500">*</span></label>
+          <select id="st-type-${s.id}" onchange="updateServicingType('${s.id}')"
+            class="w-full mt-1 text-sm px-3 py-2 border border-border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-accent">
+            <option value="">-- Select Servicing Type --</option>
+            <option value="partner"     ${s.servicingType === 'partner'     ? 'selected' : ''}>Free Service</option>
+            <option value="non-partner" ${s.servicingType === 'non-partner' ? 'selected' : ''}>Paid Service</option>
+          </select>
+        </div>
+        <div id="st-sub-${s.id}" class="${s.servicingType === 'non-partner' ? '' : 'hidden'}">
+          <label class="text-[11px] text-text-muted font-medium">Sub Type <span class="text-red-500">*</span></label>
+          <select id="st-subtype-${s.id}" onchange="updateServicingSubType('${s.id}')"
+            class="w-full mt-1 text-sm px-3 py-2 border border-border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-accent">
+            <option value="">-- Select Sub Type --</option>
+            <option value="premium-universities"  ${s.nonPartnerSubType === 'premium-universities'  ? 'selected' : ''}>Premium Universities</option>
+            <option value="specialised-services"  ${s.nonPartnerSubType === 'specialised-services'  ? 'selected' : ''}>Specialised Services</option>
+            <option value="paid-application"      ${s.nonPartnerSubType === 'paid-application'      ? 'selected' : ''}>Paid Application</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Subtask Checklist -->
+    <div class="mb-4">
+      <p class="text-xs text-text-muted mb-2 font-semibold uppercase tracking-wide">Subtasks</p>
+      <div id="subtaskList">${subtaskHtml}</div>
+    </div>
+
+    <!-- Activity Log -->
+    <div>
+      <p class="text-xs text-text-muted mb-2 font-semibold uppercase tracking-wide">Activity Log</p>
+      ${activityHtml}
+    </div>
+  `;
+
+  openDrawer(s.name, content, true);
+}
+
+function toggleSubtask(studentId, idx) {
+  const s = STUDENTS.find(x => x.id === studentId);
+  if (!s) return;
+  const t = s.subtasks[idx];
+  const formEl = document.getElementById(`stform-${studentId}-${idx}`);
+  if (!t.done) {
+    formEl.classList.toggle('hidden');
+  } else {
+    t.done = false;
+    t.timestamp = null;
+    openStudentDetail(studentId);
+  }
+}
+
+function saveSubtask(studentId, idx) {
+  const notes   = document.getElementById(`stnotes-${studentId}-${idx}`)?.value.trim();
+  const date    = document.getElementById(`stdate-${studentId}-${idx}`)?.value;
+  const outcome = document.getElementById(`stoutcome-${studentId}-${idx}`)?.value || '';
+
+  // Validation — both notes and follow-up date are mandatory
+  if (!notes && !date) {
+    showToast('⚠️ Mark Follow Up Date and Fill the Notes', 'warning');
+    document.getElementById(`stnotes-${studentId}-${idx}`)?.classList.add('border-red-400');
+    document.getElementById(`stdate-${studentId}-${idx}`)?.classList.add('border-red-400');
+    return;
+  }
+  if (!notes) {
+    showToast('⚠️ Please fill in the Notes before saving.', 'warning');
+    document.getElementById(`stnotes-${studentId}-${idx}`)?.classList.add('border-red-400');
+    return;
+  }
+  if (!date) {
+    showToast('⚠️ Please mark a Follow Up Date before saving.', 'warning');
+    document.getElementById(`stdate-${studentId}-${idx}`)?.classList.add('border-red-400');
+    return;
+  }
+
+  const s = STUDENTS.find(x => x.id === studentId);
+  if (!s) return;
+  const now = new Date().toLocaleString('en-IN', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' });
+
+  s.subtasks[idx].done      = true;
+  s.subtasks[idx].timestamp = now;
+  s.subtasks[idx].notes     = notes;
+  s.subtasks[idx].outcome   = outcome;
+  s.followup                = date;       // update lead follow-up date
+  s.lastCallOutcome         = outcome;
+  s.activity.unshift({ type: s.subtasks[idx].label, time: now, notes });
+
+  showToast('Subtask saved!', 'success');
+  openStudentDetail(studentId);
+}
+
+/* Opportunity Drawer */
+function openOpportunityDrawer() {
+  state.drawerMode     = 'opportunity';
+  state.drawerPrevMode = null;
+  const students = getViewingStudents();
+  const courseFeeLocal = s => s.course.includes('MBA') ? 120000 : s.course.includes('B.Tech') ? 100000 : 80000;
+  const totalVal = students.reduce((sum, s) => sum + courseFeeLocal(s), 0);
+  const byStage = { lockin:[], deposit:[], application:[], sti:[] };
+  students.forEach(s => { if (byStage[s.stage]) byStage[s.stage].push(s); });
+  const countryFlag = { UK:'🇬🇧', Canada:'🇨🇦', Australia:'🇦🇺', USA:'🇺🇸', Germany:'🇩🇪', Ireland:'🇮🇪', Singapore:'🇸🇬', 'New Zealand':'🇳🇿' };
+
+  const stageConfig = [
+    { key:'lockin',      label:'Boost Lock-in',    icon:'🔒', accentCls:'bg-purple-600' },
+    { key:'deposit',     label:'Boost Deposit',     icon:'💰', accentCls:'bg-green-600'  },
+    { key:'application', label:'Boost Application', icon:'📋', accentCls:'bg-blue-600'   },
+    { key:'sti',         label:'Boost STI',         icon:'⚡', accentCls:'bg-orange-500' },
+  ];
+
+  let content = `
+    <div class="mb-4 p-3.5 bg-accent/10 border border-accent/20 rounded-xl">
+      <p class="text-xs text-text-muted mb-0.5">Total Pipeline Opportunity</p>
+      <p class="font-mono text-2xl font-bold text-accent">${fmt(totalVal)}</p>
+      <p class="text-xs text-text-muted mt-1">${students.length} students across all stages</p>
+    </div>
+    <div class="space-y-2.5">
+  `;
+
+  stageConfig.forEach(({ key, label, icon }) => {
+    const list = byStage[key];
+    const stageVal = list.reduce((sum, s) => sum + courseFeeLocal(s), 0);
+    content += `
+      <div class="border border-border rounded-xl overflow-hidden shadow-sm">
+        <button onclick="toggleOppCard('${key}')" class="w-full flex items-center justify-between p-3.5 bg-white hover:bg-surface transition-colors text-left">
+          <div class="flex items-center gap-3">
+            <span class="text-xl leading-none">${icon}</span>
+            <div>
+              <p class="font-semibold text-sm text-text-main">${label}</p>
+              <p class="text-xs text-text-muted">${list.length} student${list.length !== 1 ? 's' : ''} · <span class="font-mono font-semibold text-success">${fmt(stageVal)}</span></p>
+            </div>
+          </div>
+          <svg id="chevron-opp-${key}" class="w-4 h-4 text-text-muted transition-transform duration-200 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+          </svg>
+        </button>
+        <div id="oppBody-${key}" class="hidden border-t border-border bg-surface/30">
+          ${list.length === 0
+            ? `<p class="text-xs text-text-muted text-center py-5">No students at this stage</p>`
+            : `<div class="divide-y divide-border/40">${list.map(s => {
+                const fee = courseFeeLocal(s);
+                const flag = countryFlag[s.country] || '🌍';
+                const initials = s.name.split(' ').map(w => w[0]).join('').slice(0,2);
+                return `
+                  <div class="flex items-center gap-3 px-3.5 py-3 hover:bg-surface/60 transition-colors">
+                    <div class="w-8 h-8 rounded-full bg-primary/10 text-primary font-bold text-[11px] flex items-center justify-center flex-shrink-0">${initials}</div>
+                    <div class="flex-1 min-w-0">
+                      <p class="text-sm font-semibold text-text-main">${s.name} <span class="text-sm">${flag}</span></p>
+                      <p class="text-[11px] text-text-muted">${s.course}</p>
+                    </div>
+                    <div class="flex flex-col items-end gap-1.5">
+                      <span class="text-xs font-bold font-mono text-success">${fmt(fee)}</span>
+                      <button onclick="openStudentDetail('${s.id}');state.drawerPrevMode='opportunity';" class="text-[10px] font-bold text-primary bg-primary/10 hover:bg-primary/20 px-2.5 py-1 rounded-full transition-colors whitespace-nowrap">Take to Task →</button>
+                    </div>
+                  </div>`;
+              }).join('')}</div>`
+          }
+        </div>
+      </div>
+    `;
+  });
+
+  // Generate More Referrals accordion card
+  const allRefStudents = [...new Map(
+    [...getReferralCohort('visa'), ...getReferralCohort('premium'), ...getReferralCohort('sti')]
+    .map(s => [s.id, s])
+  ).values()];
+  const stageLabelMap = { sti:'STI', application:'Application', deposit:'Deposit', lockin:'Lock-in' };
+  const stageClsMap   = { sti:'bg-orange-100 text-orange-700', application:'bg-blue-100 text-blue-700', deposit:'bg-green-100 text-green-700', lockin:'bg-purple-100 text-purple-700' };
+
+  content += `
+    <div class="border border-purple-200 rounded-xl overflow-hidden shadow-sm">
+      <button onclick="toggleOppCard('referral')" class="w-full flex items-center justify-between p-3.5 bg-gradient-to-r from-purple-50 to-white hover:from-purple-100 transition-colors text-left">
+        <div class="flex items-center gap-3">
+          <span class="text-xl leading-none">🤝</span>
+          <div>
+            <p class="font-semibold text-sm text-text-main">Generate More Referrals</p>
+            <p class="text-xs text-text-muted">${allRefStudents.length} students most likely to refer</p>
+          </div>
+        </div>
+        <svg id="chevron-opp-referral" class="w-4 h-4 text-text-muted transition-transform duration-200 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+        </svg>
+      </button>
+      <div id="oppBody-referral" class="hidden border-t border-purple-100">
+        ${allRefStudents.length === 0
+          ? `<p class="text-xs text-text-muted text-center py-5">No referral candidates yet</p>`
+          : `<div class="divide-y divide-border/40">${allRefStudents.map(s => {
+              const initials = s.name.split(' ').map(w => w[0]).join('').slice(0,2);
+              const flag = countryFlag[s.country] || '🌍';
+              return `
+                <div class="px-3.5 py-3 bg-purple-50/30 hover:bg-purple-50/60 transition-colors">
+                  <div class="flex items-center gap-3 mb-2.5">
+                    <div class="w-8 h-8 rounded-full bg-purple-100 text-purple-700 font-bold text-[11px] flex items-center justify-center flex-shrink-0">${initials}</div>
+                    <div class="flex-1 min-w-0">
+                      <p class="text-sm font-semibold text-text-main">${s.name} <span class="text-sm">${flag}</span></p>
+                      <p class="text-[11px] text-text-muted">${s.course}</p>
+                    </div>
+                    <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full ${stageClsMap[s.stage] || 'bg-gray-100 text-gray-600'}">${stageLabelMap[s.stage] || s.stage}</span>
+                  </div>
+                  <div class="flex gap-2">
+                    <button onclick="openReferralWAMessage('${s.id}')" class="flex-1 text-[11px] font-semibold bg-green-50 text-green-700 border border-green-200 hover:bg-green-100 px-3 py-1.5 rounded-lg transition-colors flex items-center justify-center gap-1.5">
+                      <svg class="w-3 h-3 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M11.999 0C5.373 0 0 5.373 0 12c0 2.118.555 4.107 1.523 5.832L0 24l6.335-1.524A11.946 11.946 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 11.999 0zM12 22c-1.943 0-3.779-.517-5.376-1.428l-.387-.226-3.993.96.994-3.866-.253-.4A9.975 9.975 0 012 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/></svg>
+                      Ask for Referral
+                    </button>
+                    <button onclick="openStudentDetail('${s.id}');state.drawerPrevMode='opportunity';" class="text-[11px] font-bold text-primary bg-primary/10 hover:bg-primary/20 px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap">Take to Task →</button>
+                  </div>
+                </div>`;
+            }).join('')}</div>`
+        }
+      </div>
+    </div>
+  `;
+
+  content += `</div>`; // close space-y-2.5
+  openDrawer('Opportunity Size', content, false);
+}
+
+function toggleOppCard(key) {
+  const body    = document.getElementById(`oppBody-${key}`);
+  const chevron = document.getElementById(`chevron-opp-${key}`);
+  if (!body) return;
+  const isOpen = !body.classList.contains('hidden');
+  body.classList.toggle('hidden', isOpen);
+  if (chevron) chevron.style.transform = isOpen ? '' : 'rotate(180deg)';
+}
+
+function openReferralWAMessage(studentId) {
+  const s = STUDENTS.find(x => x.id === studentId);
+  if (!s) return;
+  const counselorName = (state.currentUser && state.currentUser.name) ? state.currentUser.name : 'Your Counselor';
+  const msgTemplate = `Hi ${s.name}! 👋\n\nThis is ${counselorName} from Leap. I hope your journey with us has been great so far! 🎓\n\nWe'd love to help your friends and family who are also planning to study abroad. If you know anyone who might be interested, please do share our details with them!\n\nFor every successful referral, you and your friend both get special benefits. 🎁\n\nThank you for being an amazing part of the Leap family! 🙏`;
+  const encodedMsg = encodeURIComponent(msgTemplate);
+  const groups = s.whatsappGroups || [];
+
+  const groupsHtml = groups.length ? `
+    <div class="mb-4">
+      <p class="text-[10px] font-bold text-text-muted uppercase tracking-widest mb-2">WhatsApp Groups</p>
+      <div class="space-y-2">
+        ${groups.map(g => `
+          <div class="flex items-center justify-between p-2.5 bg-green-50 border border-green-200 rounded-xl">
+            <div>
+              <p class="text-xs font-semibold text-text-main">${g.groupName}</p>
+              <p class="text-[10px] text-text-muted mt-0.5">${g.studentJoined ? '✅ Student joined' : '⏳ Student not in group'}</p>
+            </div>
+            <a href="https://wa.me/?text=${encodedMsg}" target="_blank"
+               class="text-[10px] font-bold bg-green-600 text-white px-2.5 py-1.5 rounded-lg hover:bg-green-700 transition-colors whitespace-nowrap">
+              Send to Group
+            </a>
+          </div>`).join('')}
+      </div>
+    </div>` : '';
+
+  const safeMsg = msgTemplate.replace(/\\/g, '\\\\').replace(/`/g, '\\`').replace(/\$/g, '\\$');
+  const content = `
+    <div class="mb-4 flex items-center gap-3 p-3.5 bg-purple-50 border border-purple-200 rounded-xl">
+      <div class="w-10 h-10 rounded-full bg-purple-200 text-purple-800 font-bold text-xs flex items-center justify-center flex-shrink-0">
+        ${s.name.split(' ').map(w => w[0]).join('').slice(0,2)}
+      </div>
+      <div>
+        <p class="font-bold text-sm text-text-main">${s.name}</p>
+        <p class="text-xs text-text-muted">${s.course} · Stage: ${s.stage.toUpperCase()}</p>
+      </div>
+    </div>
+    ${groupsHtml}
+    <div class="mb-4">
+      <p class="text-[10px] font-bold text-text-muted uppercase tracking-widest mb-2">Message Template</p>
+      <div class="p-3.5 bg-surface border border-border rounded-xl text-[11px] text-text-main whitespace-pre-wrap leading-relaxed font-mono">${msgTemplate}</div>
+    </div>
+    <div class="flex gap-2">
+      <button onclick="navigator.clipboard.writeText(\`${safeMsg}\`).then(()=>showToast('✅ Message copied to clipboard!','success'))"
+        class="flex-1 text-sm font-semibold bg-surface border border-border text-text-main hover:bg-gray-100 px-4 py-2.5 rounded-xl transition-colors">
+        📋 Copy Message
+      </button>
+      <a href="https://wa.me/?text=${encodedMsg}" target="_blank"
+         class="flex-1 text-sm font-semibold bg-green-600 text-white hover:bg-green-700 px-4 py-2.5 rounded-xl transition-colors text-center flex items-center justify-center gap-2">
+        <svg class="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M11.999 0C5.373 0 0 5.373 0 12c0 2.118.555 4.107 1.523 5.832L0 24l6.335-1.524A11.946 11.946 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 11.999 0zM12 22c-1.943 0-3.779-.517-5.376-1.428l-.387-.226-3.993.96.994-3.866-.253-.4A9.975 9.975 0 012 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/></svg>
+        Open WhatsApp
+      </a>
+    </div>
+  `;
+  state.drawerPrevMode = 'opportunity';
+  openDrawer('Ask for Referral — ' + s.name, content, true);
+}
+
+/* Offer Drawer */
+function openOfferDrawer(offerId) {
+  const o = OFFERS.find(x => x.id === offerId);
+  if (!o) return;
+  state.drawerMode   = 'offer';
+  state.drawerOfferId = offerId;
+  const students = getViewingStudents().filter(s => s.stage === o.bucket || (o.bucket === 'lockin' && s.stage === 'lockin') || s.stage === o.bucket);
+  const content = `
+    <div class="mb-4 p-3 bg-accent/10 border border-accent/20 rounded-xl">
+      <p class="font-semibold text-sm text-accent">${bucketEmoji(o.bucket)} ${o.title}</p>
+      <p class="text-xs text-text-muted mt-1">${o.desc}</p>
+    </div>
+    <p class="text-xs font-semibold text-text-muted uppercase tracking-wide mb-3">Eligible Students (${students.length})</p>
+    <div class="space-y-3">${renderStudentList(students)}</div>
+  `;
+  openDrawer('Eligible Students', content, false);
+}
+
+/* ═══════════════ PROFILE PAGE ═══════════════ */
+
+function openProfile() {
+  closeProfileDropdown();
+  const u = state.role === 'counselor' ? state.currentUser : COUNSELORS.find(c => c.id === state.viewingCounselorId) || state.currentUser;
+
+  // Rating
+  const d = COUNSELORS.find(c => c.id === (state.role === 'counselor' ? state.currentUser.id : state.viewingCounselorId));
+  let rating = 7.0;
+  if (d && d.today) {
+    const t = d.today;
+    const scores = [
+      t.stis / TARGETS.stis, t.applications / TARGETS.applications, t.deposits / TARGETS.deposits,
+      t.lockins / TARGETS.lockins, t.revenueCollected / TARGETS.revenue_target, t.f2f / TARGETS.f2f,
+      t.isl / 5, t.referralPct / TARGETS.referral, t.q1score / 100, t.q2score / 100,
+    ].map(v => Math.min(v, 1));
+    rating = (scores.reduce((a,b) => a+b, 0) / scores.length * 10);
+  }
+  const ratingFixed = rating.toFixed(1);
+  const stars = Math.round(rating / 2);
+
+  // Avatar — show uploaded photo if available, else initials
+  const avEl = document.getElementById('profileAvatar');
+  if (u.photoUrl) {
+    avEl.innerHTML = `<img src="${u.photoUrl}" class="w-full h-full object-cover rounded-full" alt="" />`;
+    avEl.style.background = 'transparent';
+  } else {
+    avEl.textContent = u.avatar || initials(u.name);
+    avEl.style.background = '';
+  }
+
+  document.getElementById('profileName').textContent   = u.name;
+  document.getElementById('profileDesig').textContent  = u.designation || 'Counselor';
+
+  // Login number + email under name
+  const loginId = `LEAP-${String(u.id || 1).padStart(4,'0')}`;
+  const loginInfoEl = document.getElementById('profileLoginInfo');
+  if (loginInfoEl) loginInfoEl.textContent = `ID: ${loginId}  ·  ${u.email || '—'}`;
+
+  document.getElementById('profileJoining').textContent = u.joiningDate || '—';
+  document.getElementById('profileTeam').textContent    = u.team || '—';
+  document.getElementById('profileManager').textContent = u.manager || '—';
+
+  // Customer Rating — based on ISL feedback (out of 5) minus escalation penalty
+  const myStudents = STUDENTS; // all students for this counsellor
+  const escalationCount = myStudents.filter(s => s.hasEscalation).length;
+  const avgISL = d && d.today ? d.today.isl : 4.0; // already out of 5
+  const customerRating = Math.max(0, Math.min(5, avgISL - (escalationCount * 0.2))).toFixed(1);
+  document.getElementById('profileRatingNum').textContent = `⭐ ${customerRating} / 5`;
+
+  // Overall performance stars (out of 5 stars)
+  const ratingEl = document.getElementById('profileRating');
+  ratingEl.innerHTML = Array.from({length:5}, (_,i) =>
+    `<span class="text-xl ${i < stars ? 'text-gold' : 'text-gray-300'}">★</span>`).join('');
+
+  // Star rating definition
+  const defEl = document.getElementById('profileRatingDef');
+  if (defEl) {
+    defEl.textContent = `★ Performance Rating (${ratingFixed}/10): Based on STI, Applications, Deposits, Lock-ins, Revenue, F2F, ISL, Referrals & Quality Scores relative to targets. ${stars}/5 stars.`;
+  }
+
+  // Best counsellor by performance rating
+  const bestEl = document.getElementById('profileBestCounsellor');
+  if (bestEl) {
+    let bestC = null, bestR = -1;
+    COUNSELORS.forEach(c => {
+      if (!c.today) return;
+      const t = c.today;
+      const sc = [t.stis/TARGETS.stis, t.applications/TARGETS.applications, t.deposits/TARGETS.deposits,
+        t.lockins/TARGETS.lockins, t.revenueCollected/TARGETS.revenue_target, t.f2f/TARGETS.f2f,
+        t.isl/5, t.referralPct/TARGETS.referral, t.q1score/100, t.q2score/100
+      ].map(v => Math.min(v,1));
+      const r = sc.reduce((a,b) => a+b,0) / sc.length * 10;
+      if (r > bestR) { bestR = r; bestC = c; }
+    });
+    if (bestC) {
+      bestEl.innerHTML = `<div class="flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-lg px-3 py-1.5 w-fit">
+        <span class="text-sm">🏆</span>
+        <span class="text-xs font-semibold text-amber-800">Top Rated: ${bestC.name} · ${bestR.toFixed(1)}/10</span>
+      </div>`;
+    }
+  }
+
+  // Badges
+  const myBadges  = getMyBadges();
+  const titleEl   = document.getElementById('profileBadgesTitle');
+  titleEl.textContent = `${myBadges.length} Badge${myBadges.length !== 1 ? 's' : ''} Earned`;
+
+  const grid = document.getElementById('profileBadgeGrid');
+  grid.innerHTML = BADGE_TYPES.map(bt => {
+    const earned = myBadges.find(ab => ab.badgeId === bt.id);
+    const date   = earned ? AWARDED_BADGES.find(ab => ab.badgeId === bt.id && ab.counselorId === (d ? d.id : 0))?.date : null;
+    return `<div class="badge-card ${earned ? '' : 'locked'}">
+      <div class="badge-icon ${earned ? '' : 'locked'} mx-auto" style="${earned ? `background:${bt.color}20` : ''}">${bt.icon}</div>
+      <p class="text-xs font-semibold text-text-main">${bt.name}</p>
+      ${earned ? `<p class="text-[10px] text-text-muted mt-0.5">${date || 'Earned'}</p>` : `<p class="text-[10px] text-text-muted mt-0.5">${bt.desc.slice(0,30)}…</p>`}
+    </div>`;
+  }).join('');
+
+  document.getElementById('profilePage').classList.remove('hidden');
+}
+
+function closeProfile() {
+  document.getElementById('profilePage').classList.add('hidden');
+}
+
+/* ═══════════════ PROFILE DROPDOWN ═══════════════ */
+
+function toggleProfileDropdown() {
+  const dd = document.getElementById('profileDropdown');
+  dd.classList.toggle('hidden');
+}
+
+function closeProfileDropdown() {
+  document.getElementById('profileDropdown').classList.add('hidden');
+}
+
+document.addEventListener('click', (e) => {
+  const dd = document.getElementById('profileDropdown');
+  if (dd && !dd.classList.contains('hidden') && !e.target.closest('[aria-haspopup]') && !e.target.closest('#profileDropdown')) {
+    closeProfileDropdown();
+  }
+});
+
+/* ═══════════════ MODALS ═══════════════ */
+
+function openTicketModal()  { document.getElementById('ticketModal').classList.remove('hidden'); }
+
+function closeModal(id) {
+  document.getElementById(id).classList.add('hidden');
+}
+
+/* ── Create Task for RM (shared CLTaskStore — synced live with RM CRM) ── */
+let rmTaskModalCtx = null;
+function toggleRmTaskOtherField() {
+  const sel = document.getElementById('rmTaskType');
+  document.getElementById('rmTaskOtherWrap').classList.toggle('hidden', sel.value !== 'OTHERS');
+}
+function openRmTaskModal(studentId, studentName) {
+  rmTaskModalCtx = { studentId, studentName };
+  document.getElementById('rmTaskStudentName').textContent = studentName;
+  document.getElementById('rmTaskType').value = '';
+  document.getElementById('rmTaskOtherSpecify').value = '';
+  document.getElementById('rmTaskOtherWrap').classList.add('hidden');
+  document.getElementById('rmTaskNotes').value = '';
+  document.getElementById('rmTaskDueDate').value = '';
+  document.getElementById('rmTaskModal').classList.remove('hidden');
+}
+function submitRmTask() {
+  if (!rmTaskModalCtx) return;
+  const typeSel = document.getElementById('rmTaskType');
+  if (!typeSel.value) { showToast('Please select a task type.', 'error'); return; }
+  const otherSpecify = document.getElementById('rmTaskOtherSpecify').value.trim();
+  if (typeSel.value === 'OTHERS' && !otherSpecify) { showToast('Please specify the task.', 'error'); return; }
+  const notes = document.getElementById('rmTaskNotes').value.trim();
+  const dueDate = document.getElementById('rmTaskDueDate').value;
+  const { studentId, studentName } = rmTaskModalCtx;
+  CLTaskStore.create({ pipeline:'', leadId: studentId, leadName: studentName, direction:'cl_to_rm', taskType: typeSel.value, otherSpecify, notes, dueDate });
+  closeModal('rmTaskModal');
+  showToast('Task created for the RM.', 'success');
+}
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    ['ticketModal','addUserModal','createOfferModal','awardBadgeModal','rmTaskModal'].forEach(id => {
+      document.getElementById(id)?.classList.add('hidden');
+    });
+    // Close student detail page → home
+    const sdp = document.getElementById('studentDetailPage');
+    if (sdp && !sdp.classList.contains('hidden')) {
+      sdp.classList.add('hidden');
+      closeDrawer();
+      setTimeout(() => switchTab('tab1'), 50);
+      return;
+    }
+    // Close drawer → home
+    const drawer = document.getElementById('rightDrawer');
+    if (drawer && !drawer.classList.contains('hidden')) {
+      closeDrawerAndGoHome();
+    }
+  }
+});
+
+['ticketModal','addUserModal','createOfferModal','awardBadgeModal'].forEach(id => {
+  document.addEventListener('click', (e) => {
+    const el = document.getElementById(id);
+    if (el && !el.classList.contains('hidden') && e.target === el) el.classList.add('hidden');
+  });
+});
+
+function handleTicketScreenshot(input) {
+  const nameEl = document.getElementById('ticketScreenshotName');
+  if (input.files && input.files[0]) {
+    nameEl.textContent = '✓ ' + input.files[0].name;
+    nameEl.classList.add('text-accent');
+  }
+}
+
+function submitTicket() {
+  const cat  = document.getElementById('ticketCategory').value;
+  const desc = document.getElementById('ticketDesc').value.trim();
+  if (!cat)  { showToast('Please select a ticket type.', 'error'); return; }
+  if (!desc) { showToast('Please describe your issue.', 'error'); return; }
+
+  // Add to counsellor tickets if counsellor role
+  const today = new Date().toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' });
+  const newTicket = {
+    id: 'TKT-' + String(COUNSELLOR_TICKETS.length + 1).padStart(3, '0'),
+    dateRaised: today,
+    category: cat,
+    status: 'Open',
+    description: desc,
+    update: 'Your ticket has been received. Our ops team will respond within 4 working hours.',
+  };
+  COUNSELLOR_TICKETS.push(newTicket);
+
+  showToast('Ticket raised! Ops team will respond within 4 working hours.', 'success');
+  closeModal('ticketModal');
+
+  // Reset form
+  document.getElementById('ticketCategory').value = '';
+  document.getElementById('ticketDesc').value = '';
+  document.getElementById('ticketScreenshot').value = '';
+  document.getElementById('ticketScreenshotName').textContent = 'Click to upload or drag & drop';
+  document.getElementById('ticketScreenshotName').classList.remove('text-accent');
+
+  // Refresh ticket summary if visible
+  renderCounsellorTicketSummary();
+}
+
+/* ═══════════════ TOAST ═══════════════ */
+
+function showToast(msg, type = 'info') {
+  const container = document.getElementById('toastContainer');
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  toast.innerHTML = `
+    <span class="flex-1">${msg}</span>
+    <button onclick="this.parentElement.remove()" class="ml-2 opacity-70 hover:opacity-100 cursor-pointer font-bold text-lg leading-none">×</button>
+  `;
+  container.appendChild(toast);
+  setTimeout(() => toast.remove(), 3500);
+}
+
+/* ═══════════════ LOGOUT ═══════════════ */
+
+/* ═══════════════ BOT ═══════════════ */
+
+/* Manager chatbot's default system greeting — the spec's "Good {Morning/Afternoon/Evening}, {Name}!"
+   step, shown once per login session in place of the generic counsellor welcome. Seeds the existing
+   greeting flow at step 1 so the Good/Not okay buttons reuse all of its existing branch logic. */
+function renderMgrBotGreeting() {
+  const firstName = (state.currentUser?.name || 'there').split(' ')[0];
+  const hour = new Date().getHours();
+  const timeOfDay = hour < 12 ? 'Morning' : hour < 17 ? 'Afternoon' : 'Evening';
+  const msg = `Good ${timeOfDay}, ${firstName}! 👋`;
+  const container = document.getElementById('botMessages');
+  container.innerHTML = `
+    <div class="flex gap-2">
+      <div class="w-6 h-6 rounded-full bg-accent flex items-center justify-center flex-shrink-0 mt-0.5">
+        <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+      </div>
+      <div class="bot-msg-bubble"><p>${escHtml(msg)}</p></div>
+    </div>`;
+  addToHistory('bot', msg);
+  // Managers don't need to type "Hi" to proceed — auto-advance into the mood-check step so the
+  // bot never sits idle waiting on typed input (this was previously wait-for-"Hi", same as the
+  // counsellor bot, but that left the manager bot looking stuck with no visible next step).
+  hideBotInputRow();
+  const bc = state.botConversation;
+  bc.flow = 'greeting';
+  bc.step = 0;
+  bc.collected = {};
+  setTimeout(() => handleGreetingStep(null), 600);
+}
+
+/* Counsellor bot goes "button-only" once the mood-check resolves (Good, or Not okay -> No) — the free-text
+   bar hides until the widget is closed and reopened. The 3 exception flows (Raise Ticket redirect, Connect
+   with SM/HR/DS, Ask TL/PL) render their own inline chat-card forms and never bring the bar back. */
+function hideBotInputRow() {
+  state.chatPanel.botInputHidden = true;
+  const row = document.getElementById('botInputRow');
+  if (row) row.style.display = 'none';
+}
+function showBotInputRow() {
+  state.chatPanel.botInputHidden = false;
+  const row = document.getElementById('botInputRow');
+  if (row) row.style.display = '';
+}
+
+function toggleBot() {
+  state.botOpen = !state.botOpen;
+  const panel = document.getElementById('botPanel');
+  if (state.botOpen) {
+    panel.classList.remove('hidden');
+    void panel.offsetWidth; // force reflow so CSS transition fires correctly (fixes Vercel)
+    panel.classList.add('open');
+    // Reset unread badge
+    state.chatPanel.unreadCount = 0;
+    state.chatPanel.lastOpenedAt = Date.now();
+    updateUnreadBadge();
+    // Restore history on open
+    if (state.botActiveTab === 'chat') {
+      if (isManagerRole(state.role)) {
+        const hadHistory = state.botConversation.history.length > 0;
+        if (hadHistory) renderChatHistory();
+        document.getElementById('botInput').focus();
+        if (!hadHistory && !state.chatPanel.mgrGreeted) {
+          state.chatPanel.mgrGreeted = true;
+          renderMgrBotGreeting();
+        }
+        checkPendingMgrQuestions();
+      } else {
+        // Counsellor bot: every open/reopen resets to a fresh Greeting State (per spec) —
+        // history never persists across a close/reopen, and the input bar comes back.
+        showBotInputRow();
+        initBotWithGreeting();
+        document.getElementById('botInput').focus();
+        checkPendingTlPlReplies();
+      }
+      // Connect-with-SM/DS replies can land for any role (counsellor/TL/PL/SM can all be senders).
+      checkPendingConnectReplies();
+      checkPendingBroadcasts();
+      updateUnreadBadge();
+    } else {
+      renderActionItems();
+    }
+  } else {
+    panel.classList.remove('open');
+    setTimeout(() => panel.classList.add('hidden'), 250);
+    cancelClearChat();
+  }
+}
+
+/* Combines the generic chat unread count with role-specific pending items (TL/PL's unanswered
+   counsellor questions, SM/Director's unanswered Connect requests, or unseen replies to a
+   Connect-with-SM/DS message the current user sent) so the floating bot bubble shows a
+   notification dot/count even before the chat panel is opened. */
+function updateUnreadBadge() {
+  const badge = document.getElementById('botUnreadBadge');
+  if (!badge) return;
+  let pending = 0;
+  const role = state.role;
+  if (role === 'team_lead' || role === 'pod_leader') {
+    pending = getPendingTlPlQuestions().length + getUnseenConnectRepliesForSender().length;
+  } else if (role === 'senior_manager') {
+    pending = getPendingConnectRequests().length + getUnseenConnectRepliesForSender().length;
+  } else if (role === 'director') {
+    pending = getPendingConnectRequests().length;
+  } else if (role === 'counselor') {
+    pending = getUnseenTlPlRepliesForCounsellor().length + getUnseenConnectRepliesForSender().length;
+  }
+  const count = (state.chatPanel.unreadCount || 0) + pending;
+  if (count > 0) {
+    badge.textContent = count > 9 ? '9+' : String(count);
+    badge.classList.remove('hidden');
+  } else {
+    badge.classList.add('hidden');
+  }
+}
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && state.botOpen) toggleBot();
+});
+
+function sendBotMessage() {
+  const input = document.getElementById('botInput');
+  const msg   = input.value.trim();
+  if (!msg) return;
+  input.value = '';
+
+  appendUserMessage(msg);
+  appendTypingIndicator();
+  const delay = state.botConversation.flow ? 400 : 800;
+  setTimeout(() => {
+    removeTypingIndicator();
+    handleBotMessage(msg);
+  }, delay);
+}
+
+function appendUserMessage(msg) {
+  const container = document.getElementById('botMessages');
+  const div = document.createElement('div');
+  div.className = 'flex justify-end';
+  div.innerHTML = `<div class="user-msg-bubble">${escHtml(msg)}</div>`;
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+}
+
+function appendTypingIndicator() {
+  const container = document.getElementById('botMessages');
+  const div = document.createElement('div');
+  div.className = 'flex gap-2';
+  div.id = 'botTyping';
+  div.innerHTML = `
+    <div class="w-6 h-6 rounded-full bg-accent flex items-center justify-center flex-shrink-0 mt-0.5">
+      <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+    </div>
+    <div id="botTypingContent" class="bot-typing"><span></span><span></span><span></span></div>
+  `;
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+  // 5s fallback
+  state._typingTimer5 = setTimeout(() => {
+    const el = document.getElementById('botTypingContent');
+    if (el) { el.className = 'bot-msg-bubble text-xs text-text-muted py-2 px-3'; el.innerHTML = 'Still thinking…'; }
+  }, 5000);
+}
+
+function removeTypingIndicator() {
+  clearTimeout(state._typingTimer5);
+  document.getElementById('botTyping')?.remove();
+}
+
+function classifyIntent(msg) {
+  const lower = msg.toLowerCase();
+  // Find the BEST match = longest keyword that appears in the message
+  // This ensures specific phrases (e.g. "incentive calculation") win over generic ones ("incentive")
+  let bestIntent = 'fallback';
+  let bestKeywordLen = 0;
+
+  for (const [intent, data] of Object.entries(BOT_INTENT_MAP)) {
+    if (intent === 'fallback') continue;
+    for (const kw of data.keywords) {
+      if (lower.includes(kw) && kw.length > bestKeywordLen) {
+        bestIntent = intent;
+        bestKeywordLen = kw.length;
+      }
+    }
+  }
+
+  let entity = '';
+  if (bestIntent === 'college_info') {
+    for (const uni of INFO_HUB_DATA) {
+      const words = uni.name.toLowerCase().split(' ');
+      if (words.some(w => w.length > 4 && lower.includes(w))) { entity = uni.name; break; }
+    }
+  }
+  return { intent: bestIntent, entity };
+}
+
+function renderBotResponse(intent, entity) {
+  const container = document.getElementById('botMessages');
+  const data = BOT_INTENT_MAP[intent] || BOT_INTENT_MAP.fallback;
+
+  let answerHtml = '';
+
+  // Special: contact_business_head
+  if (intent === 'contact_business_head') {
+    const bh = BOT_SETTINGS.businessHead;
+    answerHtml = `📞 **Contact Business Head:**\n\n**${bh.name}**\n${bh.designation}\n📱 ${bh.contact}`;
+  }
+  // Special: my_targets — show today's targets dynamically
+  else if (intent === 'my_targets') {
+    const c = getCounselorData();
+    answerHtml = `🎯 **Your targets for today:**\n\n• STIs: ${c.stis} / ${TARGETS.stis} (${Math.round(c.stis/TARGETS.stis*100)}%)\n• Applications: ${c.applications} / ${TARGETS.applications} (${Math.round(c.applications/TARGETS.applications*100)}%)\n• Deposits: ${c.deposits} / ${TARGETS.deposits} (${Math.round(c.deposits/TARGETS.deposits*100)}%)\n• Lock-ins: ${c.lockins} / ${TARGETS.lockins} (${Math.round(c.lockins/TARGETS.lockins*100)}%)\n• Calls: ${c.calls} / ${TARGETS.calls} (${Math.round(c.calls/TARGETS.calls*100)}%)\n• Revenue: ₹${(c.revenue/1000).toFixed(0)}K / ₹${(TARGETS.revenue/1000).toFixed(0)}K\n\nHead to the dashboard to see the full picture!`;
+  }
+  // Special: who_to_call — show students by urgency
+  else if (intent === 'who_to_call') {
+    const students = getViewingStudents();
+    const today = new Date('2026-05-31');
+    const overdue = students.filter(s => s.followup && new Date(s.followup) < today).slice(0, 3);
+    const dueToday = students.filter(s => s.followup === '2026-05-31').slice(0, 3);
+    const priority = [...overdue, ...dueToday].slice(0, 4);
+    if (priority.length) {
+      const lines = priority.map(s => `• **${s.name}** (${s.stage}) — Follow-up: ${s.followup}`).join('\n');
+      answerHtml = `📞 **Priority students to call today:**\n\n${lines}\n\nClick any student in the pipeline to open their profile and make notes.`;
+    } else {
+      answerHtml = `📞 No overdue follow-ups right now — you're on top of it! Check the pipeline for students whose follow-up is coming up soon.`;
+    }
+  }
+  // Special: my_performance_today — live snapshot
+  else if (intent === 'my_performance_today') {
+    const c = getCounselorData();
+    const emo = (a, t) => a >= t ? '🟢' : a >= t * 0.6 ? '🟡' : '🔴';
+    answerHtml = `📊 **Your performance today:**\n\n${emo(c.calls,TARGETS.calls)} Calls: ${c.calls}/${TARGETS.calls}\n${emo(c.stis,TARGETS.stis)} STIs: ${c.stis}/${TARGETS.stis}\n${emo(c.applications,TARGETS.applications)} Applications: ${c.applications}/${TARGETS.applications}\n${emo(c.deposits,TARGETS.deposits)} Deposits: ${c.deposits}/${TARGETS.deposits}\n${emo(c.lockins,TARGETS.lockins)} Lock-ins: ${c.lockins}/${TARGETS.lockins}\n${emo(c.revenue,TARGETS.revenue)} Revenue: ₹${(c.revenue/1000).toFixed(0)}K / ₹${(TARGETS.revenue_target/1000).toFixed(0)}K\n\n🟢 = On target  🟡 = Getting there  🔴 = Needs focus`;
+  }
+  // Special: college_info
+  else if (intent === 'college_info') {
+    const uni = entity ? INFO_HUB_DATA.find(u => u.name.toLowerCase().includes(entity.toLowerCase().split(' ')[0])) : null;
+    if (uni) {
+      answerHtml = `🎓 Found **${uni.name}** in the Info Hub!`;
+    } else {
+      answerHtml = `I couldn't find that university in the Info Hub. Try browsing the directory directly.`;
+    }
+  } else {
+    answerHtml = data.answer || '';
+  }
+
+  const msgDiv = document.createElement('div');
+  msgDiv.className = 'flex gap-2';
+
+  // Format markdown-like text
+  const formatted = answerHtml.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
+
+  let extraHtml = '';
+
+  // College card inline
+  if (intent === 'college_info') {
+    const uni = entity ? INFO_HUB_DATA.find(u => u.name.toLowerCase().includes(entity.toLowerCase().split(' ')[0])) : null;
+    if (uni) {
+      const urgent = daysUntil(uni.depositDeadline) <= 14;
+      extraHtml += `<div class="bot-college-card">
+        <p class="font-bold text-xs text-text-main">${uni.name}</p>
+        <p class="text-text-muted">${uni.flag} ${uni.country} · ${uni.city}</p>
+        <p class="text-xs mt-1">💰 Deposit: <strong>₹${(uni.depositInr/1000).toFixed(0)}K</strong>${urgent ? `<span class="deposit-urgent ml-2">Due: ${uni.depositDeadline}</span>` : ''}</p>
+        <p class="text-xs">📅 Intake: ${uni.intake.join(' · ')}</p>
+        ${uni.scholarship ? `<p class="text-xs text-success mt-1">🎓 ${uni.scholarship.name}</p>` : ''}
+        <button onclick="openUniversityDetail('${uni.id}')" class="mt-2 text-xs font-semibold text-accent hover:underline cursor-pointer">See Full Profile →</button>
+      </div>`;
+    }
+  }
+
+  // Auto-navigate for view_leaderboard — no button needed, just go there
+  if (intent === 'view_leaderboard' && data.navAction) {
+    setTimeout(() => data.navAction(), 800);
+  }
+
+  // Navigation confirm button (for all other intents with navAction)
+  if (data.navLabel && data.navAction && intent !== 'view_leaderboard') {
+    extraHtml += `<button class="bot-nav-btn" onclick="confirmBotNav('${intent}')">
+      ${data.navLabel}
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+    </button>`;
+  }
+
+  msgDiv.innerHTML = `
+    <div class="w-6 h-6 rounded-full bg-accent flex items-center justify-center flex-shrink-0 mt-0.5">
+      <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+    </div>
+    <div class="bot-msg-bubble flex-1">
+      <p>${formatted}</p>
+      ${extraHtml}
+    </div>
+  `;
+  container.appendChild(msgDiv);
+  container.scrollTop = container.scrollHeight;
+  // Save to history (text only)
+  addToHistory('bot', answerHtml || '');
+}
+
+function confirmBotNav(intent) {
+  const data = BOT_INTENT_MAP[intent];
+  if (data && data.navAction) data.navAction();
+  showToast('Navigating…', 'info');
+}
+
+function escHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+/* ═══════════════════════════════════════════════════════
+   BOT V3 — CONVERSATION ENGINE
+═══════════════════════════════════════════════════════ */
+
+const FLOW_INTENTS = ['greeting', 'start_my_day', 'connect_business_team', 'connect_manager_hr_ds', 'clarify_before_answering', 'need_help', 'top_performer', 'incentive_clarify', 'incentive_details_guide', 'training_help', 'live_offers_query', 'earn_more_guide', 'target_today_guide', 'who_to_call_guide', 'my_raised_tickets', 'agreement_reminders', 'raise_support_ticket_guide',
+  'mgr_broadcast', 'mgr_reply_questions',
+  'week_open_tasks', 'isl_pending_shortlist', 'qna_ready_leads', 'f2f_today', 'missing_admit_info',
+  'how_am_i_performing', 'focus_input_output', 'my_standing_vs_org', 'input_output_correlation', 'ask_tl_pl_question'];
+const CANCEL_PHRASES = ['cancel', 'stop', 'nevermind', 'never mind'];
+
+const FOLLOW_UP_CONFIG = {
+  boost_sti:       { msg: 'Want me to show you which students need STI first?',           yesNav: () => { switchTab('tab1'); setTimeout(() => openBoostDrawer('sti'), 300); } },
+  boost_deposit:   { msg: 'Shall I highlight students whose deposit deadline is closest?', yesNav: () => { switchTab('tab1'); setTimeout(() => openBoostDrawer('deposit'), 300); } },
+  boost_lockin:    { msg: 'Want tips on what works best to close lock-ins?',              yesText: "3 proven lock-in tactics:\n\n1. **Share the offer letter early** — congratulate them and create excitement\n2. **Break down the payment** — 'Just ₹5,000 now secures your seat' lowers the barrier\n3. **Set a 48-hour deadline** — maintains urgency without pressure" },
+  incentive_slabs: { msg: 'Want to see how close you are to the next slab right now?',   yesNav: () => switchTab('tab2') },
+  read_metrics:    { msg: 'Which metric do you want to improve most? I can take you there.', needsInput: true },
+};
+
+const CLARIFY_QUESTIONS_MAP = {
+  'help me':         "Sure! What do you need help with? (e.g. tasks, metrics, earnings, training, or connecting with someone)",
+  "im stuck":        "What are you stuck on? Tell me a bit more and I'll point you in the right direction.",
+  "i'm stuck":       "What are you stuck on? Tell me a bit more and I'll point you in the right direction.",
+  'something wrong': "What's the issue? Is it with your metrics, a student, the system, or something else?",
+  'i need help':     "Of course! What specifically do you need help with?",
+};
+
+/* ── History ── */
+
+function addToHistory(role, text) {
+  state.botConversation.history.push({ role, text, timestamp: new Date().toISOString() });
+  saveHistory();
+}
+
+function saveHistory() {
+  if (!state.currentUser) return;
+  try {
+    const key = `bot_history_${state.currentUser.id}`;
+    localStorage.setItem(key, JSON.stringify(state.botConversation.history.slice(-30)));
+  } catch (e) {
+    try {
+      state.botConversation.history = state.botConversation.history.slice(-15);
+      localStorage.setItem(`bot_history_${state.currentUser.id}`, JSON.stringify(state.botConversation.history));
+    } catch (e2) { /* silent */ }
+  }
+}
+
+function restoreHistory() {
+  if (!state.currentUser) return;
+  const saved = localStorage.getItem(`bot_history_${state.currentUser.id}`);
+  if (saved) {
+    try { state.botConversation.history = JSON.parse(saved); } catch (e) { /* noop */ }
+  }
+}
+
+function renderChatHistory() {
+  const hist = state.botConversation.history;
+  if (!hist.length) return;
+  const container = document.getElementById('botMessages');
+  container.innerHTML = '';
+  let lastDateStr = null;
+  hist.forEach(msg => {
+    const date = new Date(msg.timestamp);
+    const dateStr = formatDateSep(date);
+    if (dateStr !== lastDateStr) {
+      lastDateStr = dateStr;
+      const sep = document.createElement('div');
+      sep.className = 'bot-date-sep';
+      sep.innerHTML = `<span>${escHtml(dateStr)}</span>`;
+      container.appendChild(sep);
+    }
+    if (msg.role === 'user') {
+      const d = document.createElement('div');
+      d.className = 'flex justify-end';
+      d.innerHTML = `<div class="user-msg-bubble">${escHtml(msg.text)}</div>`;
+      container.appendChild(d);
+    } else {
+      const d = document.createElement('div');
+      d.className = 'flex gap-2';
+      d.innerHTML = `
+        <div class="w-6 h-6 rounded-full bg-accent flex items-center justify-center flex-shrink-0 mt-0.5">
+          <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+        </div>
+        <div class="bot-msg-bubble"><p>${formatBotText(msg.text)}</p></div>
+      `;
+      container.appendChild(d);
+    }
+  });
+  container.scrollTop = container.scrollHeight;
+}
+
+function formatDateSep(date) {
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const yesterday = new Date(today); yesterday.setDate(today.getDate() - 1);
+  const d = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  if (d.getTime() === today.getTime()) return 'Today';
+  if (d.getTime() === yesterday.getTime()) return 'Yesterday';
+  return date.toLocaleDateString('en-IN', { weekday:'short', day:'numeric', month:'short' });
+}
+
+function formatBotText(text) {
+  return escHtml(text).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
+}
+
+/* ── Clear Chat ── */
+
+function showClearChatConfirm() {
+  document.getElementById('botClearConfirm').classList.remove('hidden');
+  document.getElementById('botClearBtn').classList.add('hidden');
+}
+
+function cancelClearChat() {
+  const el = document.getElementById('botClearConfirm');
+  if (el) el.classList.add('hidden');
+  const btn = document.getElementById('botClearBtn');
+  if (btn) btn.classList.remove('hidden');
+}
+
+function clearChatHistory() {
+  state.botConversation = { flow:null, step:0, collected:{}, history:[], lastIntent:null, shownFollowUps:[] };
+  if (state.currentUser) localStorage.removeItem(`bot_history_${state.currentUser.id}`);
+  document.getElementById('botMessages').innerHTML = `
+    <div class="flex gap-2">
+      <div class="w-6 h-6 rounded-full bg-accent flex items-center justify-center flex-shrink-0 mt-0.5">
+        <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+      </div>
+      <div class="bot-msg-bubble">
+        <p class="text-sm">Hi! I'm your Leap CRM assistant. Ask me about your tasks, metrics, incentives, or any university in the Info Hub. 👋</p>
+      </div>
+    </div>
+  `;
+  cancelClearChat();
+  showToast('Chat history cleared.', 'info');
+}
+
+/* ── Flow Engine ── */
+
+function handleBotMessage(userText) {
+  const bc = state.botConversation;
+  addToHistory('user', userText);
+
+  if (bc.flow) {
+    const lower = userText.toLowerCase().trim();
+    if (CANCEL_PHRASES.some(p => lower.includes(p))) {
+      endFlow();
+      const msg = "No problem, I've cancelled that. What else can I help with?";
+      appendBotMessageLive(`<p>${escHtml(msg)}</p>`);
+      addToHistory('bot', msg);
+      return;
+    }
+    handleFlowStep(userText);
+    return;
+  }
+
+  const { intent, entity } = classifyIntent(userText);
+  bc.lastIntent = intent;
+
+  if (FLOW_INTENTS.includes(intent)) {
+    startFlow(intent, userText);
+  } else if (intent === 'fallback') {
+    // Unknown intent → route through clarify flow before showing fallback
+    startFlow('clarify_before_answering', userText);
+  } else {
+    renderBotResponse(intent, entity);
+    maybeAddFollowUp(intent);
+    // Button-only mode has no free-text fallback — resurface the bucket menu after any simple answer.
+    if (!isManagerRole(state.role)) showPostHelpQuickReplies();
+  }
+}
+
+function startFlow(intent, userText) {
+  const bc = state.botConversation;
+  bc.flow = intent;
+  bc.step = 0;
+  bc.collected = {};
+  removeTypingIndicator();
+  if (intent === 'greeting')               handleGreetingStep(null);
+  else if (intent === 'start_my_day')      handleStartMyDayStep(null);
+  else if (intent === 'connect_business_team') handleConnectBusinessTeamStep(null);
+  else if (intent === 'connect_manager_hr_ds') handleConnectManagerHrDsStep(null);
+  else if (intent === 'need_help')         handleNeedHelpStep(null);
+  else if (intent === 'top_performer')     handleTopPerformerStep(null);
+  else if (intent === 'incentive_clarify') handleIncentiveClarifyStep(null);
+  else if (intent === 'incentive_details_guide') handleIncentiveDetailsStep(null);
+  else if (intent === 'training_help')     handleTrainingStep(null);
+  else if (intent === 'live_offers_query') handleLiveOffersQueryStep(null);
+  else if (intent === 'earn_more_guide')   handleEarnMoreStep(null);
+  else if (intent === 'target_today_guide') handleTargetTodayGuideStep(null);
+  else if (intent === 'who_to_call_guide') handleWhoToCallGuideStep(null);
+  else if (intent === 'my_raised_tickets') handleMyRaisedTicketsStep(null);
+  else if (intent === 'agreement_reminders') handleAgreementRemindersStep(null);
+  else if (intent === 'raise_support_ticket_guide') handleRaiseSupportTicketStep(null);
+  else if (intent === 'mgr_broadcast')      handleMgrBroadcastStep(null);
+  else if (intent === 'mgr_reply_questions') handleMgrReplyQuestionsStep(null);
+  else if (intent === 'week_open_tasks')   handleWeekOpenTasksStep(null);
+  else if (intent === 'isl_pending_shortlist') handleIslPendingShortlistStep(null);
+  else if (intent === 'qna_ready_leads')   handleQnaReadyLeadsStep(null);
+  else if (intent === 'f2f_today')         handleF2fTodayStep(null);
+  else if (intent === 'missing_admit_info') handleMissingAdmitInfoStep(null);
+  else if (intent === 'how_am_i_performing') handleHowAmIPerformingStep(null);
+  else if (intent === 'focus_input_output') handleFocusInputOutputStep(null);
+  else if (intent === 'my_standing_vs_org') handleMyStandingVsOrgStep(null);
+  else if (intent === 'input_output_correlation') handleInputOutputCorrelationStep(null);
+  else if (intent === 'ask_tl_pl_question') handleAskTlPlQuestionStep(null);
+  else if (intent === 'clarify_before_answering') {
+    bc.collected.originalMessage = userText;
+    handleClarifyStep(null);
+  }
+}
+
+function handleFlowStep(userText) {
+  removeTypingIndicator();
+  const flow = state.botConversation.flow;
+  if (flow === 'greeting')                  handleGreetingStep(userText);
+  else if (flow === 'start_my_day')         handleStartMyDayStep(userText);
+  else if (flow === 'connect_business_team') handleConnectBusinessTeamStep(userText);
+  else if (flow === 'connect_manager_hr_ds') handleConnectManagerHrDsStep(userText);
+  else if (flow === 'need_help')            handleNeedHelpStep(userText);
+  else if (flow === 'top_performer')        handleTopPerformerStep(userText);
+  else if (flow === 'incentive_clarify')    handleIncentiveClarifyStep(userText);
+  else if (flow === 'incentive_details_guide') handleIncentiveDetailsStep(userText);
+  else if (flow === 'training_help')        handleTrainingStep(userText);
+  else if (flow === 'live_offers_query')    handleLiveOffersQueryStep(userText);
+  else if (flow === 'earn_more_guide')      handleEarnMoreStep(userText);
+  else if (flow === 'target_today_guide')   handleTargetTodayGuideStep(userText);
+  else if (flow === 'who_to_call_guide')    handleWhoToCallGuideStep(userText);
+  else if (flow === 'my_raised_tickets')    handleMyRaisedTicketsStep(userText);
+  else if (flow === 'agreement_reminders')  handleAgreementRemindersStep(userText);
+  else if (flow === 'raise_support_ticket_guide') handleRaiseSupportTicketStep(userText);
+  else if (flow === 'mgr_broadcast')      handleMgrBroadcastStep(userText);
+  else if (flow === 'mgr_reply_questions') handleMgrReplyQuestionsStep(userText);
+  else if (flow === 'week_open_tasks')   handleWeekOpenTasksStep(userText);
+  else if (flow === 'isl_pending_shortlist') handleIslPendingShortlistStep(userText);
+  else if (flow === 'qna_ready_leads')   handleQnaReadyLeadsStep(userText);
+  else if (flow === 'f2f_today')         handleF2fTodayStep(userText);
+  else if (flow === 'missing_admit_info') handleMissingAdmitInfoStep(userText);
+  else if (flow === 'how_am_i_performing') handleHowAmIPerformingStep(userText);
+  else if (flow === 'focus_input_output') handleFocusInputOutputStep(userText);
+  else if (flow === 'my_standing_vs_org') handleMyStandingVsOrgStep(userText);
+  else if (flow === 'input_output_correlation') handleInputOutputCorrelationStep(userText);
+  else if (flow === 'ask_tl_pl_question') handleAskTlPlQuestionStep(userText);
+  else if (flow === 'clarify_before_answering') handleClarifyStep(userText);
+}
+
+function endFlow() {
+  state.botConversation.flow = null;
+  state.botConversation.step = 0;
+  state.botConversation.collected = {};
+}
+
+/* ── Flow 1: start_my_day ── */
+
+function handleStartMyDayStep(userText) {
+  const bc = state.botConversation;
+  const firstName = (state.currentUser?.name || 'there').split(' ')[0];
+
+  if (bc.step === 0) {
+    const c = getCounselorData();
+    const today = new Date();
+
+    // Metrics report card — STIs/Deposits are real tracked Volume Metrics (STI Done / Deposits).
+    // Lock-in uses the real Conversion Funnel's CA->Lock-in (14D) % against its 35% target (not the
+    // raw daily lock-in count) specifically so its "Boost" CTA below has somewhere real to land —
+    // there is no "Boost Lock-in" card on the dashboard, only Boost STI/Deposit/Revenue/Referrals,
+    // and CA->Lock-in underperformance is what the Boost Revenue pipeline (agreements, premium
+    // servicing pitches) is meant to move.
+    const { funnelRows: _dayFunnelRows } = buildPerfRows([state.currentUser], 1);
+    const lockinFunnel = _dayFunnelRows.find(r => r.name === '05.CA->LockIn (14D)');
+    const metrics = [
+      { label:'STIs',             actual:c.stis,                target:TARGETS.stis,              navType:'sti',     ctaLabel:'STIs',     isPct:false },
+      { label:'Deposits',         actual:c.deposits,             target:TARGETS.deposits,           navType:'deposit', ctaLabel:'Deposits', isPct:false },
+      { label:'CA→Lock-in (14d)', actual:lockinFunnel?.aYTD ?? 0, target:lockinFunnel?.tYTD ?? 35,   navType:'revenue',  ctaLabel:'Revenue',  isPct:true  },
+    ];
+    metrics.forEach(m => { m.pct = Math.round((m.actual / m.target) * 100); });
+    metrics.sort((a, b) => a.pct - b.pct); // weakest first
+    const weakest = metrics[0];
+
+    const emo = p => p >= 100 ? '🟢' : p >= 60 ? '🟡' : '🔴';
+    const reportLines = metrics.map(m => `${emo(m.pct)} **${m.label}:** ${m.actual}${m.isPct?'%':''}/${m.target}${m.isPct?'%':''} (${m.pct}%)`).join('\n');
+
+    // Priority students: overdue follow-ups + high-value stage
+    const stagePriority = { lockin:4, deposit:3, application:2, sti:1 };
+    const priorityStudents = getViewingStudents()
+      .filter(s => s.stage !== 'joined')
+      .map(s => {
+        const fDate = s.followup ? new Date(s.followup) : null;
+        const daysOverdue = fDate ? Math.floor((today - fDate) / 86400000) : -99;
+        return { ...s, daysOverdue, stagePri: stagePriority[s.stage] || 0 };
+      })
+      .sort((a, b) => {
+        if (a.daysOverdue > 0 && b.daysOverdue <= 0) return -1;
+        if (b.daysOverdue > 0 && a.daysOverdue <= 0) return 1;
+        if (a.daysOverdue > 0 && b.daysOverdue > 0) return b.daysOverdue - a.daysOverdue;
+        return b.stagePri - a.stagePri;
+      });
+
+    const top1 = priorityStudents[0];
+    const top2 = priorityStudents[1];
+
+    let actionLines = [];
+    if (top1) {
+      const od1 = top1.daysOverdue > 0 ? ` _(${top1.daysOverdue}d overdue)_` : '';
+      actionLines.push(`📞 **Call ${top1.name}** — ${top1.stage.toUpperCase()} · ${top1.course}${od1}`);
+    }
+    if (top2) {
+      const od2 = top2.daysOverdue > 0 ? ` _(${top2.daysOverdue}d overdue)_` : '';
+      actionLines.push(`📋 **Follow up with ${top2.name}** — ${top2.stage.toUpperCase()} · ${top2.course}${od2}`);
+    }
+    const weakestDesc = weakest.navType === 'revenue'
+      ? `🎯 **Boost Revenue** — CA→Lock-in (14d) at ${weakest.pct}% of target, needs focus today`
+      : `🎯 **Boost ${weakest.label}** — at ${weakest.pct}% of target, needs focus today`;
+    actionLines.push(weakestDesc);
+
+    const msgText = `Good morning, ${firstName}! Here's your day plan 📋\n\n**Yesterday's Report Card:**\n${reportLines}\n\n**Top Actions for Today:**\n${actionLines.join('\n')}\n\nWhere do you want to start?`;
+
+    bc.collected.top1Id   = top1?.id;
+    bc.collected.top1Name = top1?.name;
+    bc.collected.top2Id   = top2?.id;
+    bc.collected.top2Name = top2?.name;
+    bc.collected.urgentNavType  = weakest.navType;
+    bc.collected.urgentLabel    = weakest.label;
+    bc.step = 1;
+
+    appendBotMessageLive(`<p>${formatBotText(msgText)}</p>`);
+    addToHistory('bot', msgText);
+
+    const qrs = [];
+    if (top1) qrs.push(`📞 Call ${top1.name}`);
+    if (top2) qrs.push(`📋 Follow up ${top2.name}`);
+    qrs.push(`🎯 Boost ${weakest.ctaLabel}`);
+    qrs.push(`📑 Open Task List`);
+    appendQuickReplies(qrs);
+
+  } else if (bc.step === 1) {
+    const lower = (userText || '').toLowerCase();
+    const top1Id   = bc.collected.top1Id;
+    const top1Name = bc.collected.top1Name || '';
+    const top2Id   = bc.collected.top2Id;
+    const top2Name = bc.collected.top2Name || '';
+    const navType  = bc.collected.urgentNavType;
+    const navLabel = bc.collected.urgentLabel;
+
+    if (top1Id && (lower.includes('call') || lower.includes(top1Name.toLowerCase()))) {
+      const msg = `Taking you to ${top1Name}'s profile. Make it count! 💪`;
+      appendBotMessageLive(`<p>${escHtml(msg)}</p>`);
+      addToHistory('bot', msg);
+      setTimeout(() => { switchTab('tab1'); setTimeout(() => openStudentDetail(top1Id), 350); }, 300);
+    } else if (top2Id && (lower.includes('follow') || lower.includes(top2Name.toLowerCase()))) {
+      const msg = `Opening ${top2Name}'s profile. Good luck! 💪`;
+      appendBotMessageLive(`<p>${escHtml(msg)}</p>`);
+      addToHistory('bot', msg);
+      setTimeout(() => { switchTab('tab1'); setTimeout(() => openStudentDetail(top2Id), 350); }, 300);
+    } else if (lower.includes('task')) {
+      const msg = "Here's your full task list — let's clear those to-dos! ✅";
+      appendBotMessageLive(`<p>${escHtml(msg)}</p>`);
+      addToHistory('bot', msg);
+      setTimeout(() => { switchTab('tab1'); setTimeout(() => openOwnTaskDrawer(), 350); }, 300);
+    } else if (navType === 'revenue') {
+      const msg = `Heading to **Boost Revenue** — ${getRevenueStudents().length} opportunities waiting. Go get it! 🎯`;
+      appendBotMessageLive(`<p>${formatBotText(msg)}</p>`);
+      addToHistory('bot', msg);
+      setTimeout(() => { switchTab('tab1'); setTimeout(() => openBoostRevenueDrawer(), 350); }, 300);
+    } else {
+      const msg = `Heading to **Boost ${navLabel}** — ${getViewingStudents().filter(s => s.stage === navType).length} students waiting. Go get it! 🎯`;
+      appendBotMessageLive(`<p>${formatBotText(msg)}</p>`);
+      addToHistory('bot', msg);
+      setTimeout(() => { switchTab('tab1'); setTimeout(() => openBoostDrawer(navType), 350); }, 300);
+    }
+    endFlow();
+    showPostHelpQuickReplies();
+  }
+}
+
+/* ── Flow 2: connect_business_team ── */
+
+function handleConnectBusinessTeamStep(userText) {
+  const bc = state.botConversation;
+
+  if (bc.step === 0) {
+    bc.step = 1;
+    const msg = "Sure! Before I pass this on — what's the reason you'd like to connect?\n(e.g. training query, process issue, product feedback, escalation)";
+    appendBotMessageLive(`<p>${formatBotText(msg)}</p>`);
+    addToHistory('bot', msg);
+    appendQuickReplies(['Training Query', 'Process Issue', 'Product Feedback', 'Other']);
+
+  } else if (bc.step === 1) {
+    bc.collected.purpose = userText;
+    bc.step = 2;
+    const msg = `Got it — **${userText}**. What's a good time for the business team to reach out to you?`;
+    appendBotMessageLive(`<p>${formatBotText(msg)}</p>`);
+    addToHistory('bot', msg.replace(/\*\*/g, ''));
+    appendQuickReplies(['This morning', 'This afternoon', 'Tomorrow morning', 'Anytime this week']);
+
+  } else if (bc.step === 2) {
+    bc.collected.preferredTime = userText;
+    const purpose = bc.collected.purpose.slice(0, 200);
+    const time = bc.collected.preferredTime;
+    const name = state.currentUser?.name || 'Counselor';
+
+    const msg = `Perfect. I've passed this on to the business team:\n📋 **Purpose:** ${purpose}\n🕐 **Preferred time:** ${time}\n📛 **Your name:** ${name}\n\nThey'll reach out to you. Is there anything else I can help with?`;
+    appendBotMessageLive(`<p>${formatBotText(msg)}</p>`);
+    addToHistory('bot', msg.replace(/\*\*/g, ''));
+    createBotTicket(purpose, time);
+    endFlow();
+  }
+}
+
+/* ── Flow 3: clarify_before_answering ── */
+
+function handleClarifyStep(userText) {
+  const bc = state.botConversation;
+
+  if (bc.step === 0) {
+    bc.step = 1;
+    const original = (bc.collected.originalMessage || '').toLowerCase();
+    let question = "Could you tell me a bit more about what you need help with?";
+    for (const [trigger, q] of Object.entries(CLARIFY_QUESTIONS_MAP)) {
+      if (original.includes(trigger)) { question = q; break; }
+    }
+    appendBotMessageLive(`<p>${escHtml(question)}</p>`);
+    addToHistory('bot', question);
+
+  } else if (bc.step === 1) {
+    const combined = (bc.collected.originalMessage || '') + ' ' + userText;
+    const { intent, entity } = classifyIntent(combined);
+    endFlow();
+
+    if (intent === 'fallback' || intent === 'clarify_before_answering') {
+      const msg = "I still couldn't quite get that — here's how you can get help:";
+      appendBotMessageLive(`<p>${escHtml(msg)}</p>`);
+      addToHistory('bot', msg);
+      renderBotResponse('fallback', '');
+    } else if (FLOW_INTENTS.includes(intent) && intent !== 'clarify_before_answering') {
+      // Flow intent matched — start that flow properly instead of calling renderBotResponse
+      startFlow(intent, combined);
+    } else {
+      renderBotResponse(intent, entity);
+      maybeAddFollowUp(intent);
+    }
+  }
+}
+
+/* Returns the current counsellor's own TL and PL (their reporting line), or null for either if
+   unassigned — used to gate "Ask TL/PL a Question" and to route it to the right recipient. */
+function getCounsellorReportingLine() {
+  const cid = state.currentUser?.id;
+  const tlId = Object.keys(HIERARCHY.tlToCounselors).find(tid => (HIERARCHY.tlToCounselors[tid]||[]).includes(cid));
+  const tl = tlId ? TEAM_LEADS.find(t => t.id === parseInt(tlId)) : null;
+  const podId = tlId ? Object.keys(HIERARCHY.podToTLs).find(pid => (HIERARCHY.podToTLs[pid]||[]).includes(parseInt(tlId))) : null;
+  const pl = podId ? POD_LEADERS.find(p => p.id === parseInt(podId)) : null;
+  return { tl: tl || null, pl: pl || null };
+}
+
+/* ── Chat option buckets — Counsellor Chatbot PRD, Section 4. Built as a function (not a flat
+   const) since "Ask TL/PL a Question" is hidden when the counsellor has neither a TL nor a PL. ── */
+function getCounsellorChatBuckets() {
+  const line = getCounsellorReportingLine();
+  const supportOptions = ['My Raised Tickets', 'Raise Support Ticket', 'Connect with Manager/HR/DS'];
+  if (line.tl || line.pl) supportOptions.push('Ask TL/PL a Question');
+
+  return [
+    { key:'day_tasks',   label:'📋 My Day & Tasks',
+      options: ['How to Start my Day', 'Target for Today', 'Who Should I Call Today', 'Agreement Reminders',
+        'What Should I Do This Week', 'Leads Pending Shortlist (60+ Mins)', 'Leads With Q&A Ready',
+        'F2F Scheduled Today', 'Missing Info — Students Admit Preference Details'] },
+    { key:'performance',  label:'🏆 Performance & Leaderboard',
+      options: ['Top Performer in Org', 'How Am I Performing', 'Where Should I Focus (Input vs Output)', 'My Standing vs Org', 'How Input Affects Output'] },
+    { key:'incentives',   label:'💰 Incentives & Earnings',
+      options: ['Live Offers Running?', 'Incentive Details', 'How Can I Earn More'] },
+    { key:'learning',     label:'🎓 Learning & Growth',
+      options: ['Training / I Want to Learn'] },
+    { key:'support',      label:'🛠️ Support & Help',
+      options: supportOptions },
+  ];
+}
+
+/* The bucket-menu system below (getActiveChatBuckets / appendBucketMenu / appendBucketSubOptions)
+   is counsellor-only now — managers get the flat 2-option renderMgrMainMenu() instead. */
+function getActiveChatBuckets() {
+  return getCounsellorChatBuckets();
+}
+
+/* Manager (TL/PL/SM/Director) chatbot — reduced to exactly 2 functions: send a broadcast, and
+   reply to pending questions from counsellors. Rendered as flat quick-replies (no bucket-menu
+   nesting) since there are only 2 top-level actions. */
+function renderMgrMainMenu() {
+  const isTlPl = state.role === 'team_lead' || state.role === 'pod_leader';
+  const pendingCount = isTlPl ? getPendingTlPlQuestions().length : getPendingConnectRequests().length;
+  const questionsLabel = pendingCount ? `❓ Questions from Counsellors (${pendingCount})` : '❓ Questions from Counsellors';
+  appendQuickReplies(['📢 Send Broadcast Communication', questionsLabel]);
+}
+
+/* ── Helper: post-help quick replies ── */
+function showPostHelpQuickReplies() {
+  if (isManagerRole(state.role)) {
+    setTimeout(() => renderMgrMainMenu(), 400);
+    return;
+  }
+  hideBotInputRow();
+  setTimeout(() => appendBucketMenu(), 400);
+}
+
+function appendBucketMenu() {
+  const container = document.getElementById('botMessages');
+  const row = document.createElement('div');
+  row.className = 'quick-reply-row';
+  getActiveChatBuckets().forEach(bucket => {
+    const btn = document.createElement('button');
+    btn.className = 'quick-reply-btn';
+    btn.textContent = bucket.label;
+    btn.addEventListener('click', () => {
+      // Selecting a bucket is always a fresh choice — clear any lingering flow (e.g. a prior
+      // option's own follow-up quick-replies that never got clicked) so it can't hijack this click.
+      endFlow();
+      row.querySelectorAll('button').forEach(b => { b.disabled = true; });
+      row.remove();
+      appendUserMessage(bucket.label);
+      addToHistory('user', bucket.label);
+      appendTypingIndicator();
+      setTimeout(() => {
+        removeTypingIndicator();
+        const msg = `Sure! Here's what I can help with under ${bucket.label} 👇`;
+        appendBotMessageLive(`<p>${escHtml(msg)}</p>`);
+        addToHistory('bot', msg);
+        setTimeout(() => appendBucketSubOptions(bucket.key), 400);
+      }, 400);
+    }, { once: true });
+    row.appendChild(btn);
+  });
+  container.appendChild(row);
+  container.scrollTop = container.scrollHeight;
+}
+
+function appendBucketSubOptions(bucketKey) {
+  const bucket = getActiveChatBuckets().find(b => b.key === bucketKey);
+  if (!bucket) return;
+  const container = document.getElementById('botMessages');
+  const row = document.createElement('div');
+  row.className = 'quick-reply-row';
+  [...bucket.options, '⬅ Back to Main Menu'].forEach(label => {
+    const btn = document.createElement('button');
+    btn.className = 'quick-reply-btn';
+    btn.textContent = label;
+    btn.addEventListener('click', () => {
+      // Same as above — a sub-option click is always a fresh intent, never a continuation
+      // of whatever flow happened to still be open, so clear it before routing.
+      endFlow();
+      row.querySelectorAll('button').forEach(b => { b.disabled = true; });
+      row.remove();
+      appendUserMessage(label);
+      addToHistory('user', label);
+      appendTypingIndicator();
+      setTimeout(() => {
+        removeTypingIndicator();
+        if (label === '⬅ Back to Main Menu') {
+          const msg = `No problem! How can I help you today?`;
+          appendBotMessageLive(`<p>${escHtml(msg)}</p>`);
+          addToHistory('bot', msg);
+          setTimeout(() => appendBucketMenu(), 400);
+          return;
+        }
+        processBotInput(label);
+      }, 400);
+    }, { once: true });
+    row.appendChild(btn);
+  });
+  container.appendChild(row);
+  container.scrollTop = container.scrollHeight;
+}
+
+/* ── Flow 0: greeting ── */
+function handleGreetingStep(userText) {
+  const bc = state.botConversation;
+  const firstName = (state.currentUser?.name || 'there').split(' ')[0];
+
+  if (bc.step === 0) {
+    bc.step = 1;
+    const msg = `Hi ${firstName}! 😊 How is your day going?`;
+    appendBotMessageLive(`<p>${escHtml(msg)}</p>`);
+    addToHistory('bot', msg);
+    setTimeout(() => appendQuickReplies(['Good', 'Not okay']), 400);
+
+  } else if (bc.step === 1) {
+    const lower = (userText || '').toLowerCase().trim();
+    const isNotOkay = lower.includes('not okay') || lower.includes('not ok') || lower === 'not' || lower.includes('bad') || lower.includes('sad') || lower.includes('tired') || lower.includes('stressed');
+
+    if (isNotOkay) {
+      bc.step = 2;
+      bc.collected.sentimentPath = 'not_okay';
+      const recipients = _mgrConnectRecipientOptions().join(', ').replace(/, ([^,]*)$/, ' or $1');
+      const msg = `Oh no, ${firstName} — sorry to hear this 😔\n\nWant me to connect you with ${recipients}? Let's get this sorted and make sure you feel better before you start working again.`;
+      appendBotMessageLive(`<p>${formatBotText(msg)}</p>`);
+      addToHistory('bot', msg.replace(/\n\n/g, ' '));
+      setTimeout(() => appendQuickReplies(['Yes', 'No']), 400);
+    } else {
+      // Good path
+      endFlow();
+      const msg = `Awesome! I'm ready to help make it even better, How can I help you make it even better today`;
+      appendBotMessageLive(`<p>${escHtml(msg)}</p>`);
+      addToHistory('bot', msg);
+      showPostHelpQuickReplies();
+    }
+
+  } else if (bc.step === 2) {
+    // After "Not okay" → Yes = connect, No = show options
+    const lower = (userText || '').toLowerCase();
+    if (lower.includes('yes') || lower === 'yes') {
+      endFlow();
+      setTimeout(() => {
+        state.botConversation.flow = 'connect_manager_hr_ds';
+        state.botConversation.step = 0;
+        state.botConversation.collected = {};
+        handleConnectManagerHrDsStep(null);
+      }, 300);
+    } else {
+      endFlow();
+      const msg = `Alright! Let's keep going 💪 How can I help you today?`;
+      appendBotMessageLive(`<p>${escHtml(msg)}</p>`);
+      addToHistory('bot', msg);
+      showPostHelpQuickReplies();
+    }
+  }
+}
+
+/* ── Flow: training_help ── */
+function handleTrainingStep(userText) {
+  const bc = state.botConversation;
+
+  if (bc.step === 0) {
+    bc.step = 1;
+    const msg = 'Sure! What type of training are you looking for?';
+    appendBotMessageLive(`<p>${escHtml(msg)}</p>`);
+    addToHistory('bot', msg);
+    appendQuickReplies(['Domain Training', 'Soft Skills', 'New Features', 'System Training']);
+
+  } else if (bc.step === 1) {
+    endFlow();
+    const lower = (userText || '').toLowerCase();
+    let label = userText;
+    if (lower.includes('domain'))   label = 'Domain Training';
+    if (lower.includes('soft'))     label = 'Soft Skills';
+    if (lower.includes('new') || lower.includes('feature')) label = 'New Features';
+    if (lower.includes('system'))   label = 'System Training';
+
+    const msg = `Got it! Taking you to the **${label}** modules in the Learning & Development tab 📚`;
+    appendBotMessageLive(`<p>${formatBotText(msg)}</p>`);
+    addToHistory('bot', msg.replace(/\*\*/g,''));
+    setTimeout(() => {
+      switchTab('tab3');
+      setTimeout(() => {
+        const el = document.getElementById('trainingModulesLD') || document.getElementById('trainingModules');
+        const mc = document.getElementById('mainContent');
+        if (el && mc) mc.scrollTo({ top: el.getBoundingClientRect().top + mc.scrollTop - 80, behavior: 'smooth' });
+      }, 400);
+    }, 700);
+    if (!isManagerRole(state.role)) showPostHelpQuickReplies();
+  }
+}
+
+/* ── Flow: live_offers_query ── */
+function handleLiveOffersQueryStep(userText) {
+  const bc = state.botConversation;
+  const isMgr = isManagerRole(state.role);
+
+  if (bc.step === 0) {
+    bc.step = 1;
+    const msg = '🎁 Here are the active promotional tracks running right now.';
+    appendBotMessageLive(`<p>${escHtml(msg)}</p>`);
+    addToHistory('bot', msg);
+    appendQuickReplies(isMgr ? ['Offers for Students', 'Offers for Counsellors', 'Offers for Managers'] : ['Offers for Students', 'Offers for Me']);
+
+  } else if (bc.step === 1) {
+    endFlow();
+    const lower = (userText || '').toLowerCase();
+    const forManager    = isMgr && lower.includes('manager');
+    const forCounsellor = !forManager && (lower.includes('counsellor') || lower.includes('counselor') || lower.includes('me') || lower.includes('for me'));
+    const msg = forManager
+      ? '🎁 Taking you to the **Leadership Bonus Offers** section!'
+      : forCounsellor
+        ? '🎁 Taking you to the **Live for Counsellors** section!'
+        : '🎁 Taking you to the **Live Offers for Students** section!';
+    appendBotMessageLive(`<p>${formatBotText(msg)}</p>`);
+    addToHistory('bot', msg.replace(/\*\*/g,''));
+    setTimeout(() => {
+      switchTab('tab2');
+      setTimeout(() => {
+        const body = document.getElementById('body-ongoingOffers');
+        if (body?.classList.contains('hidden')) toggleSection('ongoingOffers');
+        setTimeout(() => {
+          const elId = forManager ? 'mgrManagerOffersRow' : forCounsellor ? 'counsellorOffersRow' : 'offersRow';
+          const el = document.getElementById(elId);
+          const mc = document.getElementById('mainContent');
+          if (el && mc) mc.scrollTo({ top: el.getBoundingClientRect().top + mc.scrollTop - 80, behavior: 'smooth' });
+        }, 50);
+      }, 400);
+    }, 700);
+    if (!isMgr) showPostHelpQuickReplies();
+  }
+}
+
+/* ── Flow: earn_more_guide ── */
+function handleEarnMoreStep(userText) {
+  const bc = state.botConversation;
+
+  if (bc.step === 0) {
+    bc.step = 1;
+    const msg = '💰 Great question! The fastest way to earn more is to open your **Opportunity Pipeline** — it shows exactly which students are ready to convert.\n\nShould I take you to the Opportunity Pipeline now?';
+    appendBotMessageLive(`<p>${formatBotText(msg)}</p>`);
+    addToHistory('bot', msg.replace(/\*\*/g,''));
+    appendQuickReplies(['Yes, take me there!', 'No, tell me more']);
+
+  } else if (bc.step === 1) {
+    endFlow();
+    const lower = (userText || '').toLowerCase();
+    if (lower.includes('yes') || lower.includes('take') || lower.includes('there')) {
+      const msg = '📊 Opening the Opportunity Pipeline for you!';
+      appendBotMessageLive(`<p>${escHtml(msg)}</p>`);
+      addToHistory('bot', msg);
+      setTimeout(() => { switchTab('tab2'); setTimeout(() => openOpportunityDrawer(), 500); }, 700);
+    } else {
+      const msg = '📌 **3 ways to earn more right now:**\n\n• 🎯 Convert students with pending deposits — check **Boost Deposit** on your dashboard\n• 💡 Check **Live for Counsellors** offers in the Incentives tab for active performance sprints\n• 📞 Call students in your deferral list — they already have admits!';
+      appendBotMessageLive(`<p>${formatBotText(msg)}</p>`);
+      addToHistory('bot', msg.replace(/\*\*/g,''));
+    }
+    showPostHelpQuickReplies();
+  }
+}
+
+/* ── Flow: target_today_guide ── */
+function handleTargetTodayGuideStep(userText) {
+  const bc = state.botConversation;
+
+  if (bc.step === 0) {
+    bc.step = 1;
+    const c = getCounselorData();
+    const msg = `🎯 **Your targets for today:**\n\n• STIs: ${c.stis}/${TARGETS.stis} · Deposits: ${c.deposits}/${TARGETS.deposits}\n• Lock-ins: ${c.lockins}/${TARGETS.lockins}\n\nShould I take you to the **Action Required — Boost Tasks** section?`;
+    appendBotMessageLive(`<p>${formatBotText(msg)}</p>`);
+    addToHistory('bot', msg.replace(/\*\*/g,''));
+    appendQuickReplies(['Yes, take me there!', 'No thanks']);
+
+  } else if (bc.step === 1) {
+    endFlow();
+    const lower = (userText || '').toLowerCase();
+    if (lower.includes('yes') || lower.includes('take') || lower.includes('there')) {
+      const msg = '📋 Taking you to Action Required — Boost Tasks!';
+      appendBotMessageLive(`<p>${escHtml(msg)}</p>`);
+      addToHistory('bot', msg);
+      setTimeout(() => {
+        switchTab('tab1');
+        setTimeout(() => {
+          const el = document.getElementById('boostCardsGrid');
+          const mc = document.getElementById('mainContent');
+          if (el && mc) mc.scrollTo({ top: el.getBoundingClientRect().top + mc.scrollTop - 80, behavior: 'smooth' });
+        }, 400);
+      }, 600);
+    } else {
+      const msg = '👍 No problem! Your dashboard is always the best place to start — just look at the **Action Required** cards at the top for today\'s priorities.';
+      appendBotMessageLive(`<p>${formatBotText(msg)}</p>`);
+      addToHistory('bot', msg.replace(/\*\*/g,''));
+    }
+    showPostHelpQuickReplies();
+  }
+}
+
+/* ── Flow: who_to_call_guide ── */
+function handleWhoToCallGuideStep(userText) {
+  const bc = state.botConversation;
+
+  if (bc.step === 0) {
+    bc.step = 1;
+    const students = getViewingStudents();
+    const todayStr = new Date().toISOString().split('T')[0];
+    const due = students.filter(s => s.followup && s.followup <= todayStr).slice(0,3);
+    const lines = due.length
+      ? due.map(s => `• **${s.name}** (${s.stage}) — follow-up due ${s.followup}`).join('\n')
+      : '• You\'re all caught up ✅ — no leads pending a call today.';
+    const msg = `📞 **Priority students to call today:**\n\n${lines}\n\nShould I take you to **Action Required — Boost Tasks** for the full list?`;
+    appendBotMessageLive(`<p>${formatBotText(msg)}</p>`);
+    addToHistory('bot', msg.replace(/\*\*/g,''));
+    appendQuickReplies(due.length ? ['Yes, take me there!', 'No thanks'] : ['No thanks']);
+
+  } else if (bc.step === 1) {
+    endFlow();
+    const lower = (userText || '').toLowerCase();
+    if (lower.includes('yes') || lower.includes('take') || lower.includes('there')) {
+      const msg = '📋 Taking you to Action Required — Boost Tasks!';
+      appendBotMessageLive(`<p>${escHtml(msg)}</p>`);
+      addToHistory('bot', msg);
+      setTimeout(() => {
+        switchTab('tab1');
+        setTimeout(() => {
+          const el = document.getElementById('boostCardsGrid');
+          const mc = document.getElementById('mainContent');
+          if (el && mc) mc.scrollTo({ top: el.getBoundingClientRect().top + mc.scrollTop - 80, behavior: 'smooth' });
+        }, 400);
+      }, 600);
+    } else {
+      const msg = '👍 Got it! Your **Boost STI** and **Boost Deposit** cards on the dashboard show exactly who needs attention first.';
+      appendBotMessageLive(`<p>${formatBotText(msg)}</p>`);
+      addToHistory('bot', msg.replace(/\*\*/g,''));
+    }
+    showPostHelpQuickReplies();
+  }
+}
+
+/* ── Flow 4: need_help ── */
+
+function handleNeedHelpStep(userText) {
+  const bc = state.botConversation;
+
+  if (bc.step === 0) {
+    bc.step = 1;
+    const msg = "Of course! What kind of help do you need?\n\n• **Connect with Business Team** — for escalations, campaigns, or training queries\n• **Connect with your Manager** — to reach your Team Lead directly";
+    appendBotMessageLive(`<p>${formatBotText(msg)}</p>`);
+    addToHistory('bot', msg.replace(/\*\*/g,''));
+    appendQuickReplies(['Connect with Business Team', 'Connect with my Manager', 'Something else']);
+
+  } else if (bc.step === 1) {
+    const lower = userText.toLowerCase();
+    endFlow();
+
+    if (lower.includes('business team') || lower.includes('business')) {
+      // Hand off to the connect_business_team flow
+      const msg = "Sure, let me connect you with the Business Team!";
+      appendBotMessageLive(`<p>${escHtml(msg)}</p>`);
+      addToHistory('bot', msg);
+      setTimeout(() => {
+        bc.flow = 'connect_business_team';
+        bc.step = 0;
+        bc.collected = {};
+        handleConnectBusinessTeamStep(null);
+      }, 400);
+
+    } else if (lower.includes('manager') || lower.includes('team lead') || lower.includes('tl')) {
+      const u = state.currentUser;
+      const tl = COUNSELORS.find(c => c.name === u?.manager) || TEAM_LEADS.find(t => t.name === u?.manager);
+      const tlName = u?.manager || 'your Team Lead';
+      const tlEmail = tl?.email || 'Check with Ops for contact details';
+      const msg = `👤 **Your Manager: ${tlName}**\n\n📧 Email: ${tlEmail}\n\nYou can also message them directly in the **Chat in Internal Team** panel (the green bubble on the right).`;
+      appendBotMessageLive(`<p>${formatBotText(msg)}</p>`);
+      addToHistory('bot', msg.replace(/\*\*/g,''));
+
+    } else {
+      // Reroute to clarify
+      const msg = "Got it! Can you tell me a bit more about what you need? I can help with metrics, students, incentives, training, or connecting with someone.";
+      appendBotMessageLive(`<p>${escHtml(msg)}</p>`);
+      addToHistory('bot', msg);
+      appendQuickReplies(['Metrics help', 'Student pipeline', 'Incentives', 'Training resources']);
+    }
+  }
+}
+
+/* ── Flow 5: top_performer ── */
+
+function handleTopPerformerStep(userText) {
+  const bc = state.botConversation;
+
+  const METRIC_BUTTONS = ['Revenue', 'CA > STI (30d)', 'STIs', 'Deposits', 'CA > Lock-ins', 'CA > F2F'];
+
+  if (bc.step === 0) {
+    bc.step = 1;
+    const msg = "Great question! Which metric are you asking about?";
+    appendBotMessageLive(`<p>${escHtml(msg)}</p>`);
+    addToHistory('bot', msg);
+    appendQuickReplies(METRIC_BUTTONS);
+
+  } else if (bc.step === 1) {
+    const lower = userText.toLowerCase().trim();
+
+    // Map input to a MGR_TOP_PERF_METRICS key (shared with the manager bot's Top Performer flow).
+    let metricKey = null;
+    if (lower.includes('30d') || lower.includes('sti (30')) metricKey = 'casti30d';
+    else if (lower.includes('lock')) metricKey = 'calockin';
+    else if (lower.includes('f2f')) metricKey = 'caf2f';
+    else if (lower.includes('sti')) metricKey = 'sti';
+    else if (lower.includes('deposit')) metricKey = 'deposit';
+    else if (lower.includes('revenue')) metricKey = 'revenue';
+
+    if (!metricKey) {
+      const msg = "I'm not sure which metric you meant. Please pick one:";
+      appendBotMessageLive(`<p>${escHtml(msg)}</p>`);
+      addToHistory('bot', msg);
+      appendQuickReplies(METRIC_BUTTONS);
+      return;
+    }
+    endFlow();
+
+    const metric = MGR_TOP_PERF_METRICS[metricKey];
+    const rows = _buildTierMetricRows('counsellor', '');
+    const ranked = rows
+      .map(r => ({ name:r.name, value: metric.value(r) }))
+      .filter(r => r.value !== null && r.value !== undefined)
+      .sort((a,b) => b.value - a.value)
+      .slice(0, 3);
+    const medals = ['🥇', '🥈', '🥉'];
+    const lines = ranked.length
+      ? ranked.map((r,i) => `${medals[i]} ${r.name} — ${metric.fmt(r.value)}`).join('\n')
+      : 'No data available for this metric.';
+
+    const msg = `📊 Top performers for ${metric.label}:\n\n${lines}`;
+    appendBotMessageLive(`<p>${formatBotText(msg)}</p>`);
+    addToHistory('bot', msg.replace(/\n/g,' '));
+    bc.collected.metricKey = metricKey;
+    setTimeout(() => appendQuickReplies(['Show me the leaderboard']), 600);
+  }
+}
+
+/* Shared with renderStandupTable()'s own status computation — kept as a small standalone
+   helper here rather than refactoring the render function, to minimise risk to that code path. */
+function _statusForRow(r) {
+  const aYTD = typeof r.aYTD === 'number' ? r.aYTD : parseFloat(String(r.aYTD).replace(/[^0-9.]/g,''));
+  const tYTD = typeof r.tYTD === 'number' ? r.tYTD : parseFloat(String(r.tYTD).replace(/[^0-9.]/g,''));
+  if (tYTD === 0) return 'focus';
+  if (r.isDropRate) return aYTD <= tYTD ? 'good' : 'focus';
+  return aYTD >= tYTD ? 'good' : 'focus';
+}
+
+/* ── Flow: how_am_i_performing ── */
+function handleHowAmIPerformingStep(userText) {
+  const bc = state.botConversation;
+  if (bc.step === 0) {
+    bc.step = 1;
+    const { volumeRows, funnelRows } = buildPerfRows([state.currentUser], 1);
+    [...volumeRows, ...funnelRows].forEach(r => { r.status = _statusForRow(r); });
+    const goodCnt    = [...volumeRows, ...funnelRows].filter(r => r.status === 'good').length;
+    const ontrackCnt = [...volumeRows, ...funnelRows].filter(r => r.status === 'ontrack').length;
+    const focusCnt   = [...volumeRows, ...funnelRows].filter(r => r.status === 'focus').length;
+    const caSTIRow    = funnelRows.find(r => r.name === '03.CA->STI (14D)');
+    const caLockInRow = funnelRows.find(r => r.name === '05.CA->LockIn (14D)');
+    const statusLabel = r => r.status === 'good' ? 'Good' : r.status === 'ontrack' ? 'On Track' : 'Focus';
+    const msg = `📊 Your performance snapshot:\n\n✅ Good: ${goodCnt} metrics\n🟡 On Track: ${ontrackCnt} metrics\n🔴 Focus: ${focusCnt} metrics\n\n🎯 CA→STI (14d): ${caSTIRow?.aYTD ?? 0}% vs ${caSTIRow?.tYTD ?? 0}% target — ${caSTIRow ? statusLabel(caSTIRow) : '—'}\n🎯 CA→Lock-in (14d): ${caLockInRow?.aYTD ?? 0}% vs ${caLockInRow?.tYTD ?? 0}% target — ${caLockInRow ? statusLabel(caLockInRow) : '—'}\n\nWant the full scorecard?`;
+    appendBotMessageLive(`<p>${formatBotText(msg)}</p>`);
+    addToHistory('bot', msg.replace(/\n/g,' '));
+    appendQuickReplies(['Yes, show full table', 'No thanks']);
+
+  } else if (bc.step === 1) {
+    endFlow();
+    const lower = (userText || '').toLowerCase();
+    if (lower.includes('yes') || lower.includes('show')) {
+      const msg = '📊 Opening the full Performance Summary!';
+      appendBotMessageLive(`<p>${escHtml(msg)}</p>`);
+      addToHistory('bot', msg);
+      setTimeout(() => {
+        switchTab('tab1');
+        setTimeout(() => {
+          const body = document.getElementById('body-standup');
+          if (body?.classList.contains('hidden')) toggleSection('standup');
+          document.getElementById('standupScoreStrip')?.scrollIntoView({ behavior:'smooth', block:'start' });
+        }, 300);
+      }, 500);
+    } else {
+      const msg = "👍 No problem! Your Performance Summary is always available on the Tasks & Performance tab.";
+      appendBotMessageLive(`<p>${escHtml(msg)}</p>`);
+      addToHistory('bot', msg);
+    }
+    showPostHelpQuickReplies();
+  }
+}
+
+/* ── Flow: focus_input_output ── */
+function handleFocusInputOutputStep(userText) {
+  const bc = state.botConversation;
+  if (bc.step === 0) {
+    bc.step = 1;
+    const msg = 'How would you like to view your focus areas?';
+    appendBotMessageLive(`<p>${escHtml(msg)}</p>`);
+    addToHistory('bot', msg);
+    appendQuickReplies(['Input metrics', 'Output metrics']);
+
+  } else if (bc.step === 1) {
+    const lower = (userText || '').toLowerCase();
+    const isInput = lower.includes('input');
+    bc.step = 2;
+    bc.collected.mode = isInput ? 'input' : 'output';
+    const students = getViewingStudents();
+    const c = getCounselorData();
+    const todayStr = new Date().toISOString().split('T')[0];
+
+    if (isInput) {
+      const lowIsl = students.filter(s => s.islRating < 8).length;
+      const notReplied = students.filter(s => (WA_UNANSWERED[s.id] || []).length > 0).length;
+      const breached = getPendingISLStudents(state.currentUser?.id).length;
+      const ownCount = (state.ownTasks || []).filter(t => !t.done).length;
+      bc.collected.buttons = [];
+      const msg = `📥 Here's where your input quality needs attention:\n\n⭐ ISL Feedback Rating: ${c.isl}/5 — ${c.isl >= 4 ? 'Good' : 'Focus'}\n🎯 Quality Score: ${c.q1score}% — ${c.q1score >= 80 ? 'Good' : 'Focus'}\n🚨 Potential Escalations: Low ISL Feedback (${lowIsl})\n🚨 Messages Not Replied (${notReplied})\n🚨 IS Pending & Breached (${breached})\n📋 Own Tasks (${ownCount})`;
+      appendBotMessageLive(`<p>${formatBotText(msg)}</p>`);
+      addToHistory('bot', msg.replace(/\n/g,' '));
+      appendQuickReplies(['Open Boost Input', '⬅ Back']);
+    } else {
+      const stiCount = students.filter(s => s.stage === 'sti').length;
+      const depCount = students.filter(s => s.stage === 'deposit').length;
+      const revCount = students.filter(s => s.servicingType === 'partner' || s.servicingType === 'non-partner').length;
+      const refCount = [...new Map([...getReferralCohort('visa'), ...getReferralCohort('premium'), ...getReferralCohort('sti')].map(s => [s.id, s])).values()].length;
+      const dueToday = arr => arr.filter(s => s.followup <= todayStr && !s.subtasks.every(t => t.done)).length;
+      const msg = `🚀 Your priority output actions today:\n\n🎯 Boost STI — ${stiCount} students (${dueToday(students.filter(s=>s.stage==='sti'))} due today)\n📦 Boost Deposit — ${depCount} students (${dueToday(students.filter(s=>s.stage==='deposit'))} due today)\n💰 Boost Revenue — ${revCount} opportunities\n🤝 Boost Referrals — ${refCount} students`;
+      appendBotMessageLive(`<p>${formatBotText(msg)}</p>`);
+      addToHistory('bot', msg.replace(/\n/g,' '));
+      appendQuickReplies(['Open Boost Output', '⬅ Back']);
+    }
+
+  } else if (bc.step === 2) {
+    endFlow();
+    const lower = (userText || '').toLowerCase();
+    if (lower.includes('open')) {
+      const msg = bc.collected.mode === 'input' ? '🎁 Taking you to Boost Input!' : '🎁 Taking you to Boost Output!';
+      appendBotMessageLive(`<p>${escHtml(msg)}</p>`);
+      addToHistory('bot', msg);
+      setTimeout(() => {
+        switchTab('tab1');
+        setTimeout(() => {
+          const elId = bc.collected.mode === 'input' ? 'volumeMetrics' : 'boostCardsGrid';
+          const el = document.getElementById(elId);
+          const mc = document.getElementById('mainContent');
+          if (el && mc) mc.scrollTo({ top: el.getBoundingClientRect().top + mc.scrollTop - 80, behavior: 'smooth' });
+        }, 400);
+      }, 500);
+    }
+    showPostHelpQuickReplies();
+  }
+}
+
+/* Per-counsellor value for a My Standing vs Org metric, sourced from the real Performance Summary
+   scorecard (buildPerfRows) rather than the raw daily counters _buildTierMetricRows()/Top Performer
+   use — My Standing is meant to reflect the same Volume Metrics/Conversion Funnel numbers a
+   counsellor sees on their own Performance Summary tab. casti30d has no true 30-day funnel metric
+   in this CRM (only a 14-day CA->STI window is tracked) — it's mapped to that 14D value as the
+   closest real proxy; flag to product/tech if a genuine 30-day figure is ever needed. */
+function _standingMetricValue(counsellor, metricKey) {
+  const { volumeRows, funnelRows } = buildPerfRows([counsellor], 1);
+  if (metricKey === 'revenue')  return volumeRows.find(r => r.key === 'revenue_collected')?.aYTD ?? null;
+  if (metricKey === 'sti')      return volumeRows.find(r => r.key === 'stis')?.aYTD ?? null;
+  if (metricKey === 'deposit')  return volumeRows.find(r => r.key === 'deposits')?.aYTD ?? null;
+  if (metricKey === 'calockin') return funnelRows.find(r => r.name === '05.CA->LockIn (14D)')?.aYTD ?? null;
+  if (metricKey === 'caf2f')    return funnelRows.find(r => r.name === '04.CA->F2F (14D)')?.aYTD ?? null;
+  if (metricKey === 'casti30d') return funnelRows.find(r => r.name === '03.CA->STI (14D)')?.aYTD ?? null;
+  return null;
+}
+
+/* ── Flow: my_standing_vs_org ── */
+function handleMyStandingVsOrgStep(userText) {
+  const bc = state.botConversation;
+  const METRIC_BUTTONS = ['Revenue', 'CA > STI (30d)', 'STIs', 'Deposits', 'CA > Lock-ins', 'CA > F2F'];
+
+  if (bc.step === 0) {
+    bc.step = 1;
+    const msg = 'Which metric would you like to compare?';
+    appendBotMessageLive(`<p>${escHtml(msg)}</p>`);
+    addToHistory('bot', msg);
+    appendQuickReplies(METRIC_BUTTONS);
+
+  } else if (bc.step === 1) {
+    const lower = (userText || '').toLowerCase().trim();
+    let metricKey = null;
+    if (lower.includes('30d') || lower.includes('sti (30')) metricKey = 'casti30d';
+    else if (lower.includes('lock')) metricKey = 'calockin';
+    else if (lower.includes('f2f')) metricKey = 'caf2f';
+    else if (lower.includes('sti')) metricKey = 'sti';
+    else if (lower.includes('deposit')) metricKey = 'deposit';
+    else if (lower.includes('revenue')) metricKey = 'revenue';
+
+    if (!metricKey) {
+      const msg = "I'm not sure which metric you meant. Please pick one:";
+      appendBotMessageLive(`<p>${escHtml(msg)}</p>`);
+      addToHistory('bot', msg);
+      appendQuickReplies(METRIC_BUTTONS);
+      return;
+    }
+    bc.step = 2;
+
+    const metric = MGR_TOP_PERF_METRICS[metricKey];
+    const me = state.currentUser;
+    const myVal = _standingMetricValue(me, metricKey);
+
+    if (myVal === null || myVal === undefined) {
+      bc.collected.metricKey = metricKey;
+      const msg = `📈 ${metric.label} isn't available on your Performance Summary yet. Keep building your pipeline!`;
+      appendBotMessageLive(`<p>${escHtml(msg)}</p>`);
+      addToHistory('bot', msg);
+      appendQuickReplies(['Yes, show me', 'No thanks']);
+      return;
+    }
+
+    const others = COUNSELORS.filter(c => c.id !== me.id).map(c => _standingMetricValue(c, metricKey)).filter(v => v !== null && v !== undefined);
+    const worseCount = others.filter(v => v < myVal).length;
+    const totalOthers = others.length;
+    const pct = totalOthers > 0 ? Math.round((worseCount / totalOthers) * 100) : 0;
+    const aheadCount = totalOthers - worseCount;
+    bc.collected.metricKey = metricKey;
+    const msg = `📈 Here's how you compare on ${metric.label}:\n\nYou're doing better than ${pct}% of counsellors in the org.\n${aheadCount} counsellor${aheadCount===1?'':'s'} ${aheadCount===1?'is':'are'} ahead of you on this metric.\n\nWant to see the full ranking?`;
+    appendBotMessageLive(`<p>${formatBotText(msg)}</p>`);
+    addToHistory('bot', msg.replace(/\n/g,' '));
+    appendQuickReplies(['Yes, show me', 'No thanks']);
+
+  } else if (bc.step === 2) {
+    endFlow();
+    const lower = (userText || '').toLowerCase();
+    if (lower.includes('yes') || lower.includes('show')) {
+      const msg = '🎁 Taking you to the Top Performers leaderboard!';
+      appendBotMessageLive(`<p>${escHtml(msg)}</p>`);
+      addToHistory('bot', msg);
+      setTimeout(() => {
+        switchTab('tab1');
+        setTimeout(() => {
+          const body = document.getElementById('body-mgrTopPerf');
+          if (body?.classList.contains('hidden')) toggleSection('mgrTopPerf');
+          document.getElementById('mgrLeaderboardGrid')?.scrollIntoView({ behavior:'smooth', block:'start' });
+        }, 300);
+      }, 500);
+    }
+    showPostHelpQuickReplies();
+  }
+}
+
+/* ── Flow: input_output_correlation — explains the causal link between the two Call Quality
+   Scores (input) and the Conversion Funnel steps they drive (output): 1st Call Quality feeds
+   CA->F2F, 2nd Call Quality feeds CA->Lock-in. ── */
+function handleInputOutputCorrelationStep(userText) {
+  const bc = state.botConversation;
+  if (bc.step === 0) {
+    bc.step = 1;
+    const c = getCounselorData();
+    const { funnelRows } = buildPerfRows([state.currentUser], 1);
+    const f2fRow    = funnelRows.find(r => r.name === '04.CA->F2F (14D)');
+    const lockinRow = funnelRows.find(r => r.name === '05.CA->LockIn (14D)');
+    const q1 = c.q1score ?? 0;
+    const q2 = c.q2score ?? 0;
+    const q1Status = q1 >= 80 ? 'Good' : 'Focus';
+    const q2Status = q2 >= 80 ? 'Good' : 'Focus';
+
+    const insights = [];
+    if (q1 < 80) insights.push('⚠️ Your 1st Call Quality Score is below target — this is holding back your CA→F2F conversion.');
+    if (q2 < 80) insights.push('⚠️ Your 2nd Call Quality Score is below target — this is holding back your CA→Lock-in conversion.');
+    if (!insights.length) insights.push('✅ Both call quality scores are on target — keep it up!');
+
+    const msg = `📊 Here's how your call quality is shaping your output:\n\n⭐ 1st Call Quality Score: ${q1}% — ${q1Status} → feeds CA→F2F: ${f2fRow?.aYTD ?? 0}% vs ${f2fRow?.tYTD ?? 30}% target\n⭐ 2nd Call Quality Score: ${q2}% — ${q2Status} → feeds CA→Lock-in: ${lockinRow?.aYTD ?? 0}% vs ${lockinRow?.tYTD ?? 35}% target\n\n${insights.join('\n')}\n\nWant to see the full input/output breakdown?`;
+    appendBotMessageLive(`<p>${formatBotText(msg)}</p>`);
+    addToHistory('bot', msg.replace(/\n/g,' '));
+    appendQuickReplies(['Yes, show me', 'No thanks']);
+
+  } else if (bc.step === 1) {
+    endFlow();
+    const lower = (userText || '').toLowerCase();
+    if (lower.includes('yes') || lower.includes('show')) {
+      const msg = '🎁 Taking you to your Performance Summary!';
+      appendBotMessageLive(`<p>${escHtml(msg)}</p>`);
+      addToHistory('bot', msg);
+      setTimeout(() => {
+        switchTab('tab1');
+        setTimeout(() => {
+          const body = document.getElementById('body-standup');
+          if (body?.classList.contains('hidden')) toggleSection('standup');
+          document.getElementById('standupScoreStrip')?.scrollIntoView({ behavior:'smooth', block:'start' });
+        }, 300);
+      }, 500);
+    }
+    showPostHelpQuickReplies();
+  }
+}
+
+/* ── Flow 6: incentive_clarify ── */
+
+function handleIncentiveClarifyStep(userText) {
+  const bc = state.botConversation;
+
+  if (bc.step === 0) {
+    bc.step = 1;
+    const msg = "Let me take you to your **Incentives & Earnings** tab right now — you can see your full breakdown there!\n\nI'll wait here while you review it. Let me know if you still need help after.";
+    appendBotMessageLive(`<p>${formatBotText(msg)}</p>`);
+    addToHistory('bot', msg.replace(/\*\*/g,''));
+    setTimeout(() => switchTab('tab2'), 500);
+    setTimeout(() => {
+      const q = "Did that help? Do you still need clarity on your incentive calculation?";
+      appendBotMessageLive(`<p>${escHtml(q)}</p>`);
+      addToHistory('bot', q);
+      appendQuickReplies(['Yes, still need help', 'No, I got it! Thanks']);
+    }, 2000);
+
+  } else if (bc.step === 1) {
+    const lower = userText.toLowerCase();
+    if (lower.includes('yes') || lower.includes('still') || lower.includes('help') || lower.includes('need') || lower.includes('clarity') || lower.includes('nahi samjha')) {
+      bc.step = 2;
+      const msg = "No problem! The best way to get this sorted is to raise a ticket — our Ops team will walk you through your specific calculation.\n\nShall I open the ticket form for you?";
+      appendBotMessageLive(`<p>${escHtml(msg)}</p>`);
+      addToHistory('bot', msg);
+      appendQuickReplies(['Yes, open the ticket form', 'No thanks']);
+
+    } else {
+      endFlow();
+      const msg = "Great! Glad that helped. Let me know if you have any other questions. 💪";
+      appendBotMessageLive(`<p>${escHtml(msg)}</p>`);
+      addToHistory('bot', msg);
+    }
+
+  } else if (bc.step === 2) {
+    endFlow();
+    const lower = userText.toLowerCase();
+    if (lower.includes('yes') || lower.includes('open') || lower.includes('ticket') || lower.includes('form')) {
+      const msg = "Opening the ticket form now! Describe your specific query and Ops will get back to you within 4 working hours.";
+      appendBotMessageLive(`<p>${escHtml(msg)}</p>`);
+      addToHistory('bot', msg);
+      setTimeout(() => { switchTab('tab3'); setTimeout(openTicketModal, 400); }, 300);
+    } else {
+      const msg = "No worries! If you need help later, just come back here and I'll point you in the right direction.";
+      appendBotMessageLive(`<p>${escHtml(msg)}</p>`);
+      addToHistory('bot', msg);
+    }
+  }
+}
+
+/* ── Follow-ups ── */
+
+function maybeAddFollowUp(intent) {
+  const bc = state.botConversation;
+  const cfg = FOLLOW_UP_CONFIG[intent];
+  if (!cfg || bc.shownFollowUps.includes(intent)) return;
+  bc.shownFollowUps.push(intent);
+
+  setTimeout(() => {
+    const fuId = 'fu-' + Date.now();
+    const msgDiv = document.createElement('div');
+    msgDiv.id = fuId;
+    msgDiv.className = 'flex gap-2';
+    msgDiv.innerHTML = `
+      <div class="w-6 h-6 rounded-full bg-accent/60 flex items-center justify-center flex-shrink-0 mt-0.5">
+        <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+      </div>
+      <div class="bot-followup-bubble flex-1">
+        <p class="mb-2">${escHtml(cfg.msg)}</p>
+        <div class="flex gap-2">
+          <button onclick="handleFollowUpYes('${intent}','${fuId}')" class="bot-nav-btn-sm">Yes, show me</button>
+          <button onclick="document.getElementById('${fuId}')?.remove()" class="bot-nav-btn-sm muted">No thanks</button>
+        </div>
+      </div>
+    `;
+    const container = document.getElementById('botMessages');
+    if (container) { container.appendChild(msgDiv); container.scrollTop = container.scrollHeight; }
+  }, 800);
+}
+
+function handleFollowUpYes(intent, fuId) {
+  document.getElementById(fuId)?.remove();
+  const cfg = FOLLOW_UP_CONFIG[intent];
+  if (!cfg) return;
+  if (cfg.yesText) {
+    appendBotMessageLive(`<p>${formatBotText(cfg.yesText)}</p>`);
+    addToHistory('bot', cfg.yesText);
+  } else if (cfg.yesNav) {
+    cfg.yesNav();
+    showToast('Navigating…', 'info');
+  }
+}
+
+/* ── Append Bot Message (live) ── */
+
+function appendBotMessageLive(htmlContent, isFollowUp = false) {
+  const container = document.getElementById('botMessages');
+  const msgDiv = document.createElement('div');
+  msgDiv.className = 'flex gap-2';
+  msgDiv.innerHTML = `
+    <div class="w-6 h-6 rounded-full bg-accent flex items-center justify-center flex-shrink-0 mt-0.5">
+      <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+    </div>
+    <div class="${isFollowUp ? 'bot-followup-bubble' : 'bot-msg-bubble'} flex-1">
+      ${htmlContent}
+    </div>
+  `;
+  container.appendChild(msgDiv);
+  container.scrollTop = container.scrollHeight;
+  return msgDiv;
+}
+
+/* ── Quick Replies ── */
+
+function appendQuickReplies(buttons) {
+  const container = document.getElementById('botMessages');
+  const row = document.createElement('div');
+  row.className = 'quick-reply-row';
+
+  buttons.forEach(label => {
+    const btn = document.createElement('button');
+    btn.className = 'quick-reply-btn';
+    btn.textContent = label;
+    btn.addEventListener('click', () => {
+      row.querySelectorAll('button').forEach(b => { b.disabled = true; });
+      row.remove();
+      appendUserMessage(label);
+      addToHistory('user', label);
+      appendTypingIndicator();
+      setTimeout(() => {
+        removeTypingIndicator();
+        if (state.botConversation.flow) {
+          handleFlowStep(label);
+        } else {
+          // No active flow — route through intent classifier
+          processBotInput(label);
+        }
+      }, 400);
+    }, { once: true });
+    row.appendChild(btn);
+  });
+
+  container.appendChild(row);
+  container.scrollTop = container.scrollHeight;
+}
+
+/* Route a message without re-adding user history (already added by quick reply handler) */
+function processBotInput(userText) {
+  const { intent, entity } = classifyIntent(userText);
+  state.botConversation.lastIntent = intent;
+  if (FLOW_INTENTS.includes(intent)) {
+    startFlow(intent, userText);
+  } else if (intent === 'fallback') {
+    startFlow('clarify_before_answering', userText);
+  } else {
+    renderBotResponse(intent, entity);
+    maybeAddFollowUp(intent);
+    if (!isManagerRole(state.role)) showPostHelpQuickReplies();
+  }
+}
+
+/* ── Create Bot Ticket ── */
+
+function createBotTicket(purpose, preferredTime) {
+  const name = state.currentUser?.name || 'Counselor';
+  const catMap = { 'Training Query':'HR Query', 'Process Issue':'Process Question', 'Product Feedback':'Product Feedback' };
+  let category = 'Other';
+  for (const [k, v] of Object.entries(catMap)) {
+    if (purpose.includes(k)) { category = v; break; }
+  }
+  SUPPORT_TICKETS.push({
+    id: 'TKT-' + String(SUPPORT_TICKETS.length + 1).padStart(3, '0'),
+    subject: `Business Team Connection Request — ${name}`,
+    counselor: name,
+    category,
+    status: 'Open',
+  });
+  const tbody = document.getElementById('ticketsTableBody');
+  if (tbody) renderTicketsTable();
+}
+
+/* ── Bot Settings Admin ── */
+function saveBotSettings() {
+  BOT_SETTINGS.businessHead.name        = document.getElementById('bhName').value.trim() || BOT_SETTINGS.businessHead.name;
+  BOT_SETTINGS.businessHead.designation = document.getElementById('bhDesig').value.trim() || BOT_SETTINGS.businessHead.designation;
+  BOT_SETTINGS.businessHead.contact     = document.getElementById('bhContact').value.trim() || BOT_SETTINGS.businessHead.contact;
+  showToast('Bot settings saved!', 'success');
+}
+
+function toggleBotEnabled() {
+  BOT_SETTINGS.enabled = !BOT_SETTINGS.enabled;
+  const btn   = document.getElementById('botToggleBtn');
+  const knob  = document.getElementById('botToggleKnob');
+  const bubble = document.getElementById('botBubble');
+  btn.style.background  = BOT_SETTINGS.enabled ? '' : '#94A3B8';
+  knob.style.transform  = BOT_SETTINGS.enabled ? 'translateX(24px)' : 'translateX(4px)';
+  bubble.classList.toggle('hidden', !BOT_SETTINGS.enabled);
+  if (!BOT_SETTINGS.enabled && state.botOpen) toggleBot();
+  showToast(`Bot ${BOT_SETTINGS.enabled ? 'enabled' : 'disabled'} for all users.`, BOT_SETTINGS.enabled ? 'success' : 'warning');
+}
+
+function addFaqEntry() {
+  BOT_SETTINGS.faqs.push({ keywords:'', answer:'', nav:'' });
+  renderFaqList();
+}
+
+function renderFaqList() {
+  const el = document.getElementById('faqList');
+  if (!el) return;
+  if (!BOT_SETTINGS.faqs.length) {
+    el.innerHTML = '<p class="text-xs text-text-muted">No custom FAQs yet. Click "+ Add FAQ Entry" to create one.</p>';
+    return;
+  }
+  el.innerHTML = BOT_SETTINGS.faqs.map((f,i) => `
+    <div class="bg-surface rounded-lg border border-border p-3 space-y-2">
+      <input type="text" placeholder="Keywords (comma-separated)" value="${escHtml(f.keywords)}"
+        oninput="BOT_SETTINGS.faqs[${i}].keywords=this.value"
+        class="w-full text-xs px-2 py-1.5 border border-border rounded-lg focus:outline-none focus:ring-1 focus:ring-accent" />
+      <textarea placeholder="Answer (max 300 chars)" maxlength="300" rows="2"
+        oninput="BOT_SETTINGS.faqs[${i}].answer=this.value"
+        class="w-full text-xs px-2 py-1.5 border border-border rounded-lg focus:outline-none focus:ring-1 focus:ring-accent resize-none">${escHtml(f.answer)}</textarea>
+      <button onclick="BOT_SETTINGS.faqs.splice(${i},1);renderFaqList()" class="text-xs text-danger hover:underline cursor-pointer">Remove</button>
+    </div>
+  `).join('');
+}
+
+/* ═══════════════ INFO HUB ═══════════════ */
+
+function toggleInfoHub() {
+  infoHubState.expanded = !infoHubState.expanded;
+  const body   = document.getElementById('infoHubBody');
+  const chev   = document.getElementById('infoHubChevron');
+  const search = document.getElementById('infoHubSearchWrap');
+  body.classList.toggle('hidden', !infoHubState.expanded);
+  chev.style.transform = infoHubState.expanded ? 'rotate(180deg)' : '';
+  search.classList.toggle('hidden', !infoHubState.expanded);
+  if (infoHubState.expanded) renderInfoHub();
+}
+
+function debounceInfoHubSearch(val) {
+  clearTimeout(infoHubState.searchTimer);
+  infoHubState.search = val;
+  infoHubState.searchTimer = setTimeout(() => renderInfoHub(), 300);
+}
+
+function renderInfoHub() {
+  renderInfoHubFilters();
+  renderInfoHubDirectory();
+}
+
+function renderInfoHubFilters() {
+  const el = document.getElementById('infoHubFilters');
+  if (!el) return;
+  const f = infoHubState.filters;
+  const countries  = ['All','UK','USA','Canada','Australia'];
+  const courseTypes = ['All','MBA','MS','UG','Medicine','Law'];
+  const deposits   = ['All','Under ₹50K','₹50K–₹1L','Above ₹1L'];
+  const intakes    = ['All','Jul 2026','Sep 2026','Jan 2027','Feb 2027'];
+
+  function pillGroup(label, options, key) {
+    return options.map(opt => {
+      const active = f[key] === opt;
+      return `<button class="filter-pill ${active ? 'active' : ''}" onclick="setInfoFilter('${key}','${opt}')">${opt}${active && opt !== 'All' ? '<span class="remove-x" onclick="event.stopPropagation();setInfoFilter(\''+key+'\',\'All\')">×</span>' : ''}</button>`;
+    }).join('');
+  }
+
+  el.innerHTML = `
+    <span class="text-[10px] font-bold text-text-muted uppercase tracking-wide mr-1">Country</span>
+    ${pillGroup('Country', countries, 'country')}
+    <span class="text-[10px] font-bold text-text-muted uppercase tracking-wide ml-2 mr-1">Course</span>
+    ${pillGroup('Course', courseTypes, 'courseType')}
+    <span class="text-[10px] font-bold text-text-muted uppercase tracking-wide ml-2 mr-1">Deposit</span>
+    ${pillGroup('Deposit', deposits, 'deposit')}
+    <span class="text-[10px] font-bold text-text-muted uppercase tracking-wide ml-2 mr-1">Intake</span>
+    ${pillGroup('Intake', intakes, 'intake')}
+    ${Object.values(f).some(v => v !== 'All') ? `<button onclick="clearInfoFilters()" class="ml-2 text-xs text-danger hover:underline cursor-pointer">Clear All</button>` : ''}
+  `;
+}
+
+function setInfoFilter(key, val) {
+  infoHubState.filters[key] = val;
+  renderInfoHub();
+}
+
+function clearInfoFilters() {
+  infoHubState.filters = { country:'All', courseType:'All', deposit:'All', intake:'All' };
+  renderInfoHub();
+}
+
+function getFilteredUniversities() {
+  const { search, filters } = infoHubState;
+  return INFO_HUB_DATA.filter(u => {
+    // Search
+    if (search) {
+      const q = search.toLowerCase();
+      const haystack = [u.name, u.country, u.city, ...u.courses.map(c=>c.name), u.scholarship?.name || ''].join(' ').toLowerCase();
+      if (!haystack.includes(q)) return false;
+    }
+    // Country filter
+    if (filters.country !== 'All' && u.country !== filters.country) return false;
+    // Course type filter
+    if (filters.courseType !== 'All') {
+      const hasType = u.courses.some(c => c.name.toLowerCase().includes(filters.courseType.toLowerCase()) ||
+        (filters.courseType === 'MS' && c.name.toLowerCase().startsWith('ms')) ||
+        (filters.courseType === 'MBA' && c.name.toLowerCase().includes('mba')));
+      if (!hasType) return false;
+    }
+    // Deposit filter
+    if (filters.deposit !== 'All') {
+      if (filters.deposit === 'Under ₹50K'  && u.depositInr >= 50000) return false;
+      if (filters.deposit === '₹50K–₹1L'    && (u.depositInr < 50000 || u.depositInr > 100000)) return false;
+      if (filters.deposit === 'Above ₹1L'   && u.depositInr <= 100000) return false;
+    }
+    // Intake filter
+    if (filters.intake !== 'All' && !u.intake.includes(filters.intake)) return false;
+    return true;
+  });
+}
+
+function renderInfoHubDirectory() {
+  const el = document.getElementById('infoHubDirectory');
+  if (!el) return;
+  const unis = getFilteredUniversities();
+  if (!unis.length) {
+    el.innerHTML = `<div class="text-center py-10">
+      <svg class="w-10 h-10 text-text-muted mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+      <p class="text-sm text-text-muted">No universities match these filters.</p>
+      <button onclick="clearInfoFilters()" class="mt-2 text-xs font-semibold text-accent hover:underline cursor-pointer">Clear Filters</button>
+    </div>`;
+    return;
+  }
+
+  const countries = [...new Set(unis.map(u => u.country))];
+  const countryMeta = { UK: { flag:'🇬🇧', cls:'uk' }, USA: { flag:'🇺🇸', cls:'usa' }, Canada: { flag:'🇨🇦', cls:'canada' }, Australia: { flag:'🇦🇺', cls:'australia' } };
+
+  el.innerHTML = countries.map(country => {
+    const group = unis.filter(u => u.country === country);
+    const meta  = countryMeta[country] || { flag:'🌍', cls:'' };
+    const cards = group.map(u => renderUniversityCard(u, meta.cls)).join('');
+    return `<div>
+      <p class="ih-country-label">${meta.flag} ${country} <span class="text-text-muted font-normal">(${group.length})</span></p>
+      <div class="ih-scroll-row">${cards}</div>
+    </div>`;
+  }).join('');
+}
+
+function highlight(text, query) {
+  if (!query) return escHtml(text);
+  const re = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')})`, 'gi');
+  return escHtml(text).replace(re, '<span class="ih-highlight">$1</span>');
+}
+
+function renderUniversityCard(u, cls) {
+  const urgent = daysUntil(u.depositDeadline) <= 14;
+  const q = infoHubState.search;
+  return `<div class="uni-card ${cls}" onclick="openUniversityDetail('${u.id}')">
+    <p class="font-bold text-sm text-text-main mb-1 leading-tight">${highlight(u.name, q)}</p>
+    <p class="text-xs text-text-muted mb-2">${u.flag} ${u.country} · ${u.city}</p>
+    <div class="flex flex-wrap gap-1 mb-2">
+      ${u.intake.map(i => `<span class="text-[10px] px-1.5 py-0.5 bg-blue-100 text-primary rounded font-semibold">${i}</span>`).join('')}
+    </div>
+    <p class="text-xs mb-1">💰 ₹${(u.depositInr/1000).toFixed(0)}K deposit ${urgent ? `<span class="deposit-urgent">· Due: ${u.depositDeadline.split('-').reverse().join(' ')}</span>` : ''}</p>
+    ${u.scholarship ? `<span class="text-[10px] px-2 py-0.5 bg-green-100 text-success rounded-full font-semibold">🎓 Scholarship</span>` : ''}
+    <button class="mt-2 w-full text-xs font-semibold text-primary hover:underline cursor-pointer text-left">View Details →</button>
+  </div>`;
+}
+
+function openUniversityDetail(uniId) {
+  const u = INFO_HUB_DATA.find(x => x.id === uniId);
+  if (!u) return;
+  state.drawerPrevMode = null;
+
+  const intakeHtml = u.intake.map(i => `<div class="flex items-center gap-2 py-1">
+    <span class="text-xs px-2 py-0.5 bg-blue-100 text-primary rounded font-semibold">${i}</span>
+    <span class="text-xs text-text-muted">${daysUntil(i + '-01') > 0 ? 'Open' : 'Closed'}</span>
+  </div>`).join('');
+
+  const coursesHtml = u.courses.map(c => `<tr class="border-b border-border">
+    <td class="py-2 text-xs font-medium text-text-main">${c.name}</td>
+    <td class="py-2 text-xs text-text-muted">${c.duration}</td>
+    <td class="py-2 text-xs text-text-muted">${c.fee}</td>
+    <td class="py-2 text-xs text-text-muted">${c.entry}</td>
+  </tr>`).join('');
+
+  const docsHtml = u.docs.map(d => `<div class="flex items-center gap-2 py-1 text-xs text-text-main">
+    <svg class="w-3 h-3 text-success flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4"/></svg>${d}
+  </div>`).join('');
+
+  const urgent = daysUntil(u.depositDeadline) <= 14;
+
+  const content = `
+    <div class="uni-detail-section">
+      <h4>University Profile</h4>
+      <p class="text-sm font-semibold text-text-main">${u.name}</p>
+      <p class="text-xs text-text-muted mt-0.5">${u.flag} ${u.country} · ${u.city} · ${u.type}</p>
+      <p class="text-xs text-text-muted mt-2 leading-relaxed">${u.desc}</p>
+      <a href="${u.website}" target="_blank" class="text-xs text-primary hover:underline mt-1 inline-block">🌐 Official Website →</a>
+    </div>
+    <div class="uni-detail-section">
+      <h4>Intake &amp; ETA</h4>
+      ${intakeHtml}
+    </div>
+    <div class="uni-detail-section">
+      <h4>Courses Offered</h4>
+      <div class="overflow-x-auto">
+        <table class="w-full text-xs">
+          <thead><tr class="border-b border-border text-text-muted">
+            <th class="text-left py-1">Course</th><th class="text-left py-1">Duration</th><th class="text-left py-1">Fee/yr</th><th class="text-left py-1">Entry</th>
+          </tr></thead>
+          <tbody>${coursesHtml}</tbody>
+        </table>
+      </div>
+    </div>
+    <div class="uni-detail-section">
+      <h4>Deposit Details</h4>
+      <div class="grid grid-cols-2 gap-2 text-xs">
+        <div class="bg-surface rounded-lg p-2"><p class="text-text-muted">Amount</p><p class="font-semibold">₹${u.depositInr.toLocaleString('en-IN')} (${u.depositCcy})</p></div>
+        <div class="bg-surface rounded-lg p-2"><p class="text-text-muted">Deadline</p><p class="font-semibold ${urgent ? 'deposit-urgent' : ''}">${u.depositDeadline}</p></div>
+        <div class="bg-surface rounded-lg p-2 col-span-2"><p class="text-text-muted">Refund Policy</p><p class="font-semibold">${u.refundPolicy}</p></div>
+        <div class="bg-surface rounded-lg p-2 col-span-2"><p class="text-text-muted">Payment Method</p><p class="font-semibold">${u.paymentNotes}</p></div>
+      </div>
+    </div>
+    ${u.scholarship ? `<div class="uni-detail-section">
+      <h4>Scholarship</h4>
+      <p class="text-xs font-semibold text-success mb-2">🎓 ${u.scholarship.name}</p>
+      <p class="text-xs text-text-muted mb-1">Amount: <strong class="text-text-main">${u.scholarship.amount}</strong></p>
+      <p class="text-xs text-text-muted mb-2">Deadline: <strong class="text-text-main">${u.scholarship.deadline}</strong></p>
+      <p class="text-xs font-semibold text-text-muted mb-1">Eligibility:</p>
+      ${u.scholarship.eligibility.map(e => `<div class="flex items-start gap-1.5 text-xs text-text-main py-0.5"><span class="text-success mt-0.5">•</span>${e}</div>`).join('')}
+    </div>` : ''}
+    <div class="uni-detail-section">
+      <h4>Required Documents</h4>
+      ${docsHtml}
+    </div>
+    <p class="text-[10px] text-text-muted mt-4">Last updated by ${u.lastUpdatedBy} on ${u.lastUpdatedDate}</p>
+  `;
+
+  openDrawer(u.name, content, false);
+}
+
+/* ── Admin Info Hub ── */
+function renderAdminInfoHub() {
+  const tbody = document.getElementById('adminInfoHubBody');
+  if (!tbody) return;
+  tbody.innerHTML = INFO_HUB_DATA.map(u => `
+    <tr class="hover:bg-surface">
+      <td class="px-4 py-3 text-sm font-medium text-text-main">${u.name}</td>
+      <td class="px-4 py-3 text-sm text-text-muted">${u.flag} ${u.country}</td>
+      <td class="px-4 py-3 text-sm font-mono">₹${(u.depositInr/1000).toFixed(0)}K</td>
+      <td class="px-4 py-3 text-sm text-text-muted">${u.intake.join(', ')}</td>
+      <td class="px-4 py-3 text-right">
+        <div class="flex gap-2 justify-end">
+          <button onclick="showToast('Editing ${u.name}','info')" class="text-xs text-primary hover:underline cursor-pointer">Edit</button>
+          <button onclick="showToast('${u.name} hidden from counselors','warning')" class="text-xs text-danger hover:underline cursor-pointer">Hide</button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function logout() {
+  if (state.earningsChart) { state.earningsChart.destroy(); state.earningsChart = null; }
+  if (state.botOpen) { document.getElementById('botPanel').classList.remove('open'); document.getElementById('botPanel').classList.add('hidden'); }
+  // Hide 10x banner
+  const b10x = document.getElementById('join10xBanner');
+  if (b10x) b10x.classList.add('hidden');
+  const mc = document.getElementById('mainContent');
+  if (mc) mc.style.marginTop = '104px';
+  state = { role:'counselor', currentUser:null, viewingCounselorId:1, historyPeriod:'7d', leaderPeriod:'today', currentTab:'tab1', currentAdminPanel:'users', loginAttempts:0, lockedUntil:null, earningsChart:null, drawerMode:null, drawerBoostType:null, drawerBoostSubType:null, drawerBoostSubCardId:null, drawerVolumeMetricKey:null, drawerRevenueSubCardId:null, drawerSelectedStudent:null, drawerPrevMode:null, selectedSubtask:null, ownTasks:[], boostAcknowledged:{}, botOpen:false, botActiveTab:'chat', chatPanel:{ unreadCount:0, lastOpenedAt:null, botInputHidden:false }, botConversation:{ flow:null, step:0, collected:{}, history:[], lastIntent:null, shownFollowUps:[] } };
+  document.getElementById('appShell').classList.add('hidden');
+  document.getElementById('loginScreen').classList.remove('hidden');
+  document.getElementById('loginEmail').value = '';
+  document.getElementById('loginPwd').value   = '';
+  document.getElementById('loginError').classList.add('hidden');
+  document.getElementById('counselorSelectorWrapper').classList.add('hidden');
+  document.getElementById('adminTabBtn').classList.add('hidden');
+  document.getElementById('mainTabBar').querySelectorAll('.htab').forEach(b => b.classList.remove('active'));
+  document.querySelector('.htab[data-tab="tab1"]').classList.add('active');
+}
+
+/* ═══════════════════════════════════════════════════════
+   FEATURE C — BOT PANEL TWO-TAB LAYOUT
+═══════════════════════════════════════════════════════ */
+
+function switchBotTab(tab) {
+  state.botActiveTab = tab;
+  const chatBtn    = document.getElementById('botTabChat');
+  const actionsBtn = document.getElementById('botTabActions');
+  const msgs       = document.getElementById('botMessages');
+  const actItems   = document.getElementById('botActionItems');
+  const inputRow   = document.getElementById('botInputRow');
+
+  if (tab === 'chat') {
+    chatBtn.classList.add('active','border-accent','text-accent');
+    chatBtn.classList.remove('border-transparent','text-text-muted');
+    actionsBtn.classList.remove('active','border-accent','text-accent');
+    actionsBtn.classList.add('border-transparent','text-text-muted');
+    msgs.classList.remove('hidden');
+    actItems.classList.add('hidden');
+    // Respect button-only mode (counsellor bot, post mood-check) — don't resurrect a hidden input bar.
+    if (inputRow) inputRow.style.display = state.chatPanel.botInputHidden ? 'none' : '';
+    document.getElementById('botInput')?.focus();
+  } else {
+    actionsBtn.classList.add('active','border-accent','text-accent');
+    actionsBtn.classList.remove('border-transparent','text-text-muted');
+    chatBtn.classList.remove('active','border-accent','text-accent');
+    chatBtn.classList.add('border-transparent','text-text-muted');
+    msgs.classList.add('hidden');
+    actItems.classList.remove('hidden');
+    if (inputRow) inputRow.style.display = 'none';
+    // Mark action items as seen — reduce badge
+    const aiUnread = ACTION_ITEMS.filter(a => !a.completed && !a._seen).length;
+    ACTION_ITEMS.forEach(a => a._seen = true);
+    updateActionItemsBadge();
+    renderActionItems();
+  }
+}
+
+function renderActionItems() {
+  const el = document.getElementById('botActionItems');
+  if (!el) return;
+  const pending   = ACTION_ITEMS.filter(a => !a.completed);
+  const completed = ACTION_ITEMS.filter(a => a.completed);
+  const all = [...pending, ...completed];
+
+  if (!all.length) {
+    el.innerHTML = `<div class="flex flex-col items-center justify-center h-full py-10 text-center">
+      <svg class="w-10 h-10 text-text-muted mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+      <p class="text-xs text-text-muted">No action items right now.<br>Check back later.</p>
+    </div>`;
+    return;
+  }
+
+  el.innerHTML = all.map(item => {
+    if (item.completed) {
+      const d = new Date(item.completedAt);
+      const ds = d.toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' });
+      return `<div class="action-item-card completed flex items-center justify-between gap-2 py-2 px-3">
+        <div class="flex-1 min-w-0">
+          <p class="ai-title truncate">${escHtml(item.title)}</p>
+          <p class="ai-meta">Completed on ${ds}</p>
+        </div>
+        <span class="ai-badge completed flex-shrink-0">Done</span>
+      </div>`;
+    }
+    const sentD = new Date(item.sentAt);
+    const sentStr = sentD.toLocaleDateString('en-IN', { day:'numeric', month:'short' }) + ', ' +
+      sentD.toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit' });
+    const linksHtml = (item.links || []).map(l => {
+      const isValid = l.url && l.url.startsWith('http');
+      return isValid
+        ? `<a href="${escHtml(l.url)}" target="_blank" rel="noopener noreferrer" class="ai-link">${escHtml(l.label)} →</a>`
+        : `<span class="text-xs text-text-muted">${escHtml(l.label)}</span>`;
+    }).join('');
+    return `<div class="action-item-card" id="ai-card-${item.id}">
+      <div class="flex items-start justify-between gap-2 mb-1">
+        <p class="ai-title flex-1">${escHtml(item.title)}</p>
+        <span class="ai-badge pending flex-shrink-0">Pending</span>
+      </div>
+      <p class="ai-desc">${escHtml(item.description)}</p>
+      ${linksHtml}
+      <div class="flex items-center justify-between mt-2">
+        <p class="ai-meta">Sent ${sentStr}</p>
+        <button class="ai-complete-btn" onclick="markActionItemComplete('${item.id}')">Mark Done</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function markActionItemComplete(id) {
+  const item = ACTION_ITEMS.find(a => a.id === id);
+  if (!item || item.completed) return;
+  const btn = document.querySelector(`#ai-card-${id} .ai-complete-btn`);
+  if (btn) { btn.disabled = true; btn.textContent = 'Saving…'; }
+
+  // Simulate PATCH /action-items/{id}/complete
+  setTimeout(() => {
+    item.completed = true;
+    item.completedAt = new Date().toISOString();
+    showToast('Action item marked as completed!', 'success');
+    renderActionItems();
+    updateActionItemsBadge();
+  }, 500);
+}
+
+function updateActionItemsBadge() {
+  const badge = document.getElementById('actionItemsBadge');
+  if (!badge) return;
+  const unseen = ACTION_ITEMS.filter(a => !a.completed && !a._seen).length;
+  if (unseen > 0) {
+    badge.textContent = unseen;
+    badge.classList.remove('hidden');
+  } else {
+    badge.classList.add('hidden');
+  }
+}
+
+/* ═══════════════════════════════════════════════════════
+   FEATURE D — PRIORITY ALERT (UNHAPPY CASES)
+═══════════════════════════════════════════════════════ */
+
+/* Students where the ISL shortlist hasn't been shared yet, scoped to one counsellor — shared by the
+   Notifications bell's "IS Pending and Breached" panel and the chatbot's "Leads Pending Shortlist" /
+   "Leads With Q&A Ready" options. */
+function getPendingISLStudents(counselorId) {
+  return STUDENTS.filter(s => s.counselorId === counselorId && !s.islSharedDate && s.firstCallAt);
+}
+
+function renderAlertIcon() {
+  const badge = document.getElementById('alertBadge');
+  if (!badge) return;
+  const todayStr = new Date().toISOString().split('T')[0];
+  const reminderCount = (state.ownTasks || []).filter(t => !t.done && t.date && t.date.slice(0,10) <= todayStr).length;
+  const counselorId = state.currentUser?.id;
+  const myStudents = STUDENTS.filter(s => s.counselorId === counselorId);
+  const unhappyCount = myStudents.filter(s => s.islRating < 8 || s.hasEscalation).length;
+  const pendingCount = getPendingISLStudents(counselorId).length;
+  // Note: "Questions from Counsellors" and "Replies from TL/PL" no longer contribute to the bell
+  // badge at all — both now live entirely inside the chatbot (see updateUnreadBadge() for the
+  // floating bot-bubble's own notification dot).
+  const total = reminderCount + unhappyCount + pendingCount;
+  if (total > 0) {
+    badge.textContent = total > 9 ? '9+' : String(total);
+    badge.classList.remove('hidden');
+    badge.classList.add('alert-pulse');
+  } else {
+    badge.classList.add('hidden');
+    badge.classList.remove('alert-pulse');
+  }
+}
+
+function toggleAlertDrawer() {
+  const drawer  = document.getElementById('alertDrawer');
+  const overlay = document.getElementById('alertDrawerOverlay');
+  const isOpen  = !drawer.classList.contains('hidden');
+  if (isOpen) {
+    drawer.classList.add('hidden');
+    overlay.classList.add('hidden');
+  } else {
+    drawer.classList.remove('hidden');
+    overlay.classList.remove('hidden');
+    renderAlertDrawer();
+  }
+}
+
+function toggleNotifSection(id) {
+  const bodyIdMap = { reminders:'notifRemindersBody', pending:'notifPendingBody', unhappy:'notifUnhappyBody', rmTasks:'notifRmTasksBody' };
+  const bodyId  = bodyIdMap[id] || 'notifUnhappyBody';
+  const body    = document.getElementById(bodyId);
+  const chevron = document.getElementById(`chevron-notif-${id}`);
+  if (!body) return;
+  const isHidden = body.classList.contains('hidden');
+  body.classList.toggle('hidden', !isHidden);
+  if (chevron) chevron.style.transform = isHidden ? 'rotate(180deg)' : '';
+}
+
+function renderAlertDrawer() {
+  const todayStr = new Date().toISOString().split('T')[0];
+  const counselorId = state.currentUser?.id;
+
+  // ── Own Reminders ──────────────────────────────────────────
+  const remindersEl  = document.getElementById('notifRemindersBody');
+  const reminderBadge = document.getElementById('notifReminderBadge');
+  if (remindersEl) {
+    const due = (state.ownTasks || []).filter(t => !t.done && t.date && t.date.slice(0,10) <= todayStr);
+    if (reminderBadge) {
+      if (due.length) { reminderBadge.textContent = due.length; reminderBadge.classList.remove('hidden'); }
+      else reminderBadge.classList.add('hidden');
+    }
+    if (!due.length) {
+      remindersEl.innerHTML = '<p class="text-xs text-text-muted text-center py-5 px-4">No reminders due today.</p>';
+    } else {
+      const typeIcon = { call:'📞', message:'💬', payment:'💳', custom:'📌' };
+      remindersEl.innerHTML = due.map(t => {
+        const dt = new Date(t.date);
+        const timeStr = dt.toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit' });
+        const overdue  = t.date.slice(0,10) < todayStr;
+        return `<div class="flex items-start gap-3 px-4 py-3 hover:bg-surface/40 border-b border-border/50 last:border-0">
+          <span class="text-base flex-shrink-0 mt-0.5">${typeIcon[t.type] || '📌'}</span>
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-semibold text-text-main truncate">${escHtml(t.title)}</p>
+            ${t.notes ? `<p class="text-[11px] text-text-muted truncate">${escHtml(t.notes)}</p>` : ''}
+            <p class="text-[10px] mt-0.5 ${overdue ? 'text-danger font-semibold' : 'text-accent'}">${overdue ? '⚡ Overdue · ' : '🕐 '}${timeStr}</p>
+          </div>
+        </div>`;
+      }).join('');
+    }
+  }
+
+  // ── Unhappy Students ───────────────────────────────────────
+  const unhappyEl   = document.getElementById('notifUnhappyBody');
+  const unhappyBadge = document.getElementById('notifUnhappyBadge');
+  if (unhappyEl) {
+    const myStudents   = STUDENTS.filter(s => s.counselorId === counselorId);
+    const unhappyStudents = myStudents.filter(s => s.islRating < 8 || s.hasEscalation)
+      .sort((a,b) => (a.islRating || 10) - (b.islRating || 10));
+    if (unhappyBadge) {
+      if (unhappyStudents.length) { unhappyBadge.textContent = unhappyStudents.length; unhappyBadge.classList.remove('hidden'); }
+      else unhappyBadge.classList.add('hidden');
+    }
+    if (!unhappyStudents.length) {
+      unhappyEl.innerHTML = '<p class="text-xs text-text-muted text-center py-5 px-4">No unhappy students right now 🎉</p>';
+    } else {
+      unhappyEl.innerHTML = unhappyStudents.map(s => {
+        const ratingCls = s.islRating < 6 ? 'text-danger' : 'text-accent';
+        const followupDue = s.followup && s.followup <= todayStr;
+        return `<div class="flex items-start gap-3 px-4 py-3 hover:bg-danger/5 border-b border-danger/10 last:border-0 cursor-pointer"
+          onclick="openStudentDetail('${s.id}');toggleAlertDrawer()">
+          <div class="w-8 h-8 rounded-full bg-danger/10 flex items-center justify-center text-xs font-bold text-danger flex-shrink-0">
+            ${escHtml((s.name || '?').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase())}
+          </div>
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-semibold text-text-main truncate">${escHtml(s.name)}</p>
+            <p class="text-[11px] text-text-muted">${escHtml(s.course || '—')} · ${escHtml(s.stage || '—')}</p>
+            <div class="flex items-center gap-2 mt-0.5">
+              <span class="text-[10px] font-bold ${ratingCls}">ISL ${s.islRating}/10</span>
+              ${s.hasEscalation ? `<span class="text-[10px] font-bold text-danger bg-danger/10 px-1.5 py-0.5 rounded-full">Escalation</span>` : ''}
+              ${followupDue ? `<span class="text-[10px] font-bold text-accent">⚡ Follow-up due</span>` : ''}
+            </div>
+          </div>
+        </div>`;
+      }).join('');
+    }
+  }
+
+  // ── IS Pending and Breached (ISL shortlist not shared yet) ──
+  const pendingEl    = document.getElementById('notifPendingBody');
+  const pendingBadge = document.getElementById('notifPendingBadge');
+  const pendingStudents = getPendingISLStudents(counselorId);
+  if (pendingEl) {
+    if (pendingBadge) {
+      if (pendingStudents.length) { pendingBadge.textContent = pendingStudents.length; pendingBadge.classList.remove('hidden'); }
+      else pendingBadge.classList.add('hidden');
+    }
+    if (!pendingStudents.length) {
+      pendingEl.innerHTML = '<p class="text-xs text-text-muted text-center py-5 px-4">No pending breached tasks right now 🎉</p>';
+    } else {
+      pendingEl.innerHTML = `<p class="text-[11px] text-text-muted px-4 pt-3 pb-1">All students where shortlist hasn't been shared yet is visible at this view.</p>` +
+        pendingStudents.map(s => `
+        <div class="px-4 py-3 border-b border-border/50 last:border-0">
+          <div class="flex items-start justify-between gap-2">
+            <div class="min-w-0">
+              <p class="text-sm font-semibold text-text-main truncate">${escHtml(s.name)}</p>
+              <p class="text-[11px] text-text-muted">${escHtml(s.id)} · ${escHtml(s.country || '—')}</p>
+            </div>
+            ${s.qnaGenerated ? `<span class="text-[10px] font-bold text-success bg-success/10 px-2 py-0.5 rounded-full flex-shrink-0">QnaGenerated</span>` : ''}
+          </div>
+          <div class="flex gap-2 mt-2">
+            <button onclick="openStudentDetail('${s.id}');toggleAlertDrawer()" class="text-[11px] font-bold text-primary bg-primary/10 hover:bg-primary/20 px-2.5 py-1 rounded-lg transition-colors">View Student</button>
+            <button onclick="viewStudentTask('${s.id}');toggleAlertDrawer()" class="text-[11px] font-bold text-primary bg-primary/10 hover:bg-primary/20 px-2.5 py-1 rounded-lg transition-colors">View Task</button>
+          </div>
+        </div>`).join('');
+    }
+  }
+
+  // ── Tasks with RM (shared CLTaskStore — synced live with RM CRM) ──
+  const rmTasksEl = document.getElementById('notifRmTasksBody');
+  const rmTasksBadge = document.getElementById('notifRmTasksBadge');
+  if (rmTasksEl && window.CLTaskStore) {
+    const allTasks = CLTaskStore.visible();
+    const pendingForMe = allTasks.filter(t => t.direction === 'rm_to_cl' && t.status === 'open').length;
+    if (rmTasksBadge) {
+      if (pendingForMe) { rmTasksBadge.textContent = pendingForMe; rmTasksBadge.classList.remove('hidden'); }
+      else rmTasksBadge.classList.add('hidden');
+    }
+    if (!allTasks.length) {
+      rmTasksEl.innerHTML = '<p class="text-xs text-text-muted text-center py-5 px-4">No tasks yet.</p>';
+    } else {
+      rmTasksEl.innerHTML = allTasks.map(t => {
+        const forMe = t.direction === 'rm_to_cl'; // RM raised it — the counsellor (you) act on it
+        const dirLabel = forMe ? 'RM → You' : 'You → RM';
+        const dirColor = forMe ? { bg:'#FFF7ED', text:'#C2410C', border:'#FED7AA' } : { bg:'#EEF2FF', text:'#4338CA', border:'#C7D2FE' };
+        const isOpen = t.status === 'open';
+        const typeLabel = CLTaskStore.typeLabel(t.direction, t.taskType, t.otherSpecify);
+        return `<div class="px-4 py-3 border-b border-border/50 last:border-0">
+          <div class="flex items-center justify-between gap-2 mb-1">
+            <p class="text-sm font-semibold text-text-main truncate">${escHtml(t.leadName)}</p>
+            <span class="text-[9px] font-bold px-2 py-0.5 rounded-full flex-shrink-0" style="background:${dirColor.bg};color:${dirColor.text};border:1px solid ${dirColor.border}">${dirLabel}</span>
+          </div>
+          <p class="text-[11px] text-text-muted mb-1">${escHtml(t.leadId)}</p>
+          <div class="flex items-center gap-2 mb-1 flex-wrap">
+            <span class="text-xs font-semibold text-text-main">${escHtml(typeLabel)}</span>
+            ${isOpen ? `<span class="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-accent/10 text-accent">Open</span>` : `<span class="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-success/10 text-success">Done</span>`}
+          </div>
+          ${t.notes ? `<p class="text-[11px] text-text-muted mb-1">${escHtml(t.notes)}</p>` : ''}
+          <p class="text-[10px] text-text-muted mb-2">${t.dueDate ? `Due ${t.dueDate} · ` : ''}Created ${t.createdDate}</p>
+          ${forMe && isOpen ? `<button onclick="markRmTaskDone('${t.id}')" class="text-[11px] font-bold text-white bg-accent hover:opacity-90 px-2.5 py-1 rounded-lg transition-colors cursor-pointer">Mark Complete</button>` : ''}
+        </div>`;
+      }).join('');
+    }
+  }
+
+  // Note: "Questions from Counsellors" (TL/PL-facing) and "Replies from TL/PL" (counsellor-facing)
+  // both moved out of the bell entirely and live inside the chatbot now — see
+  // handleMgrReplyQuestionsStep()/checkPendingMgrQuestions() and checkPendingTlPlReplies(), plus
+  // the bot bubble's own notification dot in updateUnreadBadge().
+
+  // ── Total badge in drawer header ───────────────────────────
+  const totalBadge = document.getElementById('notifTotalBadge');
+  if (totalBadge) {
+    const total = ((state.ownTasks||[]).filter(t=>!t.done&&t.date&&t.date.slice(0,10)<=todayStr).length)
+      + (STUDENTS.filter(s=>s.counselorId===counselorId&&(s.islRating<8||s.hasEscalation)).length)
+      + pendingStudents.length;
+    if (total) { totalBadge.textContent = total; totalBadge.classList.remove('hidden'); }
+    else totalBadge.classList.add('hidden');
+  }
+}
+
+function markRmTaskDone(id) {
+  CLTaskStore.markDone(id);
+  showToast('Task marked complete.', 'success');
+  renderAlertDrawer();
+}
+
+// Live-refresh the drawer if it's open when the shared task store changes —
+// including changes made from the RM CRM side (cross-iframe, via the
+// storage event inside CLTaskStore).
+if (window.CLTaskStore) {
+  CLTaskStore.onChange(() => {
+    const drawer = document.getElementById('alertDrawer');
+    if (drawer && !drawer.classList.contains('hidden')) renderAlertDrawer();
+  });
+}
+
+function viewStudentTask(studentId) {
+  openStudentDetail(studentId);
+  setTimeout(() => document.getElementById('subtaskList')?.scrollIntoView({ behavior:'smooth', block:'center' }), 300);
+}
+
+function resolveAlert(id) {
+  const alert = UNHAPPY_ALERTS.find(a => a.id === id);
+  if (!alert) return;
+  alert.resolved = true;
+  renderAlertDrawer();
+  renderAlertIcon();
+  showToast('Alert marked as resolved.', 'success');
+}
+
+/* ═══════════════════════════════════════════════════════
+   FEATURE E — DAILY REPORT CARD
+═══════════════════════════════════════════════════════ */
+
+function renderReportCard() {
+  const c = getCounselorData();
+
+  const REPORT_METRICS = [
+    { name:'1st Call Quality Score', actual: c.q1score,      target: 80,  unit:'%' },
+    { name:'2nd Call Quality Score', actual: c.q2score,      target: 80,  unit:'%' },
+    { name:'CA to ISLs — 48H',       actual: 42,             target: 75,  unit:'%' },
+    { name:'CA to F2F — 15D',        actual: c.f2f,          target: TARGETS.f2f,  unit:'' },
+    { name:'LinkedIn (Last 2D)',      actual: 3,              target: 5,   unit:'' },
+    { name:'CA to STI — 15D',        actual: c.stis,         target: TARGETS.stis, unit:'' },
+    { name:'Admit to Deposit — 30D', actual: c.deposits,     target: TARGETS.deposits, unit:'' },
+    { name:'Deposit via LeapPay (Y)', actual: 2,              target: 4,   unit:'' },
+  ];
+
+  REPORT_METRICS.forEach(m => {
+    const pct = m.target ? Math.round((m.actual / m.target) * 100) : 0;
+    m.pct = pct;
+    m.status = pct >= 100 ? 'green' : pct >= 60 ? 'amber' : 'red';
+  });
+
+  const green = REPORT_METRICS.filter(m => m.status === 'green').length;
+  const amber = REPORT_METRICS.filter(m => m.status === 'amber').length;
+  const red   = REPORT_METRICS.filter(m => m.status === 'red').length;
+
+  // Summary line
+  const summaryEl = document.getElementById('reportCardSummary');
+  if (summaryEl) {
+    const lines = red > 0 ? `${red} metric${red > 1 ? 's' : ''} in the red zone — focus here first.` : 'Great job — all metrics on track!';
+    summaryEl.textContent = lines;
+  }
+
+  // Score summary row
+  const scoreEl = document.getElementById('reportScoreSummary');
+  if (scoreEl) {
+    scoreEl.innerHTML = `
+      <div class="scorecard-col green"><p class="sc-count">${green}</p><p class="sc-label">Working Well</p></div>
+      <div class="scorecard-col amber"><p class="sc-count">${amber}</p><p class="sc-label">Improving</p></div>
+      <div class="scorecard-col red"><p class="sc-count">${red}</p><p class="sc-label">Needs Focus</p></div>`;
+  }
+
+  // Metric table
+  const tableEl = document.getElementById('reportMetricTable');
+  if (tableEl) {
+    tableEl.innerHTML = REPORT_METRICS.map(m => {
+      const statusBg = m.status === 'green' ? 'bg-green-100 text-success' : m.status === 'amber' ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-danger';
+      const unit = m.unit === '%' ? '%' : '';
+      return `<tr>
+        <td class="py-2 font-medium text-text-main text-xs">${m.name}</td>
+        <td class="py-2 text-center text-xs font-mono">T — ${m.target}${unit} · A — ${m.actual}${unit}</td>
+        <td class="py-2 text-center"><span class="px-2 py-0.5 rounded-full text-[10px] font-semibold ${statusBg}">${m.status === 'green' ? '✓ Good' : m.status === 'amber' ? '~ On Track' : '! Focus'}</span></td>
+      </tr>`;
+    }).join('');
+  }
+
+  // Recommended next steps (red only)
+  const nextEl = document.getElementById('reportNextSteps');
+  if (nextEl) {
+    const redMetrics = REPORT_METRICS.filter(m => m.status === 'red');
+    if (!redMetrics.length) { nextEl.innerHTML = ''; return; }
+    const WHY = {
+      'CA to ISLs — 48H':       'Early ISLs set the tone for the counselling relationship.',
+      '2nd Call Quality Score':  'Second call quality drives conversion to application stage.',
+      'Deposit via LeapPay (Y)': 'LeapPay deposits confirm commitment and unlock revenue tracking.',
+      'LinkedIn (Last 2D)':      'LinkedIn engagement builds trust and keeps leads warm.',
+    };
+    const HOW = {
+      'CA to ISLs — 48H':       'Call new leads within 48 hours — set a morning reminder.',
+      '2nd Call Quality Score':  'Review your call script; focus on discovery questions.',
+      'Deposit via LeapPay (Y)': 'Share the LeapPay link in WhatsApp with payment-ready students.',
+      'LinkedIn (Last 2D)':      'Send 3 LinkedIn messages today to warm leads.',
+    };
+    const rows = redMetrics.map(m => `<tr class="border-b border-border">
+      <td class="py-2 text-xs font-medium text-danger">${m.name} (T: ${m.target} · A: ${m.actual})</td>
+      <td class="py-2 text-xs text-text-muted">${WHY[m.name] || 'Impacts your overall conversion rate.'}</td>
+      <td class="py-2 text-xs text-text-main">${HOW[m.name] || 'Focus on daily follow-ups for this metric.'}</td>
+    </tr>`).join('');
+    nextEl.innerHTML = `
+      <p class="text-xs font-semibold text-text-muted uppercase tracking-wide mb-2">Recommended Next Steps</p>
+      <div class="overflow-x-auto">
+        <table class="w-full text-xs">
+          <thead><tr class="border-b border-border bg-surface">
+            <th class="text-left py-2 font-semibold text-text-muted">Metric</th>
+            <th class="text-left py-2 font-semibold text-text-muted">Why It Matters</th>
+            <th class="text-left py-2 font-semibold text-text-muted">How to Improve</th>
+          </tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>`;
+  }
+
+  // Top performers
+  const topEl = document.getElementById('reportTopPerformers');
+  if (topEl) {
+    const topOrg     = COUNSELORS.reduce((best, c) => (c.today.stis > (best?.today?.stis || 0) ? c : best), null);
+    const teamCounselors = COUNSELORS.filter(c => c.team === (state.currentUser?.team || 'Alpha'));
+    const topCluster = teamCounselors.reduce((best, c) => (c.today.stis > (best?.today?.stis || 0) ? c : best), null);
+    topEl.innerHTML = `
+      <p class="text-xs font-semibold text-text-muted uppercase tracking-wide mb-2">Top Performers (STIs)</p>
+      <div class="grid grid-cols-2 gap-2 text-xs">
+        <div class="bg-surface rounded-lg p-2">
+          <p class="text-text-muted font-semibold mb-0.5">Org Wide</p>
+          <p class="font-bold text-text-main">${topOrg?.name || '—'}</p>
+          <p class="text-text-muted">${topOrg?.today?.stis || 0} STIs</p>
+        </div>
+        <div class="bg-surface rounded-lg p-2">
+          <p class="text-text-muted font-semibold mb-0.5">Your Cluster</p>
+          <p class="font-bold text-text-main">${topCluster?.name || '—'}</p>
+          <p class="text-text-muted">${topCluster?.today?.stis || 0} STIs</p>
+        </div>
+      </div>`;
+  }
+}
+
+/* ── TL: change counsellor viewed in Scorecard ── */
+function changeScorecardCounsellor(id) {
+  if (!id) return;
+  state.viewingCounselorId = parseInt(id);
+  renderReportCard();
+}
+
+/* ── Counsellor: render scorecard strip inside Performance Summary ── */
+function renderSummaryScoreStrip() {
+  const countsEl = document.getElementById('summaryScoreCounts');
+  const tableEl  = document.getElementById('summaryScoreTable');
+  if (!countsEl || !tableEl) return;
+
+  const c = getCounselorData();
+  const METRICS = [
+    { name:'1st Call Quality',      actual: c.q1score,   target: 80,              unit:'%' },
+    { name:'2nd Call Quality',      actual: c.q2score,   target: 80,              unit:'%' },
+    { name:'CA to ISLs — 48H',      actual: 42,          target: 75,              unit:'%' },
+    { name:'CA to F2F — 15D',       actual: c.f2f,       target: TARGETS.f2f,     unit:''  },
+    { name:'CA to STI — 15D',       actual: c.stis,      target: TARGETS.stis,    unit:''  },
+    { name:'Admit to Deposit — 30D',actual: c.deposits,  target: TARGETS.deposits,unit:''  },
+    { name:'LinkedIn (Last 2D)',     actual: 3,           target: 5,               unit:''  },
+    { name:'LeapPay Deposits (Y)',   actual: 2,           target: 4,               unit:''  },
+  ];
+  METRICS.forEach(m => {
+    const pct = m.target ? Math.round((m.actual / m.target) * 100) : 0;
+    m.status = pct >= 100 ? 'green' : pct >= 60 ? 'amber' : 'red';
+  });
+  const green = METRICS.filter(m => m.status === 'green').length;
+  const amber = METRICS.filter(m => m.status === 'amber').length;
+  const red   = METRICS.filter(m => m.status === 'red').length;
+
+  countsEl.innerHTML = `
+    <div class="scorecard-col green"><p class="sc-count">${green}</p><p class="sc-label">Working Well</p></div>
+    <div class="scorecard-col amber"><p class="sc-count">${amber}</p><p class="sc-label">Improving</p></div>
+    <div class="scorecard-col red"><p class="sc-count">${red}</p><p class="sc-label">Needs Focus</p></div>`;
+
+  tableEl.innerHTML = METRICS.map(m => {
+    const statusBg = m.status === 'green' ? 'bg-green-100 text-success' : m.status === 'amber' ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-danger';
+    const unit = m.unit;
+    return `<tr>
+      <td class="py-1.5 font-medium text-text-main">${m.name}</td>
+      <td class="py-1.5 text-center font-mono">T — ${m.target}${unit} · A — ${m.actual}${unit}</td>
+      <td class="py-1.5 text-center"><span class="px-2 py-0.5 rounded-full text-[10px] font-semibold ${statusBg}">${m.status === 'green' ? '✓ Good' : m.status === 'amber' ? '~ On Track' : '! Focus'}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+/* ═══════════════════════════════════════════════════════
+   FEATURE F — STAND UP METRICS TABLE
+═══════════════════════════════════════════════════════ */
+
+// Deterministic per-counsellor performance weight (~0.35–1.0, org average ≈1) — used to shift
+// filtered Performance Summary figures so filtering down to one person shows whether THEY are
+// hitting the business goal, not just an unchanging org-wide average.
+function counselorPerfWeight(c) {
+  const islN = (c.today.isl || 3.5) / 5;
+  const q1N  = (c.today.q1score || 60) / 100;
+  const q2N  = (c.today.q2score || 60) / 100;
+  return islN * 0.4 + q1N * 0.3 + q2N * 0.3;
+}
+const AVG_COUNSELOR_PERF_WEIGHT = COUNSELORS.reduce((s, c) => s + counselorPerfWeight(c), 0) / COUNSELORS.length;
+
+// Advanced-filter multiplier (Intake / Country / Servicing Type / CA Date Range) — approximates
+// what share of the pipeline matches the selected criteria; used to scale volume counts only
+// (rates/percentages are scaled by performance weight instead, see buildPerfRows).
+function computeExtraFilterMultiplier(filters) {
+  let m = 1;
+  if (filters.intake)  m *= 0.55;
+  if (filters.country) m *= 0.6;
+  if (filters.servicingType === 'partner')          m *= 0.55;
+  else if (filters.servicingType === 'non-partner') m *= 0.45;
+  if (filters.caDateFrom || filters.caDateTo) {
+    const from = filters.caDateFrom ? new Date(filters.caDateFrom) : new Date('2020-01-01');
+    const to   = filters.caDateTo   ? new Date(filters.caDateTo)   : new Date('2099-12-31');
+    const matched = STUDENTS.filter(s => {
+      if (!s.caDate) return false;
+      const d = new Date(s.caDate);
+      return d >= from && d <= to;
+    }).length;
+    m *= STUDENTS.length ? Math.max(0.05, matched / STUDENTS.length) : 1;
+  }
+  return m;
+}
+
+// Narrows a counsellor pool using the Performance Summary's own local Advanced Filters
+// (SM/POD/TL/Counsellor selects), on top of whatever the global top filter bar already applied.
+function narrowPoolByLocalFilters(pool, filters) {
+  let p = pool;
+  if (filters.sm) {
+    const smId = parseInt(filters.sm);
+    const allowedPods = HIERARCHY.smToPods[smId] || [];
+    const allowedTLs  = allowedPods.flatMap(pid => HIERARCHY.podToTLs[pid] || []);
+    p = p.filter(c => allowedTLs.some(tid => (HIERARCHY.tlToCounselors[tid] || []).includes(c.id)));
+  }
+  if (filters.pod) {
+    const podId = parseInt(filters.pod);
+    const allowedTLs = HIERARCHY.podToTLs[podId] || [];
+    p = p.filter(c => allowedTLs.some(tid => (HIERARCHY.tlToCounselors[tid] || []).includes(c.id)));
+  }
+  if (filters.tl) {
+    const tlId = parseInt(filters.tl);
+    p = p.filter(c => (HIERARCHY.tlToCounselors[tlId] || []).includes(c.id));
+  }
+  if (filters.counsellor) {
+    const clId = parseInt(filters.counsellor);
+    p = p.filter(c => c.id === clId);
+  }
+  return p;
+}
+
+const VOLUME_BASE = [
+  { name:'Leads',                      key:'leads',             isCurrency:false, aYTD:342,    aMTD:6,  W01:2,  M01:22    },
+  { name:'ISL Shared within 24 Hours', key:'isl_24h',           isCurrency:false, aYTD:202,    aMTD:2,  W01:2,  M01:14    },
+  { name:'F2F Done',                   key:'f2f',               isCurrency:false, aYTD:20,     aMTD:1,  W01:0,  M01:4     },
+  { name:'Lock In Done',               key:'lockins',           isCurrency:false, aYTD:66,     aMTD:0,  W01:0,  M01:1     },
+  { name:'STI Done',                   key:'stis',              isCurrency:false, aYTD:485,    aMTD:0,  W01:0,  M01:2     },
+  { name:'Admits',                     key:'admits',            isCurrency:false, aYTD:329,    aMTD:1,  W01:0,  M01:1     },
+  { name:'Deposits',                   key:'deposits',          isCurrency:false, aYTD:80,     aMTD:0,  W01:0,  M01:3     },
+  { name:'Visa Approved',              key:'visas',             isCurrency:false, aYTD:39,     aMTD:4,  W01:3,  M01:1     },
+  { name:'Revenue Generated',          key:'revenue_collected', isCurrency:true,  aYTD:272590, aMTD:0,  W01:0,  M01:12799 },
+  { name:'Pre ISL Drop',               key:'pre_isl_drop',      isCurrency:false, aYTD:34,     aMTD:2,  W01:0,  M01:1     },
+  { name:'Total Drop',                 key:'post_isl_drop',     isCurrency:false, aYTD:86,     aMTD:2,  W01:0,  M01:1     },
+];
+
+const FUNNEL_BASE = [
+  { name:'01.ISL Shared (24 hrs)',    tYTD:75, tMTD:80, aYTD:61,  aMTD:41,  Y:46, Y1:53, Y2:66, W0:0, W01:100, M01:40  },
+  { name:'02.CA->ISL (60 mins)',      tYTD:60, tMTD:60, aYTD:5,   aMTD:0,   Y:3,  Y1:23, Y2:14, W0:0, W01:0,   M01:0   },
+  { name:'03.CA->STI (14D)',          tYTD:20, tMTD:20, aYTD:54,  aMTD:0,   Y:7,  Y1:14, Y2:14, W0:0, W01:0,   M01:7   },
+  { name:'04.CA->F2F (14D)',          tYTD:30, tMTD:30, aYTD:53,  aMTD:0,   Y:16, Y1:7,  Y2:0,  W0:0, W01:0,   M01:13  },
+  { name:'05.CA->LockIn (14D)',       tYTD:35, tMTD:35, aYTD:25,  aMTD:0,   Y:5,  Y1:5,  Y2:0,  W0:0, W01:0,   M01:0   },
+  { name:'06.STI->Admit (30D)',       tYTD:85, tMTD:85, aYTD:101, aMTD:0,   Y:86, Y1:86, Y2:60, W0:0, W01:0,   M01:100 },
+  { name:'07.Admit->Deposits (14D)',  tYTD:35, tMTD:35, aYTD:20,  aMTD:0,   Y:7,  Y1:13, Y2:50, W0:0, W01:0,   M01:0   },
+  { name:'08.CA->Pre ISL Drop',       tYTD:5,  tMTD:5,  aYTD:100, aMTD:340, Y:5,  Y1:18, Y2:17, W0:0, W01:0,   M01:0,  isDropRate:true },
+  { name:'09.CA->Total Drop',         tYTD:7,  tMTD:7,  aYTD:200, aMTD:243, Y:14, Y1:40, Y2:55, W0:0, W01:0,   M01:0,  isDropRate:true },
+];
+
+// Builds Volume Metrics + Conversion Funnel rows scoped to the given counsellor pool and extra
+// advanced-filter multiplier. This is what makes the whole Performance Summary respond to the
+// top filters (SM/POD/TL/Counsellor) and Advanced Filters (Intake/Country/Servicing/CA Date):
+// targets stay fixed (they're the business goal, independent of headcount), while achieved
+// figures move with the pool — a stronger cohort/person pulls rates up, a weaker one pulls them down.
+function buildPerfRows(pool, extMult) {
+  const weights   = pool.map(c => counselorPerfWeight(c) / AVG_COUNSELOR_PERF_WEIGHT);
+  const avgWeight = weights.length ? weights.reduce((s, w) => s + w, 0) / weights.length : 1;
+  const volScale  = (pool.length / COUNSELORS.length) * extMult * avgWeight;
+
+  const volumeRows = VOLUME_BASE.map(m => ({
+    name: m.name, key: m.key, isCurrency: m.isCurrency, isPct: false,
+    tYTD: 0, tMTD: 0,
+    aYTD: Math.round(m.aYTD * volScale),
+    aMTD: Math.round(m.aMTD * volScale),
+    Y: 0, Y1: 0, Y2: 0, W0: 0,
+    W01: Math.round(m.W01 * volScale),
+    M01: Math.round(m.M01 * volScale),
+  }));
+
+  function scaledPct(base, isDropRate) {
+    const factor = isDropRate ? Math.max(0.2, 2 - avgWeight) : avgWeight;
+    return Math.max(0, Math.round(base * factor));
+  }
+
+  const funnelRows = FUNNEL_BASE.map((m, i) => ({
+    name: m.name, key: `funnel_${i}`, isPct: true, isCurrency: false,
+    isDropRate: m.isDropRate || false,
+    tYTD: m.tYTD, tMTD: m.tMTD,
+    aYTD: scaledPct(m.aYTD, m.isDropRate), aMTD: scaledPct(m.aMTD, m.isDropRate),
+    Y:    scaledPct(m.Y,    m.isDropRate), Y1:   scaledPct(m.Y1,   m.isDropRate), Y2: scaledPct(m.Y2, m.isDropRate),
+    W0:   scaledPct(m.W0,   m.isDropRate), W01:  scaledPct(m.W01,  m.isDropRate), M01: scaledPct(m.M01, m.isDropRate),
+  }));
+
+  return { volumeRows, funnelRows };
+}
+
+function renderStandupTable(filterData) {
+  const filters = filterData || {
+    intake:         document.getElementById('standupIntake')?.value            || '',
+    country:        document.getElementById('standupCountry')?.value           || '',
+    counsellor:     document.getElementById('standupCounsellorFilter')?.value  || '',
+    tl:             document.getElementById('standupTLFilter')?.value           || '',
+    pod:            document.getElementById('standupPODFilter')?.value          || '',
+    sm:             document.getElementById('standupSMFilter')?.value           || '',
+    caDateFrom:     document.getElementById('standupCADateFrom')?.value        || '',
+    caDateTo:       document.getElementById('standupCADateTo')?.value          || '',
+    servicingType:  document.getElementById('standupServicingType')?.value     || '',
+  };
+  const tbody = document.getElementById('standupTableBody');
+  const empty = document.getElementById('standupEmpty');
+  if (!tbody) return;
+  if (empty) empty.classList.add('hidden');
+
+  // Counsellor pool: global top filters (SM/POD/TL/Counsellor) narrowed further by this
+  // section's own Advanced Filters, plus Intake/Country/Servicing/CA-Date scaling volume counts.
+  const isMgrRole = ['team_lead','pod_leader','senior_manager','director','ops_admin'].includes(state.role);
+  let pool = isMgrRole ? getFilteredCounselorPool() : [state.currentUser];
+  pool = narrowPoolByLocalFilters(pool, filters);
+  const extMult = computeExtraFilterMultiplier(filters);
+  const { volumeRows, funnelRows } = buildPerfRows(pool, extMult);
+
+  // ── STATUS COMPUTATION ─────────────────────────────────────
+  function addStatus(rows) {
+    rows.forEach(r => {
+      const aYTD = typeof r.aYTD === 'number' ? r.aYTD : parseFloat(String(r.aYTD).replace(/[^0-9.]/g,''));
+      const tYTD = typeof r.tYTD === 'number' ? r.tYTD : parseFloat(String(r.tYTD).replace(/[^0-9.]/g,''));
+      // No target set → cannot assess
+      if (tYTD === 0) { r.status = 'focus'; return; }
+      if (r.isDropRate) {
+        // Lower is better: actual ≤ target = good, else focus
+        r.status = aYTD <= tYTD ? 'good' : 'focus';
+      } else {
+        // Good only if meets or exceeds the target rate
+        r.status = aYTD >= tYTD ? 'good' : 'focus';
+      }
+    });
+  }
+  addStatus(volumeRows);
+  addStatus(funnelRows);
+
+  // ── STATUS SUMMARY ─────────────────────────────────────────
+  const allRows    = [...volumeRows, ...funnelRows];
+  const goodCnt    = allRows.filter(r => r.status === 'good').length;
+  const ontrackCnt = allRows.filter(r => r.status === 'ontrack').length;
+  const focusCnt   = allRows.filter(r => r.status === 'focus').length;
+
+  // Last Updated At
+  const lastUpdEl = document.getElementById('standupLastUpdated');
+  if (lastUpdEl) {
+    const now = new Date();
+    lastUpdEl.textContent = `Last updated: ${now.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'})} at ${now.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})}`;
+  }
+
+  // Business-goal box for CA->STI (14D) and CA->LockIn (14D) — a distinct, highlighted panel
+  // (not just another table row) so it's obvious at a glance whether the filtered person/team
+  // is hitting these two priority targets.
+  function goalBox(row, label) {
+    const isGood    = row.status === 'good';
+    const isOnTrack = row.status === 'ontrack';
+    const bg    = isGood ? 'bg-green-50 border-green-300' : isOnTrack ? 'bg-amber-50 border-amber-300' : 'bg-red-50 border-red-300';
+    const txt   = isGood ? 'text-green-800' : isOnTrack ? 'text-amber-800' : 'text-red-800';
+    const bar   = isGood ? 'bg-success' : isOnTrack ? 'bg-accent' : 'bg-danger';
+    const statusLabel = isGood ? 'Good' : isOnTrack ? 'On Track' : 'Focus';
+    const pct   = row.tYTD > 0 ? Math.min(100, Math.round((row.aYTD / row.tYTD) * 100)) : 0;
+    return `<div class="flex-1 min-w-[170px] h-full flex flex-col justify-center rounded-xl border ${bg} px-3.5 py-3">
+      <div class="text-[11px] font-bold ${txt} text-center whitespace-nowrap">${label}</div>
+      <div class="flex items-baseline justify-center gap-1 mt-1">
+        <span class="text-2xl font-extrabold ${txt} leading-none">${row.aYTD}%</span>
+        <span class="text-[10px] ${txt} opacity-70 font-medium">vs ${row.tYTD}% target <span class="text-sm font-bold opacity-100">(${statusLabel})</span></span>
+      </div>
+      <div class="w-full bg-white/70 rounded-full h-1.5 mt-2 overflow-hidden">
+        <div class="${bar} h-1.5 rounded-full" style="width:${pct}%"></div>
+      </div>
+    </div>`;
+  }
+  function summaryChip(count, label, colorCls, dotCls, bgCls, borderCls) {
+    return `<div class="h-full flex items-center gap-1.5 rounded-lg border ${bgCls} ${borderCls} px-3 w-full">
+      <span class="w-1.5 h-1.5 rounded-full ${dotCls} inline-block flex-shrink-0"></span>
+      <span class="font-bold ${colorCls} text-sm leading-none">${count}</span>
+      <span class="text-[9px] ${colorCls} font-semibold uppercase tracking-wide">${label}</span>
+    </div>`;
+  }
+  const caSTIRow    = funnelRows.find(r => r.name === '03.CA->STI (14D)');
+  const caLockInRow = funnelRows.find(r => r.name === '05.CA->LockIn (14D)');
+
+  const summaryEl = document.getElementById('standupStatusSummary');
+  if (summaryEl) {
+    summaryEl.innerHTML = `
+      <div class="flex flex-col lg:flex-row lg:items-stretch gap-3">
+        <div class="flex-shrink-0 lg:w-36 flex flex-col">
+          <span class="block text-[10px] font-bold text-text-muted uppercase tracking-widest mb-1.5">Overall Summary</span>
+          <div class="flex-1 flex flex-col gap-1.5">
+            <div class="flex-1">${summaryChip(goodCnt,    'Good',     'text-success', 'bg-success', 'bg-green-50', 'border-green-200')}</div>
+            <div class="flex-1">${summaryChip(ontrackCnt, 'On Track', 'text-accent',  'bg-accent',  'bg-amber-50', 'border-amber-200')}</div>
+            <div class="flex-1">${summaryChip(focusCnt,   'Focus',    'text-danger',  'bg-danger',  'bg-red-50',   'border-red-200')}</div>
+          </div>
+        </div>
+        <div class="flex-1 rounded-2xl border-2 border-primary/25 bg-gradient-to-br from-primary/5 to-accent/5 px-3.5 py-2.5">
+          <div class="flex items-center justify-center gap-1.5 mb-2">
+            <span class="text-xs">🎯</span>
+            <span class="text-[10px] font-bold text-primary uppercase tracking-widest">Important Business Goal</span>
+            <span class="text-[8px] font-bold bg-red-100 text-red-600 px-1.5 py-0.5 rounded-full">IMP</span>
+          </div>
+          <div class="flex flex-col sm:flex-row gap-3">
+            ${caSTIRow    ? goalBox(caSTIRow,    'CA > STI (14d)')    : ''}
+            ${caLockInRow ? goalBox(caLockInRow, 'CA > Lockin (14d)') : ''}
+          </div>
+        </div>
+      </div>`;
+  }
+
+  // ── RENDER HELPERS ─────────────────────────────────────────
+  function fmtV(val, isPct, isCurrency) {
+    if (isCurrency) return fmt(val);
+    if (isPct) return `${val}%`;
+    return val;
+  }
+
+  function statusBadge(status) {
+    if (status === 'good')    return `<span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-green-100 text-success whitespace-nowrap">✓ Good</span>`;
+    if (status === 'ontrack') return `<span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-100 text-amber-700 whitespace-nowrap">~ On Track</span>`;
+    return `<span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-red-100 text-danger whitespace-nowrap">! Focus</span>`;
+  }
+
+  function statusDotRow(status) {
+    const color = status === 'good' ? 'bg-success' : status === 'ontrack' ? 'bg-accent' : 'bg-danger';
+    return `<span class="w-2 h-2 rounded-full ${color} inline-block mr-1.5 flex-shrink-0"></span>`;
+  }
+
+  function perfCell(val, isPct, isCurrency, target, isDropRate) {
+    const fval = fmtV(val, isPct, isCurrency);
+    const numV = typeof val    === 'string' ? parseFloat(val.replace(/[^0-9.]/g,''))    : val;
+    const numT = typeof target === 'string' ? parseFloat(target.replace(/[^0-9.]/g,'')) : target;
+    let cls;
+    if (numT === 0) {
+      cls = 'text-danger'; // no target set
+    } else if (isDropRate) {
+      cls = numV <= numT ? 'text-success' : numV <= numT * 1.5 ? 'text-accent' : 'text-danger';
+    } else {
+      const pct = Math.round((numV / numT) * 100);
+      cls = pct >= 100 ? 'text-success' : pct >= 80 ? 'text-accent' : 'text-danger';
+    }
+    return `<span class="font-semibold ${cls}">${fval}</span>`;
+  }
+
+  function trendArrow(current, prev) {
+    if (current > prev) return `<span class="text-success text-[10px] ml-0.5">↑</span>`;
+    if (current < prev) return `<span class="text-danger text-[10px] ml-0.5">↓</span>`;
+    return `<span class="text-text-muted text-[10px] ml-0.5">→</span>`;
+  }
+
+  function sectionHeader(title, groupId, count, goodN, ontrackN, focusN) {
+    const chips = [];
+    if (goodN > 0)    chips.push(`<span class="text-[9px] text-success font-bold">${goodN} ✓</span>`);
+    if (ontrackN > 0) chips.push(`<span class="text-[9px] text-accent font-bold">${ontrackN} ~</span>`);
+    if (focusN > 0)   chips.push(`<span class="text-[9px] text-danger font-bold">${focusN} !</span>`);
+    return `<tr onclick="togglePerfSection('${groupId}')" class="cursor-pointer hover:bg-slate-200/60 transition-colors select-none">
+      <td colspan="12" class="px-3 py-2.5 bg-slate-100 border-y border-border">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="text-[10px] font-bold text-slate-600 uppercase tracking-widest">${title}</span>
+            <span class="text-[9px] px-1.5 py-0.5 rounded-full bg-slate-200 text-slate-500 font-semibold">${count} metrics</span>
+            ${chips.join('')}
+          </div>
+          <div class="flex items-center gap-1.5">
+            <span class="text-[9px] text-slate-400 font-medium">tap to expand</span>
+            <svg id="chevron-perf-${groupId}" class="w-3.5 h-3.5 text-slate-400 transition-transform duration-200" style="transform:rotate(180deg)" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/></svg>
+          </div>
+        </div>
+      </td>
+    </tr>`;
+  }
+
+  function dataRow(row, idx, i, groupId) {
+    const rowBg = i % 2 === 0 ? '' : 'bg-surface/30';
+    const nameDisplay = /^\d/.test(row.name) ? row.name : `${idx + 1}. ${row.name}`;
+    return `<tr class="hover:bg-primary/5 transition-colors ${rowBg} perf-row-${groupId}">
+      <td class="px-3 py-2.5 font-medium text-text-main sticky left-0 ${rowBg || 'bg-white'} whitespace-nowrap">
+        <div class="flex items-center">${statusDotRow(row.status)}${nameDisplay}</div>
+      </td>
+      <td class="px-3 py-2.5 text-right font-mono text-text-muted bg-blue-50/40">${fmtV(row.tYTD, row.isPct, row.isCurrency)}</td>
+      <td class="px-3 py-2.5 text-right font-mono text-text-muted bg-blue-50/40">${fmtV(row.tMTD, row.isPct, row.isCurrency)}</td>
+      <td class="px-3 py-2.5 text-right font-mono bg-emerald-50/40 cursor-pointer hover:bg-emerald-100/60" onclick="showStandupDrillDown('${row.key}','${row.name}','YTD',${JSON.stringify(row.aYTD)},${JSON.stringify(row.tYTD)},${row.isPct||false},${row.isCurrency||false})">${perfCell(row.aYTD, row.isPct, row.isCurrency, row.tYTD || 1, row.isDropRate)}<span class="text-[9px] text-emerald-600 ml-1">↗</span></td>
+      <td class="px-3 py-2.5 text-right font-mono bg-emerald-50/40 cursor-pointer hover:bg-emerald-100/60" onclick="showStandupDrillDown('${row.key}','${row.name}','MTD',${JSON.stringify(row.aMTD)},${JSON.stringify(row.tMTD)},${row.isPct||false},${row.isCurrency||false})">${perfCell(row.aMTD, row.isPct, row.isCurrency, row.tMTD || 1, row.isDropRate)}<span class="text-[9px] text-emerald-600 ml-1">↗</span></td>
+      <td class="px-3 py-2.5 text-right font-mono text-text-muted cursor-pointer hover:bg-blue-50/60" onclick="showStandupDrillDown('${row.key}','${row.name}','Yesterday',${JSON.stringify(row.Y)},${JSON.stringify(row.tMTD)},${row.isPct||false},${row.isCurrency||false})">${fmtV(row.Y,row.isPct,row.isCurrency)}<span class="text-[9px] text-blue-400 ml-0.5">↗</span></td>
+      <td class="px-3 py-2.5 text-right font-mono text-text-muted cursor-pointer hover:bg-blue-50/60" onclick="showStandupDrillDown('${row.key}','${row.name}','2 Days Ago',${JSON.stringify(row.Y1)},${JSON.stringify(row.tMTD)},${row.isPct||false},${row.isCurrency||false})">${fmtV(row.Y1,row.isPct,row.isCurrency)}<span class="text-[9px] text-blue-400 ml-0.5">↗</span></td>
+      <td class="px-3 py-2.5 text-right font-mono text-text-muted cursor-pointer hover:bg-blue-50/60" onclick="showStandupDrillDown('${row.key}','${row.name}','3 Days Ago',${JSON.stringify(row.Y2)},${JSON.stringify(row.tMTD)},${row.isPct||false},${row.isCurrency||false})">${fmtV(row.Y2,row.isPct,row.isCurrency)}<span class="text-[9px] text-blue-400 ml-0.5">↗</span></td>
+      <td class="px-3 py-2.5 text-right font-mono bg-amber-50/40 text-text-muted cursor-pointer hover:bg-amber-100/60" onclick="showStandupDrillDown('${row.key}','${row.name}','This Week',${JSON.stringify(row.W0)},${JSON.stringify(row.tMTD)},${row.isPct||false},${row.isCurrency||false})">${fmtV(row.W0,row.isPct,row.isCurrency)}${trendArrow(row.W0,row.W01)}<span class="text-[9px] text-blue-400 ml-0.5">↗</span></td>
+      <td class="px-3 py-2.5 text-right font-mono bg-amber-50/40 text-text-muted cursor-pointer hover:bg-amber-100/60" onclick="showStandupDrillDown('${row.key}','${row.name}','Last Week',${JSON.stringify(row.W01)},${JSON.stringify(row.tMTD)},${row.isPct||false},${row.isCurrency||false})">${fmtV(row.W01,row.isPct,row.isCurrency)}<span class="text-[9px] text-blue-400 ml-0.5">↗</span></td>
+      <td class="px-3 py-2.5 text-right font-mono bg-amber-50/40 text-text-muted cursor-pointer hover:bg-amber-100/60" onclick="showStandupDrillDown('${row.key}','${row.name}','Last Month',${JSON.stringify(row.M01)},${JSON.stringify(row.tMTD)},${row.isPct||false},${row.isCurrency||false})">${fmtV(row.M01,row.isPct,row.isCurrency)}<span class="text-[9px] text-blue-400 ml-0.5">↗</span></td>
+      <td class="px-3 py-2.5 text-center">${statusBadge(row.status)}</td>
+    </tr>`;
+  }
+
+  // Per-section status counts for header badges
+  const vGood = volumeRows.filter(r => r.status === 'good').length;
+  const vOn   = volumeRows.filter(r => r.status === 'ontrack').length;
+  const vFoc  = volumeRows.filter(r => r.status === 'focus').length;
+  const fGood = funnelRows.filter(r => r.status === 'good').length;
+  const fOn   = funnelRows.filter(r => r.status === 'ontrack').length;
+  const fFoc  = funnelRows.filter(r => r.status === 'focus').length;
+
+  tbody.innerHTML =
+    sectionHeader('📊 Volume Metrics',    'volume', volumeRows.length, vGood, vOn, vFoc) +
+    volumeRows.map((r, i) => dataRow(r, i, i, 'volume')).join('') +
+    sectionHeader('🔁 Conversion Funnel', 'funnel', funnelRows.length, fGood, fOn, fFoc) +
+    funnelRows.map((r, i) => dataRow(r, i, i, 'funnel')).join('');
+
+  // Auto-expand the section body on render
+  const body = document.getElementById('body-standup');
+  const chev = document.getElementById('chevron-standup');
+  if (body) {
+    body.classList.remove('hidden');
+    if (chev) chev.style.transform = 'rotate(180deg)';
+  }
+}
+
+function togglePerfSection(groupId) {
+  const rows = document.querySelectorAll(`.perf-row-${groupId}`);
+  const chevron = document.getElementById(`chevron-perf-${groupId}`);
+  if (!rows.length) return;
+  const isVisible = !rows[0].classList.contains('hidden');
+  rows.forEach(r => r.classList.toggle('hidden', isVisible));
+  if (chevron) chevron.style.transform = isVisible ? '' : 'rotate(180deg)';
+}
+
+function toggleStandupAdvancedFilter() {
+  const panel = document.getElementById('standupAdvancedFilter');
+  const btn   = document.getElementById('advFilterBtn');
+  if (!panel) return;
+  const isOpen = !panel.classList.contains('hidden');
+  panel.classList.toggle('hidden', isOpen);
+  // Make sure the table section is open so filter makes sense
+  if (!isOpen) {
+    const body = document.getElementById('body-standup');
+    const chev = document.getElementById('chevron-standup');
+    if (body && body.classList.contains('hidden')) {
+      body.classList.remove('hidden');
+      if (chev) chev.style.transform = 'rotate(180deg)';
+    }
+  }
+  if (btn) {
+    btn.classList.toggle('bg-primary/10', !isOpen);
+    btn.classList.toggle('text-primary',  !isOpen);
+    btn.classList.toggle('border-primary/30', !isOpen);
+  }
+}
+
+function applyStandupFilters() {
+  renderStandupTable();
+  // Show CA date filter info if set
+  const from = document.getElementById('standupCADateFrom')?.value;
+  const to   = document.getElementById('standupCADateTo')?.value;
+  if (from || to) {
+    const label = `CA Date: ${from || '…'} → ${to || '…'}`;
+    showToast(`Filter applied — ${label}`, 'info');
+  }
+}
+
+function resetStandupFilters() {
+  const fields = ['standupIntake','standupCountry','standupCounsellorFilter','standupTLFilter','standupPODFilter','standupSMFilter','standupCADateFrom','standupCADateTo','standupServicingType'];
+  fields.forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+  renderStandupTable({ intake:'', location:'', country:'', counsellor:'', tl:'', pod:'', sm:'', caDateFrom:'', caDateTo:'', servicingType:'' });
+}
+
+/* ── Standup Achv drill-down ── */
+function showStandupDrillDown(key, name, period, achv, target, isPct, isCurrency) {
+  setActiveDrawerRefresh(() => showStandupDrillDown(key, name, period, achv, target, isPct, isCurrency));
+  function fv(v) { if (isCurrency) return '₹' + Number(v).toLocaleString('en-IN'); if (isPct) return v + '%'; return v; }
+  const numA = parseFloat(String(achv).replace(/[^0-9.]/g,''));
+  const numT = parseFloat(String(target).replace(/[^0-9.]/g,''));
+  const pct  = numT > 0 ? Math.round((numA / numT) * 100) : (numA > 0 ? 100 : 0);
+  const cls  = pct >= 80 ? 'text-success' : pct >= 50 ? 'text-accent' : 'text-danger';
+
+  // Respect the global manager filters (SM/POD/TL/Counsellor) — same pool as the rest of the manager dashboard
+  const isMgrRole = ['team_lead','pod_leader','senior_manager','director','ops_admin'].includes(state.role);
+  const pool = isMgrRole ? getFilteredCounselorPool() : [state.currentUser];
+  const breakdownPool = pool.slice(0, 5);
+
+  const breakdown = breakdownPool.map((c, i) => {
+    const factor = [1, 0.87, 0.72, 0.61, 0.45][i];
+    const val = isCurrency ? Math.round(numA * factor) : isPct ? Math.round(numA * factor) : Math.round(numA * factor);
+    const pctOf = numT > 0 ? Math.round((val / numT) * 100) : 0;
+    const bc = pctOf >= 80 ? 'bg-green-100 text-success' : pctOf >= 50 ? 'bg-amber-100 text-accent' : 'bg-red-100 text-danger';
+    return `<div class="flex items-center justify-between py-2 border-b border-border last:border-0">
+      <div class="flex items-center gap-2">
+        <div class="w-7 h-7 rounded-full bg-accent/20 flex items-center justify-center text-xs font-bold text-accent">${c.avatar}</div>
+        <span class="text-sm font-medium text-text-main">${c.name}</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="font-mono font-bold text-sm ${cls.replace('text-','text-')}">${fv(val)}</span>
+        <span class="text-[10px] px-1.5 py-0.5 rounded-full font-semibold ${bc}">${pctOf}%</span>
+      </div>
+    </div>`;
+  }).join('') || '<p class="text-sm text-text-muted text-center py-6 italic">No counsellors match the current filters.</p>';
+
+  const content = `
+    ${isMgrRole ? mgrDrawerFilterBar() : ''}
+    <div class="mb-4 p-4 rounded-xl bg-emerald-50 border border-emerald-200">
+      <p class="text-[10px] font-bold text-emerald-700 uppercase tracking-widest mb-1">${name} — ${period}</p>
+      <p class="font-mono text-3xl font-extrabold ${cls}">${fv(achv)}</p>
+      <p class="text-xs text-text-muted mt-1">vs Target ${fv(target)} · <span class="${cls} font-semibold">${pct}% achieved</span></p>
+    </div>
+    <p class="text-[10px] font-bold text-text-muted uppercase tracking-widest mb-3">Counsellor Breakdown${pool.length > 5 ? ` (top 5 of ${pool.length})` : ''}</p>
+    <div>${breakdown}</div>
+    <p class="text-[10px] text-text-muted mt-4 text-center italic">* Breakdown is indicative based on proportional distribution</p>`;
+  state.drawerMode     = 'standupDrillDown';
+  state.drawerPrevMode = 'standup';
+  openDrawer(`${name} · ${period} Drill-Down`, content, true);
+}
+
+/* ── DP Upload ── */
+function updateProfileDP(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const av = document.getElementById('profileAvatar');
+    if (!av) return;
+    av.innerHTML = `<img src="${e.target.result}" class="w-full h-full object-cover rounded-full" alt="DP" />`;
+    av.style.background = 'transparent';
+    // Store on user
+    if (state.currentUser) state.currentUser.photoUrl = e.target.result;
+    // Update header avatar too
+    const ha = document.getElementById('headerAvatar');
+    if (ha) { ha.innerHTML = `<img src="${e.target.result}" class="w-full h-full object-cover rounded-full" alt="" />`; ha.style.background = 'transparent'; }
+    showToast('Profile photo updated!', 'success');
+  };
+  reader.readAsDataURL(file);
+}
+
+/* ═══════════════════════════════════════════════════════
+   FEATURE H — SUMMARY TABLE FILTERS
+═══════════════════════════════════════════════════════ */
+
+function applySummaryFilters() {
+  const intake  = document.getElementById('summaryIntake')?.value  || '';
+  const country = document.getElementById('summaryCountry')?.value || '';
+  // Reflect in URL
+  const url = new URL(window.location.href);
+  if (intake)  url.searchParams.set('intake',  intake);  else url.searchParams.delete('intake');
+  if (country) url.searchParams.set('country', country); else url.searchParams.delete('country');
+  window.history.replaceState({}, '', url.toString());
+  // Re-render metric cards with filter label
+  const label = [intake, country].filter(Boolean).join(' · ');
+  showToast(label ? `Filters applied: ${label}` : 'All filters cleared — showing full data.', 'info');
+  // In a real app this would re-query; here we just refresh metric cards
+  renderMetricCards();
+}
+
+function resetSummaryFilters() {
+  const fields = ['summaryIntake','summaryCountry'];
+  fields.forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+  const url = new URL(window.location.href);
+  url.searchParams.delete('intake');
+  url.searchParams.delete('country');
+  window.history.replaceState({}, '', url.toString());
+  renderMetricCards();
+  showToast('Filters reset.', 'info');
+}
+
+/* ═══════════════════════════════════════════════════════
+   FEATURE G — WHATSAPP HISTORY + CALL BUTTON
+═══════════════════════════════════════════════════════ */
+
+// Mock WhatsApp message history per student
+const WA_MESSAGES = {
+  U1001: [
+    { dir:'sent',     text:'Hi Aarav! Just wanted to check in — have you had a chance to look at the MBA brochure I shared?', ts:'20 May, 11:45 AM', status:'read' },
+    { dir:'received', text:'Yes! It looks great. I had a few questions about the fee structure.', ts:'20 May, 12:10 PM', status:'read' },
+    { dir:'sent',     text:'Of course! Happy to walk you through it. Should I send the detailed fee breakdown?', ts:'20 May, 12:15 PM', status:'read' },
+    { dir:'received', text:'Yes please, that would help a lot!', ts:'20 May, 12:20 PM', status:'read' },
+    { dir:'sent',     text:'Sending it now. Also, I\'ve added you to the MBA Batch A group on WhatsApp — check it out! 🎓', ts:'20 May, 12:22 PM', status:'delivered' },
+  ],
+  U1002: [
+    { dir:'sent',     text:'Hi Sanya, this is your counselor. We spoke yesterday. I\'m sending over the BBA application checklist.', ts:'19 May, 2:00 PM', status:'delivered' },
+    { dir:'sent',     text:'📎 BBA_Application_Checklist_2026.pdf', ts:'19 May, 2:01 PM', status:'delivered' },
+  ],
+  U1003: [
+    { dir:'sent',     text:'Rahul, sharing the payment link for your deposit here: https://pay.leap.in/xyz', ts:'21 May, 11:05 AM', status:'read' },
+    { dir:'received', text:'Thanks! I\'ll make the payment by 23rd as discussed.', ts:'21 May, 11:30 AM', status:'read' },
+    { dir:'sent',     text:'Perfect! Let me know if you face any issue. Looking forward to having you on board! 🎉', ts:'21 May, 11:32 AM', status:'read' },
+  ],
+};
+
+function callStudent(studentId) {
+  const s = STUDENTS.find(x => x.id === studentId);
+  if (!s) return;
+  const btn = document.getElementById(`callBtn-${studentId}`);
+  if (btn) { btn.disabled = true; btn.textContent = 'Calling…'; }
+
+  // Log call in activity
+  const timestamp = new Date().toLocaleString('en-IN', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' });
+  s.activity.unshift({ type:'Call logged', time: timestamp, notes:'Outgoing — Initiated via Leap CRM' });
+
+  // Resolve matching unhappy alert
+  const alert = UNHAPPY_ALERTS.find(a => a.leadId === studentId && !a.resolved);
+  if (alert) {
+    setTimeout(() => {
+      alert.resolved = true;
+      renderAlertIcon();
+      showToast(`Alert for ${s.name} auto-resolved — call logged.`, 'success');
+    }, 1500);
+  }
+
+  setTimeout(() => {
+    showToast(`Calling ${s.name}…`, 'info');
+    // Open tel: link as fallback
+    window.location.href = `tel:+919876543210`;
+    if (btn) { btn.disabled = false; btn.textContent = '📞 Call'; }
+  }, 300);
+}
+
+// Override openStudentDetail to include call button + WhatsApp history
+const _origOpenStudentDetail = openStudentDetail;
+function openStudentDetail(studentId) {
+  // Only update prevMode when navigating INTO student detail for the first time.
+  // Do NOT overwrite it when re-rendering from saveSubtask / toggleSubtask (already 'student').
+  if (state.drawerMode !== 'student') {
+    state.drawerPrevMode = state.drawerMode || null;
+  }
+  state.drawerMode = 'student';
+  state.drawerOfferId = state.drawerOfferId || null;
+  const s = STUDENTS.find(x => x.id === studentId);
+  if (!s) return;
+  state.drawerSelectedStudent = s;
+
+  const stageOrder  = ['sti','application','deposit','lockin'];
+  const stageIdx    = stageOrder.indexOf(s.stage);
+  const stageLabels = ['STI','Application','Deposit','Lock-in'];
+  const stageBar    = stageLabels.map((l,i) => `
+    <div class="flex-1">
+      <div class="stage-step ${i < stageIdx ? 'done' : i === stageIdx ? 'current' : ''}"></div>
+      <p class="text-[10px] text-center mt-1 ${i <= stageIdx ? 'font-semibold text-text-main' : 'text-text-muted'}">${l}</p>
+    </div>
+  `).join('');
+
+  const waRows = s.whatsappGroups.map(g => `
+    <div class="text-xs flex gap-4 py-1 border-b border-border last:border-0">
+      <span class="font-medium text-text-main flex-1">${g.groupName}</span>
+      <span>${g.counselorJoined ? '✅ You' : '❌ You'}</span>
+      <span>${g.studentJoined ? '✅ Student' : '❌ Student'}</span>
+    </div>
+  `).join('');
+
+  const activityHtml = `
+    <div class="activity-log pl-5">
+      ${s.activity.map(a => `
+        <div class="activity-item">
+          <div class="activity-dot"></div>
+          <div class="activity-content">
+            <p class="activity-time">${a.time}</p>
+            <p class="activity-action">${a.type}</p>
+            ${a.notes ? `<p class="activity-notes">${a.notes}</p>` : ''}
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+
+  const subtaskHtml = s.subtasks.map((t,idx) => `
+    <div class="subtask-item ${t.done ? 'done' : ''}" onclick="toggleSubtask('${s.id}',${idx})">
+      <input type="checkbox" ${t.done ? 'checked' : ''} onclick="event.stopPropagation();toggleSubtask('${s.id}',${idx})" />
+      <div class="flex-1">
+        <p class="text-sm font-medium ${t.done ? 'line-through text-text-muted' : 'text-text-main'}">${t.label}</p>
+        ${t.done && t.timestamp ? `<p class="text-xs text-text-muted">${t.timestamp}${t.notes ? ' — ' + t.notes : ''}</p>` : ''}
+      </div>
+    </div>
+    <div id="stform-${s.id}-${idx}" class="subtask-form hidden">
+      <textarea id="stnotes-${s.id}-${idx}" placeholder="Notes… (required)" rows="2" class="w-full text-xs px-2 py-1.5 border border-border rounded-lg mb-2 resize-none focus:outline-none"></textarea>
+      <div class="flex gap-2 mb-2">
+        <select id="stoutcome-${s.id}-${idx}" class="flex-1 text-xs px-2 py-1.5 border border-border rounded-lg bg-white focus:outline-none">
+          <option>Connected</option><option>Not Reachable</option><option>Callback Requested</option><option>Promise to Pay</option><option>Closed</option>
+        </select>
+        <input id="stdate-${s.id}-${idx}" type="date" placeholder="Follow-up date (required)" class="text-xs px-2 py-1.5 border border-border rounded-lg focus:outline-none" />
+      </div>
+      <p class="text-[10px] text-red-500 mb-1">* Notes and Follow-up Date are required</p>
+      <button onclick="saveSubtask('${s.id}',${idx})" class="mt-1 px-3 py-1 bg-accent text-white text-xs font-semibold rounded-lg cursor-pointer">Save</button>
+    </div>
+  `).join('');
+
+  // WhatsApp history
+  const waMsgs = WA_MESSAGES[studentId] || [];
+  let waHistoryHtml = '';
+  if (waMsgs.length) {
+    const bubbles = waMsgs.map(m => {
+      const cls = m.dir === 'sent' ? 'sent' : 'received';
+      const wrap = m.dir === 'sent' ? 'wa-msg-sent' : 'wa-msg-received';
+      const statusIcon = m.status === 'read' ? '✓✓' : m.status === 'delivered' ? '✓✓' : '✓';
+      const statusColor = m.status === 'read' ? 'color:#34B7F1' : 'color:#94A3B8';
+      return `<div class="${wrap}">
+        <div class="wa-bubble ${cls}">
+          <span>${escHtml(m.text)}</span>
+          <span class="wa-ts">${m.ts} <span style="${statusColor}">${statusIcon}</span></span>
+        </div>
+      </div>`;
+    }).join('');
+    waHistoryHtml = `<div class="bg-[#ECE5DD] rounded-xl p-3 max-h-48 overflow-y-auto space-y-1">${bubbles}</div>`;
+  } else {
+    waHistoryHtml = `<p class="text-xs text-text-muted italic">No WhatsApp conversations yet.</p>`;
+  }
+
+  const content = `
+    <!-- Stage Bar -->
+    <div class="mb-4">
+      <p class="text-xs text-text-muted mb-2 font-semibold uppercase tracking-wide">Current Stage</p>
+      <div class="stage-bar">${stageBar}</div>
+    </div>
+
+    <!-- Info Grid -->
+    <div class="grid grid-cols-2 gap-2 mb-4 text-xs">
+      <div class="bg-surface rounded-lg p-2"><p class="text-text-muted">User ID</p><p class="font-semibold">${s.id}</p></div>
+      <div class="bg-surface rounded-lg p-2"><p class="text-text-muted">Course</p><p class="font-semibold">${s.course}</p></div>
+      <div class="bg-surface rounded-lg p-2"><p class="text-text-muted">Country</p><p class="font-semibold text-primary">${s.country || '—'}</p></div>
+      <div class="bg-surface rounded-lg p-2"><p class="text-text-muted">Last Call</p><p class="font-semibold">${s.lastCallDate} — ${s.lastCallOutcome}</p></div>
+      <div class="bg-surface rounded-lg p-2"><p class="text-text-muted">Follow-up</p>
+        <p class="font-semibold ${s.followup <= '2026-05-23' ? 'text-danger' : 'text-text-main'}">${s.followup}</p></div>
+      <div class="bg-surface rounded-lg p-2"><p class="text-text-muted">App Status</p>
+        <p><span class="app-badge ${s.appDownloaded ? 'downloaded' : 'not-downloaded'}">${s.appDownloaded ? '📱 Downloaded' : '📵 Not Downloaded'}</span></p></div>
+      <div class="bg-surface rounded-lg p-2"><p class="text-text-muted">Quality Score</p><p class="font-semibold">${s.qualityScore}/100</p></div>
+      <div class="bg-surface rounded-lg p-2 col-span-2"><p class="text-text-muted">Last Connected</p><p class="font-semibold">${s.lastConnected}</p></div>
+    </div>
+
+    <!-- WhatsApp Groups -->
+    <div class="mb-4">
+      <p class="text-xs text-text-muted mb-1 font-semibold uppercase tracking-wide">WhatsApp Groups</p>
+      <div class="bg-surface rounded-lg p-2">${waRows}</div>
+    </div>
+
+    <!-- WhatsApp Message History -->
+    <div class="mb-4">
+      <button onclick="toggleWaHistory('${s.id}')" class="w-full flex items-center justify-between text-xs font-semibold text-text-muted uppercase tracking-wide mb-2 hover:text-text-main transition-colors cursor-pointer">
+        <span>WhatsApp Messages${waMsgs.length ? ` (${waMsgs.length})` : ''}</span>
+        <svg id="waChev-${s.id}" class="w-3.5 h-3.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+      </button>
+      <div id="waHistory-${s.id}" class="hidden">${waHistoryHtml}</div>
+    </div>
+
+    <!-- Servicing Type -->
+    <div class="mb-4">
+      <p class="text-xs text-text-muted mb-2 font-semibold uppercase tracking-wide">Servicing Type</p>
+      <div class="bg-surface rounded-xl p-3 space-y-2">
+        <div>
+          <label class="text-[11px] text-text-muted font-medium">Type <span class="text-red-500">*</span></label>
+          <select id="st-type-${s.id}" onchange="updateServicingType('${s.id}')"
+            class="w-full mt-1 text-sm px-3 py-2 border border-border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-accent">
+            <option value="">-- Select Servicing Type --</option>
+            <option value="partner"     ${s.servicingType === 'partner'     ? 'selected' : ''}>Free Service</option>
+            <option value="non-partner" ${s.servicingType === 'non-partner' ? 'selected' : ''}>Paid Service</option>
+          </select>
+        </div>
+        <div id="st-sub-${s.id}" class="${s.servicingType === 'non-partner' ? '' : 'hidden'}">
+          <label class="text-[11px] text-text-muted font-medium">Sub Type <span class="text-red-500">*</span></label>
+          <select id="st-subtype-${s.id}" onchange="updateServicingSubType('${s.id}')"
+            class="w-full mt-1 text-sm px-3 py-2 border border-border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-accent">
+            <option value="">-- Select Sub Type --</option>
+            <option value="premium-universities"  ${s.nonPartnerSubType === 'premium-universities'  ? 'selected' : ''}>Premium Universities</option>
+            <option value="specialised-services"  ${s.nonPartnerSubType === 'specialised-services'  ? 'selected' : ''}>Specialised Services</option>
+            <option value="paid-application"      ${s.nonPartnerSubType === 'paid-application'      ? 'selected' : ''}>Paid Application</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Subtask Checklist -->
+    <div class="mb-4">
+      <p class="text-xs text-text-muted mb-2 font-semibold uppercase tracking-wide">Subtasks</p>
+      <div id="subtaskList">${subtaskHtml}</div>
+    </div>
+
+    <!-- Activity Log -->
+    <div>
+      <p class="text-xs text-text-muted mb-2 font-semibold uppercase tracking-wide">Activity Log</p>
+      ${activityHtml}
+    </div>
+  `;
+
+  // Open as full-page overlay instead of drawer
+  const page = document.getElementById('studentDetailPage');
+  if (!page) { openDrawer(s.name, content, true); return; }
+
+  document.getElementById('sdpName').textContent = s.name;
+  document.getElementById('sdpCallWrap').innerHTML = `
+    <div class="flex items-center gap-2">
+      <button id="callBtn-${s.id}" class="call-btn flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold" onclick="callStudent('${s.id}')">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
+        Call
+      </button>
+      ${window.CLTaskStore ? `<button class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg border border-primary text-primary hover:bg-primary/5 transition-colors cursor-pointer" onclick="openRmTaskModal('${s.id}','${escHtml(s.name)}')">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 11l3 3L22 4"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+        Create Task for RM
+      </button>` : ''}
+    </div>`;
+  document.getElementById('sdpBody').innerHTML = content;
+  page.classList.remove('hidden');
+  page.scrollTop = 0;
+}
+
+function closeStudentDetailPage() {
+  const page = document.getElementById('studentDetailPage');
+  if (page) page.classList.add('hidden');
+  // Restore the drawer the user came from
+  const prev = state.drawerPrevMode;
+  if (prev === 'boostSubCardView') {
+    openBoostSubCard(state.drawerBoostSubCardId);
+  } else if (prev === 'boostFunnel') {
+    openBoostFunnelDrawer();
+  } else if (prev === 'boost') {
+    // Guard: only reopen if drawerBoostType is valid (avoid "null — Today(0)")
+    if (state.drawerBoostType) {
+      openBoostDrawer(state.drawerBoostType);
+    }
+  } else if (prev === 'volumeMetric') {
+    openVolumeMetricDrawer(state.drawerVolumeMetricKey);
+  } else if (prev === 'revenueSubCardView') {
+    openRevenueSubCard(state.drawerRevenueSubCardId);
+  } else if (prev === 'boostRevenue') {
+    openBoostRevenueDrawer();
+  } else if (prev === 'boostReferrals') {
+    openBoostReferralsDrawer();
+  } else if (prev === 'waGroup') {
+    openWAGroupDetailsDrawer();
+  } else if (prev === 'offer') {
+    openOfferDrawer(state.drawerOfferId);
+  } else if (prev === 'opportunity') {
+    openOpportunityDrawer();
+  }
+  // If prev is null/unknown (e.g. opened from main screen), just close the page — no drawer to restore
+}
+
+/* ═══════════════════════════════════════════════════════
+   WHATSAPP GROUPS DETAIL DRAWER
+═══════════════════════════════════════════════════════ */
+
+function openGroupsDetail(mode) {
+  // mode: 'counselor' → show all groups, counselor join status
+  //       'students'  → show groups where student is missing
+  const students = getViewingStudents();
+
+  // Collect all unique group entries across students
+  const groupMap = {}; // groupName → { counselorJoined, students: [{name, joined}] }
+  students.forEach(s => {
+    s.whatsappGroups.forEach(g => {
+      if (!groupMap[g.groupName]) {
+        groupMap[g.groupName] = { groupName: g.groupName, counselorJoined: g.counselorJoined, students: [] };
+      }
+      groupMap[g.groupName].students.push({ name: s.name, id: s.id, joined: g.studentJoined });
+      // Counselor join status — use latest value
+      if (g.counselorJoined) groupMap[g.groupName].counselorJoined = true;
+    });
+  });
+
+  const groups = Object.values(groupMap);
+
+  if (mode === 'counselor') {
+    const joined    = groups.filter(g => g.counselorJoined);
+    const notJoined = groups.filter(g => !g.counselorJoined);
+
+    const renderGroup = (g, cls) => `
+      <div class="border border-border rounded-xl p-3 mb-2">
+        <div class="flex items-center justify-between mb-1">
+          <p class="font-semibold text-sm text-text-main">${escHtml(g.groupName)}</p>
+          <span class="text-[10px] px-2 py-0.5 rounded-full font-bold ${cls}">${g.counselorJoined ? '✅ You joined' : '❌ You not joined'}</span>
+        </div>
+        <p class="text-xs text-text-muted">${g.students.length} student${g.students.length !== 1 ? 's' : ''} in this group</p>
+      </div>`;
+
+    const content = `
+      ${notJoined.length ? `<div class="mb-4">
+        <p class="text-xs font-semibold text-danger uppercase tracking-wide mb-2">❌ Groups you haven't joined (${notJoined.length})</p>
+        ${notJoined.map(g => renderGroup(g, 'bg-red-100 text-danger')).join('')}
+      </div>` : ''}
+      <div>
+        <p class="text-xs font-semibold text-success uppercase tracking-wide mb-2">✅ Groups you've joined (${joined.length})</p>
+        ${joined.map(g => renderGroup(g, 'bg-green-100 text-success')).join('')}
+      </div>`;
+
+    openDrawer('Your WhatsApp Groups', content, false);
+
+  } else {
+    // Students missing from groups
+    const missingRows = [];
+    groups.forEach(g => {
+      const missing = g.students.filter(s => !s.joined);
+      if (missing.length) {
+        missingRows.push({ group: g.groupName, counselorJoined: g.counselorJoined, missing });
+      }
+    });
+
+    const content = missingRows.length ? missingRows.map(r => `
+      <div class="border border-border rounded-xl p-3 mb-3">
+        <div class="flex items-center justify-between mb-2">
+          <p class="font-semibold text-sm text-text-main">${escHtml(r.group)}</p>
+          <span class="text-[10px] px-2 py-0.5 rounded-full font-bold ${r.counselorJoined ? 'bg-green-100 text-success' : 'bg-red-100 text-danger'}">${r.counselorJoined ? '✅ You joined' : '❌ You not joined'}</span>
+        </div>
+        <p class="text-xs font-semibold text-danger mb-1">${r.missing.length} student${r.missing.length !== 1 ? 's' : ''} not in group:</p>
+        ${r.missing.map(s => `
+          <div class="flex items-center justify-between py-1 border-t border-border text-xs">
+            <span class="font-medium text-text-main">${escHtml(s.name)}</span>
+            <button onclick="openStudentDetail('${s.id}')" class="text-accent font-semibold hover:underline cursor-pointer">View Lead →</button>
+          </div>`).join('')}
+      </div>`) .join('')
+    : '<p class="text-sm text-success text-center py-8">All students are in their groups! 🎉</p>';
+
+    openDrawer('Students Not in Groups', content, false);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════
+   WA GROUP DETAILS DRAWER  (4 accordion sub-cards)
+═══════════════════════════════════════════════════════ */
+
+function openWAGroupDetailsDrawer() {
+  const students = getViewingStudents();
+
+  // Build flat list of student-group pairs
+  const pairs = [];
+  students.forEach(s => {
+    s.whatsappGroups.forEach(g => {
+      pairs.push({ student: s, group: g });
+    });
+  });
+
+  // WA Group categories
+  const activeGroups       = pairs.filter(p => p.group.counselorJoined && p.group.studentJoined);
+  const inactiveGroups     = pairs.filter(p => !p.group.counselorJoined);
+  const notJoinedGroups    = pairs.filter(p => !p.group.studentJoined);
+  const notRepliedStudents = getWANotRepliedStudents();
+
+  // Group Not Created / Counsellors Not Joined:
+  // Students with NO whatsapp groups at all + students in groups where counselor hasn't joined
+  const noGroupStudents   = students.filter(s => s.whatsappGroups.length === 0);
+  const counselorNotJoined = inactiveGroups; // reuse: pairs where counselor hasn't joined
+  // Build unique student list combining both
+  const groupNotCreatedMap = new Map();
+  noGroupStudents.forEach(s => groupNotCreatedMap.set(s.id, { student: s, reason: 'No group created', group: null }));
+  counselorNotJoined.forEach(p => {
+    if (!groupNotCreatedMap.has(p.student.id)) {
+      groupNotCreatedMap.set(p.student.id, { student: p.student, reason: 'Counsellor not joined', group: p.group });
+    }
+  });
+  const groupNotCreatedList = [...groupNotCreatedMap.values()];
+
+  // Voice channel categories
+  const missedCallStudents     = students.filter(s => ['Not Reachable', 'Callback Requested'].includes(s.lastCallOutcome));
+  const escalationStudents     = students.filter(s => s.hasEscalation);
+
+  /* ── row renderers ── */
+  function waGroupRow(p) {
+    const waLink = `https://wa.me/?text=${encodeURIComponent('Hi ' + p.student.name + ', joining you on the group now!')}`;
+    return `
+      <div class="flex items-center justify-between py-2 border-b border-border/50 last:border-0">
+        <div>
+          <p class="text-xs font-semibold text-text-main">${escHtml(p.student.name)}</p>
+          <p class="text-[10px] text-text-muted">${escHtml(p.group.groupName)}</p>
+        </div>
+        <div class="flex items-center gap-1.5">
+          <a href="${waLink}" target="_blank" class="flex items-center gap-1 text-[10px] px-2 py-1 bg-[#25D366]/10 text-[#128C7E] border border-[#25D366]/30 rounded-lg font-semibold hover:bg-[#25D366]/20 transition-colors cursor-pointer">
+            <svg class="w-3 h-3" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.104.549 4.08 1.507 5.793L.057 23.25a.75.75 0 00.92.92l5.457-1.45A11.95 11.95 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.75a9.75 9.75 0 01-5.024-1.396l-.36-.215-3.735.99.99-3.735-.215-.36A9.75 9.75 0 1112 21.75z"/></svg>
+            Open WA Group
+          </a>
+          <button onclick="openStudentDetail('${p.student.id}')" class="text-[10px] px-2 py-1 bg-primary/5 text-primary border border-primary/20 rounded-lg font-semibold hover:bg-primary/10 transition-colors cursor-pointer">View Lead →</button>
+        </div>
+      </div>`;
+  }
+
+  function waRepliedRow(s) {
+    const msgs = WA_UNANSWERED[s.id] || [];
+    const waLink = `https://wa.me/?text=${encodeURIComponent('Hi ' + s.name + ', following up on your question!')}`;
+    return `
+      <div class="flex items-start justify-between py-2 border-b border-border/50 last:border-0">
+        <div class="flex-1 min-w-0 mr-2">
+          <p class="text-xs font-semibold text-text-main">${escHtml(s.name)}</p>
+          <p class="text-[10px] text-text-muted mb-1">${msgs.length} unanswered question${msgs.length !== 1 ? 's' : ''}</p>
+          ${msgs.map(m => `<p class="text-[10px] text-amber-700 italic truncate">"${escHtml(m.question)}"</p>`).join('')}
+        </div>
+        <div class="flex flex-col gap-1 flex-shrink-0">
+          <a href="${waLink}" target="_blank" class="flex items-center gap-1 text-[10px] px-2 py-1 bg-[#25D366]/10 text-[#128C7E] border border-[#25D366]/30 rounded-lg font-semibold hover:bg-[#25D366]/20 transition-colors cursor-pointer">
+            <svg class="w-3 h-3" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.104.549 4.08 1.507 5.793L.057 23.25a.75.75 0 00.92.92l5.457-1.45A11.95 11.95 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.75a9.75 9.75 0 01-5.024-1.396l-.36-.215-3.735.99.99-3.735-.215-.36A9.75 9.75 0 1112 21.75z"/></svg>
+            Reply on WA
+          </a>
+          <button onclick="openStudentDetail('${s.id}')" class="text-[10px] px-2 py-1 bg-primary/5 text-primary border border-primary/20 rounded-lg font-semibold hover:bg-primary/10 transition-colors cursor-pointer">View Lead →</button>
+        </div>
+      </div>`;
+  }
+
+  function voiceRow(s, badge) {
+    return `
+      <div class="flex items-center justify-between py-2 border-b border-border/50 last:border-0">
+        <div>
+          <p class="text-xs font-semibold text-text-main">${escHtml(s.name)}</p>
+          <p class="text-[10px] text-text-muted">${s.id} · ${s.course}</p>
+          <span class="inline-block mt-0.5 text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${badge.cls}">${badge.label}</span>
+        </div>
+        <div class="flex items-center gap-1.5">
+          <button onclick="openStudentDetail('${s.id}')" class="text-[10px] px-2 py-1 bg-primary/5 text-primary border border-primary/20 rounded-lg font-semibold hover:bg-primary/10 transition-colors cursor-pointer">View Lead →</button>
+        </div>
+      </div>`;
+  }
+
+  /* ── generic inner accordion (WA sub-items & voice sub-items) ── */
+  function accordion(id, icon, title, count, colorCls, bgCls, borderCls, rows) {
+    return `
+      <div class="rounded-xl border ${borderCls} overflow-hidden mb-2">
+        <button onclick="toggleWACard('${id}')" class="w-full flex items-center justify-between px-3 py-2.5 ${bgCls} hover:opacity-90 transition-opacity cursor-pointer">
+          <div class="flex items-center gap-2">
+            <span class="text-sm">${icon}</span>
+            <span class="text-xs font-semibold ${colorCls}">${title}</span>
+            <span class="text-[10px] px-1.5 py-0.5 rounded-full bg-white/60 ${colorCls} font-bold">${count}</span>
+          </div>
+          <svg id="chevron-wa-${id}" class="w-3.5 h-3.5 ${colorCls} transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        </button>
+        <div id="wa-body-${id}" class="hidden px-3 pb-3 pt-1 bg-white">
+          ${rows.length === 0
+            ? `<p class="text-xs text-text-muted italic text-center py-3">All good here! 🎉</p>`
+            : rows}
+        </div>
+      </div>`;
+  }
+
+  /* ── two top-level channel cards (collapsed by default) ── */
+  function channelCard(id, icon, title, badge, borderCls, bgCls, headerColor, innerContent) {
+    return `
+      <div class="rounded-xl border ${borderCls} mb-3 shadow-sm">
+        <button onclick="toggleCommCard('${id}')" class="w-full flex items-center justify-between px-4 py-3.5 ${bgCls} hover:opacity-90 transition-opacity cursor-pointer text-left">
+          <div class="flex items-center gap-2.5">
+            <span class="text-lg leading-none">${icon}</span>
+            <div>
+              <p class="text-sm font-bold ${headerColor}">${title}</p>
+              <p class="text-[10px] ${headerColor} opacity-70 font-medium">${badge}</p>
+            </div>
+          </div>
+          <svg id="chevron-comm-${id}" class="w-4 h-4 ${headerColor} transition-transform duration-200 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        </button>
+        <div id="comm-body-${id}" class="hidden border-t ${borderCls} px-3 pb-3 pt-3 bg-white/60">
+          ${innerContent}
+        </div>
+      </div>`;
+  }
+
+  /* ── Group Not Created / Counsellors Not Joined rows ── */
+  const groupNotCreatedRows = groupNotCreatedList.map(item => {
+    const s = item.student;
+    const waLink = item.group
+      ? `https://wa.me/?text=${encodeURIComponent('Hi ' + s.name + ', joining your group now!')}`
+      : `https://wa.me/?text=${encodeURIComponent('Hi ' + s.name + ', please create a WhatsApp group!')}`;
+    return `
+      <div class="flex items-center justify-between py-2 border-b border-border/50 last:border-0">
+        <div class="flex-1 min-w-0 mr-2">
+          <p class="text-xs font-semibold text-text-main">${escHtml(s.name)}</p>
+          <p class="text-[10px] text-text-muted">${s.id} · ${s.course}</p>
+          ${item.group ? `<p class="text-[10px] text-text-muted">${escHtml(item.group.groupName)}</p>` : ''}
+          <span class="inline-block mt-0.5 text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-red-200 text-red-800">${item.reason}</span>
+        </div>
+        <div class="flex flex-col gap-1 flex-shrink-0">
+          <a href="${waLink}" target="_blank" class="flex items-center gap-1 text-[10px] px-2 py-1 bg-[#25D366]/10 text-[#128C7E] border border-[#25D366]/30 rounded-lg font-semibold hover:bg-[#25D366]/20 transition-colors cursor-pointer">
+            <svg class="w-3 h-3" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.104.549 4.08 1.507 5.793L.057 23.25a.75.75 0 00.92.92l5.457-1.45A11.95 11.95 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.75a9.75 9.75 0 01-5.024-1.396l-.36-.215-3.735.99.99-3.735-.215-.36A9.75 9.75 0 1112 21.75z"/></svg>
+            ${item.group ? 'Open WA' : 'Message'}
+          </a>
+          <button onclick="openStudentDetail('${s.id}');state.drawerPrevMode='waGroup';" class="text-[10px] px-2 py-1 bg-primary/5 text-primary border border-primary/20 rounded-lg font-semibold hover:bg-primary/10 transition-colors cursor-pointer">View Lead →</button>
+        </div>
+      </div>`;
+  }).join('');
+
+  /* ── Info + Closure banners for each WA card ── */
+  function waBanner(defText, closureText, defColor, closureColor) {
+    return `
+      <div class="mb-2.5 rounded-lg overflow-hidden border border-gray-100">
+        <div class="px-2.5 py-2 bg-blue-50 border-b border-gray-100">
+          <p class="text-[10px] font-bold text-blue-700 mb-0.5">ℹ️ Definition</p>
+          <p class="text-[10px] text-blue-600 leading-relaxed">${defText}</p>
+        </div>
+        ${closureText ? `
+        <div class="px-2.5 py-2 bg-green-50">
+          <p class="text-[10px] font-bold text-green-700 mb-0.5">✅ Task Closure</p>
+          <p class="text-[10px] text-green-600 leading-relaxed">${closureText}</p>
+        </div>` : ''}
+      </div>`;
+  }
+
+  const bannerActive     = waBanner('Counsellor/TL and student are both in the group and actively discussing every 4–5 days. Student is responsive and counsellor is also active.', null);
+  const bannerInactive   = waBanner('No one has been responsive for a minimum of 4–5 days, or the student hasn\'t joined yet — excluding leads marked as Lead Drop off.', 'Counsellor sends a message in the group, OR marks the Lead Status as <strong>Permanent Drop off</strong>.');
+  const bannerNotJoined  = waBanner('The group has been created but the student hasn\'t joined yet.', 'When the student joins the group.');
+  const bannerReplied    = waBanner('Student sent a message in the group but neither the counsellor nor the TL/Manager replied within <strong>1 hour</strong>.', 'When either the counsellor or Manager replies to the student\'s query.');
+  const bannerGroupNC    = waBanner('Counsellor is assigned for a lead but the counsellor hasn\'t joined the WhatsApp group yet, or no group has been created.', 'Group is created and the Counsellor has joined.');
+
+  // Sub-item accordions are "problem" categories — show green (no issue) when the count is 0,
+  // and only switch to their warning color once there's an actual issue to look at.
+  function issueColor(count, textCls, bgCls, borderCls) {
+    return count > 0 ? [textCls, bgCls, borderCls] : ['text-emerald-700', 'bg-emerald-50', 'border-emerald-200'];
+  }
+  const [inactiveText, inactiveBg, inactiveBorder]       = issueColor(inactiveGroups.length,      'text-amber-700',  'bg-amber-50',  'border-amber-200');
+  const [notJoinedText, notJoinedBg, notJoinedBorder]    = issueColor(notJoinedGroups.length,      'text-orange-700', 'bg-orange-50', 'border-orange-200');
+  const [repliedText, repliedBg, repliedBorder]          = issueColor(notRepliedStudents.length,   'text-red-700',    'bg-red-50',    'border-red-200');
+  const [groupNCText, groupNCBg, groupNCBorder]          = issueColor(groupNotCreatedList.length,  'text-red-800',    'bg-red-100',   'border-red-400');
+
+  /* ── Non Voice: WA Group inner content ── */
+  const nonVoiceInner = `
+    <p class="text-[11px] text-text-muted mb-2.5">WhatsApp group activity across your student cohort.</p>
+    ${accordion('active',    '✅', 'Active Groups',                         activeGroups.length,        'text-emerald-700', 'bg-emerald-50',  'border-emerald-200', bannerActive  + (activeGroups.length      ? activeGroups.map(p => waGroupRow(p)).join('')      : '<p class="text-xs text-text-muted italic text-center py-2">No active groups yet.</p>'))}
+    ${accordion('inactive',  '⚠️', 'Inactive Groups',                       inactiveGroups.length,      inactiveText,  inactiveBg,   inactiveBorder,   bannerInactive + (inactiveGroups.length    ? inactiveGroups.map(p => waGroupRow(p)).join('')    : '<p class="text-xs text-text-muted italic text-center py-2">All groups are active! 🎉</p>'))}
+    ${accordion('notjoined', '🚫', 'Students Not Joined Groups',            notJoinedGroups.length,     notJoinedText, notJoinedBg,  notJoinedBorder,  bannerNotJoined + (notJoinedGroups.length  ? notJoinedGroups.map(p => waGroupRow(p)).join('')  : '<p class="text-xs text-text-muted italic text-center py-2">All students have joined! 🎉</p>'))}
+    ${accordion('replied',   '💬', 'Messages Not Replied',                  notRepliedStudents.length,  repliedText,   repliedBg,    repliedBorder,    bannerReplied   + (notRepliedStudents.length ? notRepliedStudents.map(s => waRepliedRow(s)).join('') : '<p class="text-xs text-text-muted italic text-center py-2">All messages replied! 🎉</p>'))}
+    ${accordion('group-not-created', '🚨', 'Group Not Created / Counsellors Not Joined', groupNotCreatedList.length, groupNCText, groupNCBg, groupNCBorder, bannerGroupNC + (groupNotCreatedList.length ? groupNotCreatedRows : '<p class="text-xs text-text-muted italic text-center py-2">All counsellors have joined! 🎉</p>'))}`;
+
+
+  /* ── Voice: Jerry Call inner content ── */
+  const voiceInner = `
+    <p class="text-[11px] text-text-muted mb-2.5">Call activity requiring follow-up action.</p>
+    ${accordion('missed-calls', '📵', 'Missed Call Details', missedCallStudents.length, 'text-rose-700', 'bg-rose-50', 'border-rose-200',
+      missedCallStudents.map(s => voiceRow(s, { label: s.lastCallOutcome, cls: 'bg-rose-100 text-rose-700' })).join(''))}
+    ${accordion('escalations', '🚨', 'Escalation Through Support Ticket', escalationStudents.length, 'text-purple-700', 'bg-purple-50', 'border-purple-200',
+      escalationStudents.map(s => voiceRow(s, { label: 'Escalation Raised', cls: 'bg-purple-100 text-purple-700' })).join(''))}`;
+
+  /* ── Student Not Happy sub-card ── */
+  const lowRatingStudents  = students.filter(s => s.islRating < 8 && !s.hasEscalation);
+  const escalationStudents2 = students.filter(s => s.hasEscalation);
+
+  function _unhappyStudentCard(s) {
+    const hasLowRating  = s.islRating < 8;
+    const hasTicket     = s.hasEscalation;
+    return `<div class="bg-white rounded-xl border border-border p-3 mb-2 last:mb-0">
+      <div class="flex items-start justify-between gap-2 mb-2">
+        <div>
+          <p class="text-xs font-semibold text-text-main">${escHtml(s.name)}</p>
+          <p class="text-[10px] text-text-muted">${s.id} · ${s.course}</p>
+        </div>
+        <button onclick="openStudentDetail('${s.id}');state.drawerPrevMode='waGroup';" class="text-[10px] px-2 py-1 bg-primary/5 text-primary border border-primary/20 rounded-lg font-semibold hover:bg-primary/10 cursor-pointer flex-shrink-0">View →</button>
+      </div>
+      ${hasLowRating ? `
+        <div class="flex items-start gap-2 mb-1.5 p-2 bg-red-50 rounded-lg border border-red-100">
+          <span class="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-red-100 text-red-700 flex-shrink-0">ISL ${s.islRating}/10</span>
+          <div>
+            <p class="text-[10px] font-bold text-red-700 mb-0.5">Actionable</p>
+            <p class="text-[10px] text-red-600 leading-snug">Student has given a low rating on ISL / F2F. <strong>Share a revised ISL and speak to the student</strong> to address their concerns and re-align on university choices.</p>
+          </div>
+        </div>` : ''}
+      ${hasTicket ? `
+        <div class="flex items-start gap-2 p-2 bg-purple-50 rounded-lg border border-purple-100">
+          <span class="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-purple-100 text-purple-700 flex-shrink-0">Support Ticket</span>
+          <div>
+            <p class="text-[10px] font-bold text-purple-700 mb-0.5">Actionable</p>
+            <p class="text-[10px] text-purple-600 leading-snug">Student has raised a query via support ticket. <strong>Speak to the student and close their issues</strong> — ensure all concerns are resolved before the next follow-up.</p>
+          </div>
+        </div>` : ''}
+    </div>`;
+  }
+
+  const customerSupportInner = `
+    <p class="text-[11px] text-text-muted mb-2.5">Students who raised a query via support ticket.</p>
+    ${escalationStudents2.length === 0
+      ? `<p class="text-xs text-text-muted italic text-center py-6">No open support tickets right now 🎉</p>`
+      : escalationStudents2.map(s => _unhappyStudentCard(s)).join('')}`;
+
+  const lowISLInner = `
+    <p class="text-[11px] text-text-muted mb-2.5">Students who gave a low rating on ISL/F2F.</p>
+    ${lowRatingStudents.length === 0
+      ? `<p class="text-xs text-text-muted italic text-center py-6">No low ISL ratings right now 🎉</p>`
+      : lowRatingStudents.map(s => _unhappyStudentCard(s)).join('')}`;
+
+  const breachedInner = `
+    <p class="text-[11px] text-text-muted mb-2.5">Tasks that have crossed the 24-hour closure window.</p>
+    <p class="text-xs text-text-muted italic text-center py-6">No pending breached tasks right now 🎉</p>`;
+
+  // Card color: red/pink when there's something needing attention, green when clear
+  const statusCls = count => count > 0
+    ? { border: 'border-red-200',     bg: 'bg-red-50',     text: 'text-red-800' }
+    : { border: 'border-emerald-200', bg: 'bg-emerald-50', text: 'text-emerald-800' };
+
+  const waIssueCount = inactiveGroups.length + notJoinedGroups.length + notRepliedStudents.length + groupNotCreatedList.length;
+  const csCls  = statusCls(escalationStudents2.length);
+  const islCls = statusCls(lowRatingStudents.length);
+  const waCls  = statusCls(waIssueCount);
+  const brCls  = statusCls(0);
+
+  const content = `
+    <p class="text-xs text-text-muted italic mb-3">Note: All task must be closed with in 24 hours</p>
+    ${channelCard('unhappy',   '💬', 'Customer Support',        `${escalationStudents2.length} students need attention`, csCls.border,  csCls.bg,  csCls.text,  customerSupportInner)}
+    ${channelCard('low-isl',   '🚩', 'Low ISL Feedback',        `${lowRatingStudents.length} students need attention`,   islCls.border, islCls.bg, islCls.text, lowISLInner)}
+    ${channelCard('non-voice', '💬', 'WA Summary',              'WhatsApp Group Activity',                                waCls.border,  waCls.bg,  waCls.text,  nonVoiceInner)}
+    ${channelCard('breached',  '🚨', 'IS Pending and Breached', '0 students with pending breached tasks',                 brCls.border,  brCls.bg,  brCls.text,  breachedInner)}
+  `;
+
+  state.drawerMode = 'waGroup';
+  openDrawer('All About User — Immediate Attention Required', content, false);
+}
+
+function toggleWACard(id) {
+  const body = document.getElementById(`wa-body-${id}`);
+  const chevron = document.getElementById(`chevron-wa-${id}`);
+  if (!body) return;
+  const isHidden = body.classList.contains('hidden');
+  body.classList.toggle('hidden', !isHidden);
+  if (chevron) chevron.style.transform = isHidden ? 'rotate(180deg)' : '';
+}
+
+function toggleCommCard(id) {
+  const body    = document.getElementById(`comm-body-${id}`);
+  const chevron = document.getElementById(`chevron-comm-${id}`);
+  if (!body) return;
+  const isHidden = body.classList.contains('hidden');
+  body.classList.toggle('hidden', !isHidden);
+  if (chevron) chevron.style.transform = isHidden ? 'rotate(180deg)' : '';
+}
+
+/* ═══════════════════════════════════════════════════════
+   STANDUP TABLE DRILL-DOWN
+═══════════════════════════════════════════════════════ */
+
+// Map standup metric keys to relevant student stages / fields
+const STANDUP_STAGE_MAP = {
+  leads:       null,          // all students
+  isl_count:   null,
+  isl_pending: 'sti',
+  lockins:     'lockin',
+  f2f:         null,
+  walkin:      null,
+  qa_shared:   null,
+  college_fin: 'application',
+  stis:        'sti',
+  deposits:    'deposit',
+  visas:       'lockin',
+};
+
+function openStandupDrillDown(metricName, metricKey) {
+  const students = getViewingStudents();
+  const stageFilter = STANDUP_STAGE_MAP[metricKey];
+  const filtered = stageFilter ? students.filter(s => s.stage === stageFilter) : students;
+
+  const stageLabel = { sti:'STI', application:'Application', deposit:'Deposit', lockin:'Lock-in' };
+
+  const content = `
+    <p class="text-xs text-text-muted mb-3">Students associated with <strong>${escHtml(metricName)}</strong>${stageFilter ? ` — stage: ${stageLabel[stageFilter] || stageFilter}` : ' (all pipeline)'}.</p>
+    ${filtered.length === 0
+      ? '<p class="text-sm text-text-muted text-center py-10">No students for this metric.</p>'
+      : `<div class="space-y-3">${filtered.map(s => {
+          const waIssue = s.whatsappGroups.some(g => !g.studentJoined);
+          return `<div class="student-card cursor-pointer" onclick="openStudentDetail('${s.id}')">
+            <div class="flex items-start justify-between mb-1">
+              <div>
+                <p class="font-semibold text-sm text-text-main">${escHtml(s.name)}</p>
+                <p class="text-xs text-text-muted">${s.id} · ${s.course}</p>
+              </div>
+              <span class="app-badge ${s.appDownloaded ? 'downloaded' : 'not-downloaded'}">${s.appDownloaded ? '📱 App' : '📵 No App'}</span>
+            </div>
+            <div class="flex flex-wrap gap-3 text-xs text-text-muted">
+              ${s.followup ? `<span>📅 ${s.followup}</span>` : ''}
+              <span class="font-medium capitalize">${stageLabel[s.stage] || s.stage} stage</span>
+              ${waIssue ? `<span class="text-accent">⚠ WA gap</span>` : ''}
+            </div>
+            <button class="mt-2 text-xs font-semibold text-accent hover:underline">Open Detail →</button>
+          </div>`;
+        }).join('')}</div>`
+    }`;
+
+  openDrawer(`${metricName} — Student List`, content, false);
+}
+
+function toggleWaHistory(studentId) {
+  const hist = document.getElementById(`waHistory-${studentId}`);
+  const chev = document.getElementById(`waChev-${studentId}`);
+  if (!hist) return;
+  const isHidden = hist.classList.contains('hidden');
+  hist.classList.toggle('hidden', !isHidden);
+  if (chev) chev.style.transform = isHidden ? 'rotate(180deg)' : '';
+}
+
+/* ═══════════════ NEW BOT FLOWS ═══════════════ */
+
+/* ── Flow: my_raised_tickets (Option 10) ── */
+function handleMyRaisedTicketsStep(userText) {
+  const bc = state.botConversation;
+
+  if (bc.step === 0) {
+    bc.step = 1;
+    const resolved = COUNSELLOR_TICKETS.filter(t => t.status === 'Resolved');
+    const open = COUNSELLOR_TICKETS.filter(t => t.status === 'Open').length;
+    const ticketsWithTat = resolved.filter(t => t.tat);
+    const avgTat = ticketsWithTat.length
+      ? Math.round(ticketsWithTat.reduce((s, t) => s + t.tat, 0) / ticketsWithTat.length) + ' days'
+      : 'N/A';
+
+    const msg = `🛠️ **Your Support Tickets Status:**\n\n• Total Raised: ${COUNSELLOR_TICKETS.length} Tickets\n• Resolved: ${resolved.length} Tickets (Avg. resolution time: ${avgTat})\n• Pending/Not Resolved: ${open} Tickets\n\nShould I take you to your active support dashboard view?`;
+    appendBotMessageLive(`<p>${formatBotText(msg)}</p>`);
+    addToHistory('bot', msg.replace(/\*\*/g,''));
+    appendQuickReplies(['Yes, show my tickets', 'No thanks']);
+
+  } else if (bc.step === 1) {
+    endFlow();
+    const lower = (userText || '').toLowerCase();
+    if (lower.includes('yes') || lower.includes('show') || lower.includes('ticket')) {
+      const msg = '🎁 Taking you to the My Tickets section!';
+      appendBotMessageLive(`<p>${escHtml(msg)}</p>`);
+      addToHistory('bot', msg);
+      setTimeout(() => { switchTab('tab3'); setTimeout(() => openTicketDetailPage('all'), 400); }, 600);
+    } else {
+      const msg = '👍 Your tickets are always available on the Learning & Development tab.';
+      appendBotMessageLive(`<p>${escHtml(msg)}</p>`);
+      addToHistory('bot', msg);
+    }
+    showPostHelpQuickReplies();
+  }
+}
+
+/* ── Flow: agreement_reminders (Option 11) ── */
+function handleAgreementRemindersStep(userText) {
+  const bc = state.botConversation;
+
+  if (bc.step === 0) {
+    bc.step = 1;
+    const pending = getViewingStudents().filter(s => s.hasPaidPremium && s.agreementSigned === false);
+    bc.collected.pendingIds = pending.map(s => s.id);
+    if (!pending.length) {
+      const msg = '📋 No students in your pipeline have paid without signing their e-agreement right now ✅';
+      appendBotMessageLive(`<p>${escHtml(msg)}</p>`);
+      addToHistory('bot', msg);
+      endFlow();
+      showPostHelpQuickReplies();
+      return;
+    }
+    const lines = pending.map(s => `• **${s.name}** — Paid ${s.agreementPaidDate || 'recently'}`).join('\n');
+    const msg = `📋 You have ${pending.length} student${pending.length===1?'':'s'} in your pipeline who paid but haven't signed agreements:\n\n${lines}\n\nWhere would you like to follow up first?`;
+    appendBotMessageLive(`<p>${formatBotText(msg)}</p>`);
+    addToHistory('bot', msg.replace(/\*\*/g,''));
+    appendQuickReplies([`WhatsApp ${pending[0].name.split(' ')[0]}`, 'Go to Agreement Tracker']);
+
+  } else if (bc.step === 1) {
+    endFlow();
+    const lower = (userText || '').toLowerCase();
+    const pending = getViewingStudents().filter(s => (bc.collected.pendingIds||[]).includes(s.id));
+    if (lower.includes('whatsapp')) {
+      const s = pending[0];
+      const msg = `📲 Agreement template sent to ${s?.name || 'the student'} on WhatsApp!`;
+      appendBotMessageLive(`<p>${escHtml(msg)}</p>`);
+      addToHistory('bot', msg);
+      showToast(`WhatsApp agreement template sent to ${s?.name || 'the student'}!`, 'success');
+    } else {
+      const msg = '🎁 Taking you to the Boost Revenue section!';
+      appendBotMessageLive(`<p>${escHtml(msg)}</p>`);
+      addToHistory('bot', msg);
+      setTimeout(() => {
+        switchTab('tab1');
+        setTimeout(() => {
+          openBoostRevenueDrawer();
+          switchRevenueCohortTab('agreementReminder');
+        }, 350);
+      }, 600);
+    }
+    showPostHelpQuickReplies();
+  }
+}
+
+/* ── Flow: week_open_tasks ── */
+function handleWeekOpenTasksStep(userText) {
+  const bc = state.botConversation;
+  if (bc.step === 0) {
+    bc.step = 1;
+    const students = getViewingStudents();
+    const stiCount   = students.filter(s => s.stage === 'sti').length;
+    const depCount   = students.filter(s => s.stage === 'deposit').length;
+    const revCount   = students.filter(s => s.servicingType === 'partner' || s.servicingType === 'non-partner').length;
+    const refCount   = [...new Map([...getReferralCohort('visa'), ...getReferralCohort('premium'), ...getReferralCohort('sti')].map(s => [s.id, s])).values()].length;
+    const islCount   = getPendingISLStudents(state.currentUser?.id).length;
+    const agreeCount = students.filter(s => s.hasPaidPremium && s.agreementSigned === false).length;
+    const msg = `📅 Here's what's still open right now:\n\n🚀 ${stiCount} STI tasks open\n📦 ${depCount} Deposit tasks open\n💰 ${revCount} Revenue tasks open\n🤝 ${refCount} Referral tasks open\n⏰ ${islCount} ISL pending (60+ mins)\n📋 ${agreeCount} agreement reminders pending\n\nWant to open your full task list?`;
+    appendBotMessageLive(`<p>${formatBotText(msg)}</p>`);
+    addToHistory('bot', msg.replace(/\n/g,' '));
+    appendQuickReplies(['Yes, take me there!', 'No thanks']);
+
+  } else if (bc.step === 1) {
+    endFlow();
+    const lower = (userText || '').toLowerCase();
+    if (lower.includes('yes')) {
+      const msg = '📋 Taking you to Tasks & Performance — Boost Tasks!';
+      appendBotMessageLive(`<p>${escHtml(msg)}</p>`);
+      addToHistory('bot', msg);
+      setTimeout(() => {
+        switchTab('tab1');
+        setTimeout(() => {
+          const el = document.getElementById('boostCardsGrid');
+          const mc = document.getElementById('mainContent');
+          if (el && mc) mc.scrollTo({ top: el.getBoundingClientRect().top + mc.scrollTop - 80, behavior: 'smooth' });
+        }, 400);
+      }, 600);
+    } else {
+      const msg = "👍 No problem! Everything is tracked on your dashboard whenever you're ready.";
+      appendBotMessageLive(`<p>${escHtml(msg)}</p>`);
+      addToHistory('bot', msg);
+    }
+    showPostHelpQuickReplies();
+  }
+}
+
+/* ── Flow: isl_pending_shortlist ── */
+function handleIslPendingShortlistStep(userText) {
+  const bc = state.botConversation;
+  if (bc.step === 0) {
+    bc.step = 1;
+    const pending = getPendingISLStudents(state.currentUser?.id);
+    bc.collected.hasResults = pending.length > 0;
+    if (!pending.length) {
+      const msg = "✅ You're all caught up — no leads pending shortlist right now.";
+      appendBotMessageLive(`<p>${escHtml(msg)}</p>`);
+      addToHistory('bot', msg);
+      endFlow();
+      showPostHelpQuickReplies();
+      return;
+    }
+    const preview = pending.slice(0,3).map(s => `"${s.name} · ${s.country}"`).join(', ');
+    const msg = `⏰ You have ${pending.length} student${pending.length===1?'':'s'} where the shortlist (ISL) hasn't been shared yet, and it's been 60+ minutes since the first call. ${preview}\n\nView the full list?`;
+    appendBotMessageLive(`<p>${formatBotText(msg)}</p>`);
+    addToHistory('bot', msg.replace(/\n/g,' '));
+    appendQuickReplies(['View All', 'No thanks']);
+
+  } else if (bc.step === 1) {
+    endFlow();
+    const lower = (userText || '').toLowerCase();
+    if (lower.includes('view') || lower.includes('all')) {
+      const msg = '🎁 Taking you to the Notifications panel!';
+      appendBotMessageLive(`<p>${escHtml(msg)}</p>`);
+      addToHistory('bot', msg);
+      setTimeout(() => {
+        toggleAlertDrawer();
+        const body = document.getElementById('notifPendingBody');
+        if (body?.classList.contains('hidden')) toggleNotifSection('pending');
+      }, 500);
+    }
+    showPostHelpQuickReplies();
+  }
+}
+
+/* ── Flow: qna_ready_leads — same underlying list as isl_pending_shortlist, filtered to qnaGenerated ── */
+function handleQnaReadyLeadsStep(userText) {
+  const bc = state.botConversation;
+  if (bc.step === 0) {
+    bc.step = 1;
+    const pending = getPendingISLStudents(state.currentUser?.id).filter(s => s.qnaGenerated);
+    if (!pending.length) {
+      const msg = '✅ No students have Q&A ready from their first call right now.';
+      appendBotMessageLive(`<p>${escHtml(msg)}</p>`);
+      addToHistory('bot', msg);
+      endFlow();
+      showPostHelpQuickReplies();
+      return;
+    }
+    const msg = `📝 ${pending.length} student${pending.length===1?'':'s'} ${pending.length===1?'has':'have'} Q&A ready from their first-call — review it along with their shortlist before you send it.\n\nView the full list?`;
+    appendBotMessageLive(`<p>${formatBotText(msg)}</p>`);
+    addToHistory('bot', msg.replace(/\n/g,' '));
+    appendQuickReplies(['View All', 'No thanks']);
+
+  } else if (bc.step === 1) {
+    endFlow();
+    const lower = (userText || '').toLowerCase();
+    if (lower.includes('view') || lower.includes('all')) {
+      const msg = '🎁 Taking you to the Notifications panel!';
+      appendBotMessageLive(`<p>${escHtml(msg)}</p>`);
+      addToHistory('bot', msg);
+      setTimeout(() => {
+        toggleAlertDrawer();
+        const body = document.getElementById('notifPendingBody');
+        if (body?.classList.contains('hidden')) toggleNotifSection('pending');
+      }, 500);
+    }
+    showPostHelpQuickReplies();
+  }
+}
+
+/* ── Flow: f2f_today ── */
+function handleF2fTodayStep(userText) {
+  const bc = state.botConversation;
+  if (bc.step === 0) {
+    bc.step = 1;
+    const todayStr = new Date().toISOString().split('T')[0];
+    const students = getViewingStudents().filter(s => s.f2fScheduledDate && s.f2fScheduledDate <= todayStr);
+    bc.collected.hasResults = students.length > 0;
+    if (!students.length) {
+      const msg = '📅 No F2F sessions scheduled today.';
+      appendBotMessageLive(`<p>${escHtml(msg)}</p>`);
+      addToHistory('bot', msg);
+      endFlow();
+      showPostHelpQuickReplies();
+      return;
+    }
+    const preview = students.slice(0,3).map(s => `"${s.name} · ${s.country} · ${s.f2fTime}"`).join(', ');
+    const msg = `📅 You have ${students.length} student${students.length===1?'':'s'} with an F2F scheduled today. ${preview}\n\nView the full list?`;
+    appendBotMessageLive(`<p>${formatBotText(msg)}</p>`);
+    addToHistory('bot', msg.replace(/\n/g,' '));
+    appendQuickReplies(['View All', 'No thanks']);
+
+  } else if (bc.step === 1) {
+    endFlow();
+    const lower = (userText || '').toLowerCase();
+    if (lower.includes('view') || lower.includes('all')) {
+      const msg = "🎁 Taking you to Today's F2F list!";
+      appendBotMessageLive(`<p>${escHtml(msg)}</p>`);
+      addToHistory('bot', msg);
+      setTimeout(() => openTodaysF2FDrawer(), 500);
+    }
+    showPostHelpQuickReplies();
+  }
+}
+
+function openTodaysF2FDrawer() {
+  const todayStr = new Date().toISOString().split('T')[0];
+  const students = getViewingStudents().filter(s => s.f2fScheduledDate && s.f2fScheduledDate <= todayStr);
+  const rows = students.length
+    ? students.map(s => `
+      <div class="flex items-center justify-between px-4 py-3 border-b border-border hover:bg-surface/40 last:border-0">
+        <div class="flex-1 min-w-0">
+          <p class="text-sm font-semibold text-text-main truncate">${escHtml(s.name)}</p>
+          <p class="text-[11px] text-text-muted">${escHtml(s.country || '—')} · ${escHtml(s.f2fTime || '—')}</p>
+        </div>
+        <button onclick="openStudentDetail('${s.id}')" class="text-[11px] font-bold text-primary bg-primary/10 hover:bg-primary/20 px-2.5 py-1 rounded-lg transition-colors flex-shrink-0">View Student</button>
+      </div>`).join('')
+    : '<p class="text-sm text-text-muted text-center py-8">No F2F sessions scheduled today.</p>';
+  openDrawer('📅 Today\'s F2F', `<div class="divide-y divide-border">${rows}</div>`);
+}
+
+/* ── Flow: missing_admit_info ── */
+/* Trigger: the backend task CONDITIONAL_ADMIT_RECEIVED_FILL_ADMIT_PREFERENCE_AND_DATE_OF_FULFILMENT_FROM_USER
+   being open — modelled here as admitPreference not yet filled. Admit Preference and Expected Deposit Date
+   are one combined task, so a missing Admit Preference flags both together. */
+function getMissingAdmitInfoStudents() {
+  return getViewingStudents().filter(s => s.deferral && !s.admitPreference);
+}
+
+function handleMissingAdmitInfoStep(userText) {
+  const bc = state.botConversation;
+  if (bc.step === 0) {
+    bc.step = 1;
+    const students = getMissingAdmitInfoStudents();
+    if (!students.length) {
+      const msg = '✅ No admitted students are missing info right now.';
+      appendBotMessageLive(`<p>${escHtml(msg)}</p>`);
+      addToHistory('bot', msg);
+      endFlow();
+      showPostHelpQuickReplies();
+      return;
+    }
+    const msg = `📌 ${students.length} admitted student${students.length===1?'':'s'} ${students.length===1?'is':'are'} missing info you need to fill in:\n\n${students.length} missing Admit Preference and Expected Deposit Date\n\nView the list?`;
+    appendBotMessageLive(`<p>${formatBotText(msg)}</p>`);
+    addToHistory('bot', msg.replace(/\n/g,' '));
+    appendQuickReplies(['View All', 'No thanks']);
+
+  } else if (bc.step === 1) {
+    endFlow();
+    const lower = (userText || '').toLowerCase();
+    if (lower.includes('view') || lower.includes('all')) {
+      const msg = '🎁 Taking you to the Missing Info list!';
+      appendBotMessageLive(`<p>${escHtml(msg)}</p>`);
+      addToHistory('bot', msg);
+      setTimeout(() => openMissingAdmitInfoDrawer(), 500);
+    }
+    showPostHelpQuickReplies();
+  }
+}
+
+function openMissingAdmitInfoDrawer() {
+  const students = getMissingAdmitInfoStudents();
+  const rows = students.length
+    ? students.map(s => `
+      <div class="flex items-center justify-between px-4 py-3 border-b border-border hover:bg-surface/40 last:border-0">
+        <div class="flex-1 min-w-0">
+          <p class="text-sm font-semibold text-text-main truncate">${escHtml(s.name)}</p>
+          <div class="flex flex-wrap gap-1 mt-1">
+            <span class="text-[10px] font-bold text-accent bg-accent/10 px-2 py-0.5 rounded-full">Missing Admit Preference and Expected Deposit Date</span>
+          </div>
+        </div>
+        <button onclick="openStudentDetail('${s.id}')" class="text-[11px] font-bold text-primary bg-primary/10 hover:bg-primary/20 px-2.5 py-1 rounded-lg transition-colors flex-shrink-0">View Student</button>
+      </div>`).join('')
+    : '<p class="text-sm text-text-muted text-center py-8">No admitted students are missing info right now.</p>';
+  openDrawer('📌 Missing Info — Students Admit Preference Details', `<div class="divide-y divide-border">${rows}</div>`);
+}
+
+/* ── Flow: connect_manager_hr_ds (Option 12) ── */
+/* Resolves the current user's assigned SM id by walking the hierarchy up from
+   wherever they sit (counsellor -> TL -> POD -> SM, or POD/TL directly). Works
+   for any non-SM role; returns null if no SM is mapped. */
+function _resolveMySmId() {
+  const role = state.role; const u = state.currentUser;
+  let podId = null;
+  if (role === 'pod_leader') {
+    podId = u.id;
+  } else if (role === 'team_lead') {
+    podId = Object.keys(HIERARCHY.podToTLs).find(pid => (HIERARCHY.podToTLs[pid]||[]).includes(u.id));
+  } else if (role === 'counselor') {
+    const tlId = Object.keys(HIERARCHY.tlToCounselors).find(tid => (HIERARCHY.tlToCounselors[tid]||[]).includes(u.id));
+    if (tlId != null) podId = Object.keys(HIERARCHY.podToTLs).find(pid => (HIERARCHY.podToTLs[pid]||[]).includes(parseInt(tlId)));
+  }
+  if (podId == null) return null;
+  const smId = Object.keys(HIERARCHY.smToPods).find(sid => (HIERARCHY.smToPods[sid]||[]).includes(parseInt(podId)));
+  return smId ? parseInt(smId) : null;
+}
+
+/* Resolves the Director that sits above the current user's SM (or above the current user,
+   if they already are the SM). Used to route "Connect with DS" to the right Director. */
+function _resolveMyDirectorId() {
+  const smId = state.role === 'senior_manager' ? state.currentUser?.id : _resolveMySmId();
+  if (smId == null) return null;
+  const dirId = Object.keys(HIERARCHY.dirToSMs).find(did => (HIERARCHY.dirToSMs[did]||[]).includes(smId));
+  return dirId ? parseInt(dirId) : null;
+}
+
+/* Recipient options per the spec's routing matrix: TL/PL -> SM|HR|DS, SM -> HR|DS, Director -> HR only. */
+function _mgrConnectRecipientOptions() {
+  const role = state.role;
+  if (role === 'director')       return ['HR'];
+  if (role === 'senior_manager') return ['HR', 'DS'];
+  if (role === 'team_lead' || role === 'pod_leader') return ['SM', 'HR', 'DS'];
+  return ['SM (Senior Manager)', 'HR', 'DS']; // counsellor — unchanged
+}
+
+function handleConnectManagerHrDsStep(userText) {
+  const bc = state.botConversation;
+
+  if (bc.step === 0) {
+    bc.step = 1;
+    const msg = 'Please let me know with whom you want to connect.';
+    appendBotMessageLive(`<p>${escHtml(msg)}</p>`);
+    addToHistory('bot', msg);
+    appendQuickReplies(_mgrConnectRecipientOptions());
+
+  } else if (bc.step === 1) {
+    const lower = (userText || '').toLowerCase();
+    let recipient, recipientKind, targetId = null, targetName = null;
+    if (lower.includes('hr')) {
+      recipient = 'HR'; recipientKind = 'hr';
+    } else if (lower.includes('ds') || lower.includes('data')) {
+      recipient = 'DS'; recipientKind = 'ds';
+      targetId = _resolveMyDirectorId();
+      targetName = DIRECTORS.find(d => d.id === targetId)?.name || 'the Director';
+    } else {
+      recipient = isManagerRole(state.role) ? 'SM' : 'SM (Senior Manager)';
+      recipientKind = 'sm';
+      targetId = _resolveMySmId();
+      targetName = SENIOR_MANAGERS.find(s => s.id === targetId)?.name || 'your SM';
+    }
+
+    bc.collected.recipient = recipient;
+    bc.collected.recipientKind = recipientKind;
+    bc.collected.targetId = targetId;
+    bc.collected.targetName = targetName;
+    bc.step = 2;
+
+    const formHtml = `
+      <div class="mt-3 p-3 bg-surface rounded-xl border border-border space-y-3">
+        <p class="text-xs font-semibold text-text-muted uppercase tracking-wide">Connect with ${recipient}</p>
+        <textarea id="connectMsgInput" placeholder="Message you want to send for the connect..."
+          class="w-full text-sm border border-border rounded-lg p-2 resize-none h-20 focus:outline-none focus:border-primary"></textarea>
+        <div>
+          <p class="text-xs text-text-muted mb-2 font-medium">Preferred Time (select 2):</p>
+          <div class="flex flex-wrap gap-2">
+            ${['Morning','Afternoon','Evening','Post Office Hours'].map(t =>
+              `<button onclick="selectConnectTime(this,'${t}')" class="connect-time-btn text-xs px-2.5 py-1 rounded-full border border-border hover:border-primary hover:text-primary transition-colors cursor-pointer">${t}</button>`
+            ).join('')}
+          </div>
+        </div>
+        <button onclick="submitConnectForm()" class="w-full py-2 bg-accent hover:bg-accent-dark text-white text-sm font-semibold rounded-lg cursor-pointer transition-colors">Submit</button>
+      </div>`;
+
+    const intro = `Got it! Please fill in the details to connect with ${recipient}:`;
+    appendBotMessageLive(`<p>${escHtml(intro)}</p>${formHtml}`);
+    addToHistory('bot', intro);
+  }
+}
+
+/* Toggles up to 2 preferred time slots (per the spec's "selects two preferred time slots"). */
+function selectConnectTime(btn, time) {
+  const bc = state.botConversation;
+  bc.collected.preferredTimes = bc.collected.preferredTimes || [];
+  const idx = bc.collected.preferredTimes.indexOf(time);
+  if (idx > -1) {
+    bc.collected.preferredTimes.splice(idx, 1);
+    btn.classList.remove('border-primary', 'text-primary', 'bg-primary/10');
+  } else {
+    if (bc.collected.preferredTimes.length >= 2) return;
+    bc.collected.preferredTimes.push(time);
+    btn.classList.add('border-primary', 'text-primary', 'bg-primary/10');
+  }
+}
+
+/* No real backend/cross-user delivery exists in this static demo — Connect-with-SM and
+   Connect-with-DS requests are queued in a session-local, in-memory list (same pattern as
+   MGR_BROADCAST_QUEUE / TL_PL_QUESTION_QUEUE) and surface directly inside the recipient's own
+   chatbot (with an inline Reply), not via email or the notification bell. HR has no in-app
+   login in this demo, so "Connect with HR" still opens an email client. */
+const MGR_CONNECT_QUEUE = [];
+
+function submitConnectForm() {
+  const msg = document.getElementById('connectMsgInput')?.value?.trim();
+  const times = state.botConversation.collected?.preferredTimes || [];
+  const { recipient, recipientKind, targetId, targetName } = state.botConversation.collected || {};
+  const name = state.currentUser?.name || 'Counsellor';
+  const roleLabels = { counselor:'Counsellor', team_lead:'Team Lead', pod_leader:'POD Leader', senior_manager:'Senior Manager', director:'Director' };
+  const roleLabel = roleLabels[state.role] || 'Counsellor';
+
+  if (!msg) { showToast('Please enter a message before submitting.', 'warning'); return; }
+  if (times.length !== 2) { showToast('Please select 2 preferred time slots.', 'warning'); return; }
+
+  endFlow();
+
+  if (recipientKind === 'sm' || recipientKind === 'ds') {
+    if (!targetId) {
+      const errMsg = "Couldn't find your reporting line right now — please try again later.";
+      appendBotMessageLive(`<p>${escHtml(errMsg)}</p>`);
+      addToHistory('bot', errMsg);
+      showToast('Could not resolve recipient.', 'warning');
+      showPostHelpQuickReplies();
+      return;
+    }
+    MGR_CONNECT_QUEUE.push({
+      id: Date.now(), fromId: state.currentUser?.id, fromName: name, fromRoleLabel: roleLabel,
+      toRole: recipientKind === 'sm' ? 'senior_manager' : 'director', toId: targetId,
+      message: msg, preferredTimes: times,
+      timestamp: new Date().toLocaleString('en-IN', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' }),
+      replied: false, reply: null, seenBySender: false,
+    });
+    const confirmation = `✅ Your message has been sent to ${escHtml(targetName)}. They'll see it in their chatbot and respond soon.`;
+    appendBotMessageLive(`<p>${confirmation}</p>`);
+    addToHistory('bot', confirmation.replace(/<[^>]+>/g,''));
+    showToast(`Message sent to ${targetName}!`, 'success');
+    showPostHelpQuickReplies();
+    return;
+  }
+
+  // HR — no in-app login exists for HR in this demo, so this still goes out over email.
+  const confirmation = `✅ I have notified the Team. They will get in touch with you shortly.`;
+  appendBotMessageLive(`<p>${escHtml(confirmation)}</p>`);
+  addToHistory('bot', confirmation);
+  showToast('Connection request sent!', 'success');
+
+  const subject = encodeURIComponent(`${roleLabel} wants to connect`);
+  const body = encodeURIComponent(`Hi,\n\n${roleLabel} ${name} wants to connect with ${recipient}.\n\nMessage: ${msg}\nPreferred Times: ${times.join(', ')}\n\nPlease reach out to them at your earliest.\n\nThank you,\nLeap CRM`);
+  setTimeout(() => { window.open(`mailto:rakshitha.mohan@leapfinance.com?subject=${subject}&body=${body}`, '_blank'); }, 500);
+  setTimeout(showPostHelpQuickReplies, 900);
+}
+
+/* NOTE: the manager (TL/PL/SM/Director) chatbot's scope-drilldown engine and its ~15 bucket
+   options were removed — the manager chatbot is now reduced to exactly 2 functions (send a
+   broadcast, reply to counsellor questions). See handleMgrBroadcastStep / handleMgrReplyQuestionsStep
+   further down, and renderMgrMainMenu() above. */
+
+/* MGR_TOP_PERF_METRICS is shared with the counsellor bot's "Top Performer in Org" and "My Standing
+   vs Org" flows (handleTopPerformerStep / handleMyStandingVsOrgStep) — kept here even though the
+   manager-only ranking flow that originally used it was removed. */
+const MGR_TOP_PERF_METRICS = {
+  revenue:  { label:'Revenue',           value: r => r.revenue,                                   fmt: v => `₹${(v/100000).toFixed(1)}L` },
+  sti:      { label:'STI',               value: r => r.stis,                                      fmt: v => `${Math.round(v)}` },
+  deposit:  { label:'Deposit',           value: r => r.deposits,                                  fmt: v => `${Math.round(v)}` },
+  calockin: { label:'CA > Lock-ins',     value: r => r.leads >= 20 ? Math.round((r.lockins/r.leads)*1000)/10 : null, fmt: v => `${v}%` },
+  casti30d: { label:'CA > STI(30d)',     value: r => r.leads >= 20 ? Math.round((r.stis/r.leads)*1000)/10   : null, fmt: v => `${v}%` },
+  caf2f:    { label:'CA > F2F',          value: r => r.leads >= 20 ? Math.round((r.f2f/r.leads)*1000)/10    : null, fmt: v => `${v}%` },
+};
+
+/* ── Flow: mgr_broadcast — available to TL/PL/SM/Director ──
+   No backend/multi-user delivery exists in this static demo. Broadcasts are
+   queued in a session-local, in-memory list (MGR_BROADCAST_QUEUE) and surfaced
+   the next time a targeted role opens the bot in THIS SAME browser session —
+   not a real cross-user send. */
+const MGR_BROADCAST_QUEUE = [];
+/* Hierarchical broadcast permissions — each sender role can only address roles at or below
+   their own level (Director alone can also reach the entire org). */
+function getMgrBroadcastTargetOptions() {
+  const role = state.role;
+  if (role === 'team_lead')      return ['CLs'];
+  if (role === 'pod_leader')     return ['TLs', 'CLs'];
+  if (role === 'senior_manager') return ['PLs', 'TLs', 'CLs'];
+  if (role === 'director')       return ['SMs', 'PLs', 'TLs', 'CLs', 'Entire Org'];
+  return ['CLs'];
+}
+const MGR_BROADCAST_ROLE_MAP = { SMs:'senior_manager', PLs:'pod_leader', TLs:'team_lead', CLs:'counselor' };
+const MGR_ROLE_LABELS = { team_lead:'Team Lead', pod_leader:'POD Leader', senior_manager:'Senior Manager', director:'Director' };
+
+function handleMgrBroadcastStep(userText) {
+  const bc = state.botConversation;
+
+  if (bc.step === 0) {
+    bc.step = 1;
+    bc.collected.targets = [];
+    const msg = 'Who would you like to send this communication to?';
+    appendBotMessageLive(`<p>${escHtml(msg)}</p>`);
+    addToHistory('bot', msg);
+    appendBroadcastTargetPicker();
+
+  } else if (bc.step === 3) {
+    // Reached only via the Send/Edit/Cancel quick-replies below — message entry itself happens
+    // through the dedicated inline field (submitBroadcastMessage), never the bottom input bar.
+    const lower = userText.toLowerCase();
+    if (lower.includes('send')) {
+      const targets = bc.collected.targets || [];
+      const message = bc.collected.message;
+      const roleLabel = MGR_ROLE_LABELS[state.role] || 'Manager';
+      endFlow();
+      MGR_BROADCAST_QUEUE.push({ id: Date.now(), from: state.currentUser?.name, fromRoleLabel: roleLabel, message, targets, seenBy: [] });
+      const msg = '✅ Your broadcast message has been sent successfully. It will now appear in the chatbot for all selected stakeholders.';
+      appendBotMessageLive(`<p>${escHtml(msg)}</p>`);
+      addToHistory('bot', msg);
+      showToast('Broadcast queued for selected roles!', 'success');
+      showPostHelpQuickReplies();
+    } else if (lower.includes('edit')) {
+      bc.step = 2;
+      renderBroadcastMessageForm();
+    } else {
+      endFlow();
+      const msg = 'Broadcast cancelled.';
+      appendBotMessageLive(`<p>${escHtml(msg)}</p>`);
+      addToHistory('bot', msg);
+      showPostHelpQuickReplies();
+    }
+  }
+}
+
+function appendBroadcastTargetPicker() {
+  const container = document.getElementById('botMessages');
+  const wrap = document.createElement('div');
+  wrap.className = 'mt-2 p-3 bg-surface rounded-xl border border-border space-y-2';
+  wrap.innerHTML = `
+    <div class="flex flex-wrap gap-2">
+      ${getMgrBroadcastTargetOptions().map(t => `
+        <button type="button" onclick="toggleBroadcastTarget(this,'${t}')" class="broadcast-target-btn text-xs px-2.5 py-1 rounded-full border border-border hover:border-primary hover:text-primary transition-colors cursor-pointer">${t}</button>
+      `).join('')}
+    </div>
+    <button onclick="confirmBroadcastTargets()" class="w-full py-2 bg-accent hover:bg-accent-dark text-white text-sm font-semibold rounded-lg cursor-pointer transition-colors">Continue</button>
+  `;
+  container.appendChild(wrap);
+  container.scrollTop = container.scrollHeight;
+}
+
+function toggleBroadcastTarget(btn, target) {
+  const bc = state.botConversation;
+  const arr = bc.collected.targets || (bc.collected.targets = []);
+  const i = arr.indexOf(target);
+  if (i > -1) { arr.splice(i, 1); btn.classList.remove('border-primary', 'text-primary', 'bg-primary/10'); }
+  else { arr.push(target); btn.classList.add('border-primary', 'text-primary', 'bg-primary/10'); }
+}
+
+function confirmBroadcastTargets() {
+  const bc = state.botConversation;
+  if (!bc.collected.targets || !bc.collected.targets.length) { showToast('Select at least one target group.', 'warning'); return; }
+  bc.step = 2;
+  renderBroadcastMessageForm();
+}
+
+/* Dedicated inline field for composing the broadcast message — never relies on the bottom
+   input bar, consistent with the other manager-chatbot forms (Ask TL/PL, Reply to a question). */
+function renderBroadcastMessageForm() {
+  const msg = 'Please type the message you want to broadcast:';
+  appendBotMessageLive(`<p>${escHtml(msg)}</p>`);
+  addToHistory('bot', msg);
+  const formHtml = `
+    <div class="mt-2 p-3 bg-surface rounded-xl border border-border space-y-2">
+      <textarea id="mgrBroadcastMsgInput" placeholder="Type your broadcast message…"
+        class="w-full text-sm border border-border rounded-lg p-2 resize-none h-20 focus:outline-none focus:border-primary"></textarea>
+      <button onclick="submitBroadcastMessage()" class="w-full py-2 bg-accent hover:bg-accent-dark text-white text-sm font-semibold rounded-lg cursor-pointer transition-colors">Continue</button>
+    </div>`;
+  appendBotMessageLive(formHtml);
+}
+
+function submitBroadcastMessage() {
+  const bc = state.botConversation;
+  const message = document.getElementById('mgrBroadcastMsgInput')?.value?.trim();
+  if (!message) { showToast('Please type a message before continuing.', 'warning'); return; }
+  bc.collected.message = message;
+  bc.step = 3;
+  const targets = bc.collected.targets.join(', ');
+  const roleLabel = MGR_ROLE_LABELS[state.role] || 'Manager';
+  const preview = `Preview your broadcast message:\n\n"📢 Message from ${roleLabel} (${state.currentUser?.name || roleLabel}): ${message}"\n\nSend to ${targets}?`;
+  appendBotMessageLive(`<p>${formatBotText(preview)}</p>`);
+  addToHistory('bot', preview.replace(/\n/g,' '));
+  appendQuickReplies(['Send Broadcast', 'Edit Message', 'Cancel']);
+}
+
+/* Surfaces any pending broadcasts targeted at the current role — called on bot open. */
+function checkPendingBroadcasts() {
+  const role = state.role;
+  const pending = MGR_BROADCAST_QUEUE.filter(b =>
+    b.from !== state.currentUser?.name &&
+    !b.seenBy.includes(state.currentUser?.id) &&
+    b.targets.some(t => t === 'Entire Org' || MGR_BROADCAST_ROLE_MAP[t] === role)
+  );
+  pending.forEach(b => {
+    b.seenBy.push(state.currentUser?.id);
+    const msg = `📢 Message from ${b.fromRoleLabel || 'Manager'} (${b.from}): ${b.message}`;
+    appendBotMessageLive(`<p>${formatBotText(msg)}</p>`);
+    addToHistory('bot', msg);
+  });
+}
+
+/* ── Flow: mgr_reply_questions — the manager chatbot's 2nd (and last) function. Lists every
+   pending question from a counsellor and lets the TL/PL reply inline, right inside the chat. ── */
+/* Shared by handleMgrReplyQuestionsStep (explicit click) and checkPendingMgrQuestions (proactive,
+   on bot open) — renders one reply-card per pending question, each with its own inline
+   textarea+Send button (no dependency on the bottom input bar). */
+function renderPendingQuestionCards(questions) {
+  const intro = `❓ You have ${questions.length} question${questions.length===1?'':'s'} from your counsellors:`;
+  appendBotMessageLive(`<p>${escHtml(intro)}</p>`);
+  addToHistory('bot', intro);
+  questions.forEach(q => {
+    const card = `
+      <div class="mt-2 p-3 bg-surface rounded-xl border border-border space-y-2">
+        <p class="text-sm font-semibold text-text-main">${escHtml(q.fromCounsellorName)}</p>
+        <p class="text-xs text-text-main">${escHtml(q.question)}</p>
+        <p class="text-[10px] text-text-muted">${escHtml(q.timestamp)}</p>
+        <button id="tlPlReplyBtn-${q.id}" onclick="toggleTlPlReplyBox(${q.id})" class="text-[11px] font-bold text-primary bg-primary/10 hover:bg-primary/20 px-2.5 py-1 rounded-lg transition-colors">Reply</button>
+        <div id="tlPlReplyBox-${q.id}" class="hidden space-y-2">
+          <textarea id="tlPlReplyInput-${q.id}" placeholder="Type your reply…" class="w-full text-xs border border-border rounded-lg p-2 resize-none h-16 focus:outline-none focus:border-primary"></textarea>
+          <button onclick="sendTlPlReply(${q.id})" class="w-full py-1.5 bg-accent hover:bg-accent-dark text-white text-xs font-semibold rounded-lg cursor-pointer transition-colors">Send</button>
+        </div>
+      </div>`;
+    appendBotMessageLive(card);
+  });
+}
+
+/* Same card pattern as renderPendingQuestionCards(), for SM/Director's incoming
+   "Connect with SM/DS" requests (MGR_CONNECT_QUEUE) instead of TL/PL's counsellor questions. */
+function renderPendingConnectCards(requests) {
+  const intro = `📞 You have ${requests.length} request${requests.length===1?'':'s'} to connect:`;
+  appendBotMessageLive(`<p>${escHtml(intro)}</p>`);
+  addToHistory('bot', intro);
+  requests.forEach(r => {
+    const times = (r.preferredTimes||[]).join(' / ');
+    const card = `
+      <div class="mt-2 p-3 bg-surface rounded-xl border border-border space-y-2">
+        <p class="text-sm font-semibold text-text-main">${escHtml(r.fromName)} <span class="text-[10px] font-normal text-text-muted">(${escHtml(r.fromRoleLabel)})</span></p>
+        <p class="text-xs text-text-main">${escHtml(r.message)}</p>
+        <p class="text-[10px] text-text-muted">Preferred: ${escHtml(times)} · ${escHtml(r.timestamp)}</p>
+        <button id="connectReplyBtn-${r.id}" onclick="toggleConnectReplyBox(${r.id})" class="text-[11px] font-bold text-primary bg-primary/10 hover:bg-primary/20 px-2.5 py-1 rounded-lg transition-colors">Reply</button>
+        <div id="connectReplyBox-${r.id}" class="hidden space-y-2">
+          <textarea id="connectReplyInput-${r.id}" placeholder="Type your reply…" class="w-full text-xs border border-border rounded-lg p-2 resize-none h-16 focus:outline-none focus:border-primary"></textarea>
+          <button onclick="sendConnectReply(${r.id})" class="w-full py-1.5 bg-accent hover:bg-accent-dark text-white text-xs font-semibold rounded-lg cursor-pointer transition-colors">Send</button>
+        </div>
+      </div>`;
+    appendBotMessageLive(card);
+  });
+}
+
+/* Proactively shows pending questions/connect-requests the moment a manager opens the bot —
+   they don't need to click into "Questions from Counsellors" first. Called from toggleBot(),
+   like checkPendingBroadcasts(). TL/PL get counsellor questions; SM/Director get Connect requests. */
+function checkPendingMgrQuestions() {
+  if (!isManagerRole(state.role)) return;
+  if (state.role === 'team_lead' || state.role === 'pod_leader') {
+    const questions = getPendingTlPlQuestions();
+    if (questions.length) renderPendingQuestionCards(questions);
+  } else {
+    const requests = getPendingConnectRequests();
+    if (requests.length) renderPendingConnectCards(requests);
+  }
+}
+
+function handleMgrReplyQuestionsStep(userText) {
+  const bc = state.botConversation;
+  if (bc.step !== 0) return;
+
+  const isTlPl = state.role === 'team_lead' || state.role === 'pod_leader';
+  const items = isTlPl ? getPendingTlPlQuestions() : getPendingConnectRequests();
+  if (!items.length) {
+    const msg = isTlPl ? 'You have no pending questions from your counsellors right now.' : 'You have no pending connect requests right now.';
+    appendBotMessageLive(`<p>${escHtml(msg)}</p>`);
+    addToHistory('bot', msg);
+    endFlow();
+    showPostHelpQuickReplies();
+    return;
+  }
+
+  if (isTlPl) renderPendingQuestionCards(items); else renderPendingConnectCards(items);
+  endFlow();
+  showPostHelpQuickReplies();
+}
+
+/* ── Flow: ask_tl_pl_question ── No real backend/notification system exists, so questions and
+   replies are queued in a session-local array (same pattern as MGR_BROADCAST_QUEUE) — a TL/PL
+   sees and replies to pending questions inside their own chatbot (handleMgrReplyQuestionsStep,
+   above), and the reply is surfaced back to the counsellor the next time they open the chatbot
+   in this same browser session. */
+const TL_PL_QUESTION_QUEUE = [];
+
+function handleAskTlPlQuestionStep(userText) {
+  const bc = state.botConversation;
+  const line = getCounsellorReportingLine();
+
+  if (bc.step === 0) {
+    bc.step = 1;
+    const options = [];
+    if (line.tl) options.push('TL');
+    if (line.pl) options.push('PL');
+    const msg = 'Who would you like to ask?';
+    appendBotMessageLive(`<p>${escHtml(msg)}</p>`);
+    addToHistory('bot', msg);
+    appendQuickReplies(options);
+
+  } else if (bc.step === 1) {
+    const lower = (userText || '').toLowerCase();
+    const isTL = lower.includes('tl') && line.tl;
+    const recipient = isTL ? line.tl : line.pl;
+    if (!recipient) { endFlow(); showPostHelpQuickReplies(); return; }
+    bc.collected.toId = recipient.id;
+    bc.collected.toRole = isTL ? 'team_lead' : 'pod_leader';
+    bc.collected.toName = recipient.name;
+    bc.step = 2;
+
+    const formHtml = `
+      <div class="mt-3 p-3 bg-surface rounded-xl border border-border space-y-3">
+        <p class="text-xs font-semibold text-text-muted uppercase tracking-wide">Ask ${escHtml(recipient.name)}</p>
+        <textarea id="tlPlQuestionInput" placeholder="Type your question…"
+          class="w-full text-sm border border-border rounded-lg p-2 resize-none h-20 focus:outline-none focus:border-primary"></textarea>
+        <button onclick="submitTlPlQuestion()" class="w-full py-2 bg-accent hover:bg-accent-dark text-white text-sm font-semibold rounded-lg cursor-pointer transition-colors">Submit</button>
+      </div>`;
+    const intro = 'Type your question below 👇';
+    appendBotMessageLive(`<p>${escHtml(intro)}</p>${formHtml}`);
+    addToHistory('bot', intro);
+  }
+}
+
+function submitTlPlQuestion() {
+  const question = document.getElementById('tlPlQuestionInput')?.value?.trim();
+  if (!question) { showToast('Please type a question before submitting.', 'warning'); return; }
+  const bc = state.botConversation;
+  const { toId, toRole, toName } = bc.collected;
+  endFlow();
+
+  TL_PL_QUESTION_QUEUE.push({
+    id: Date.now(), fromCounsellorId: state.currentUser?.id, fromCounsellorName: state.currentUser?.name,
+    toId, toRole, toName, question, timestamp: new Date().toLocaleString('en-IN', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' }),
+    seenByRecipient: false, replied: false, reply: null, seenByCounsellor: false,
+  });
+
+  const msg = `✅ Your question has been sent to ${escHtml(toName)}. They'll get a notification and respond soon.`;
+  appendBotMessageLive(`<p>${msg}</p>`);
+  addToHistory('bot', msg.replace(/<[^>]+>/g,''));
+  showToast(`Question sent to ${toName}!`, 'success');
+  showPostHelpQuickReplies();
+}
+
+/* Surfaces any TL/PL replies to this counsellor's own questions — called on bot open. */
+function checkPendingTlPlReplies() {
+  const myId = state.currentUser?.id;
+  const replies = TL_PL_QUESTION_QUEUE.filter(q => q.fromCounsellorId === myId && q.replied && !q.seenByCounsellor);
+  replies.forEach(q => {
+    q.seenByCounsellor = true;
+    const msg = `💬 ${q.toName} replied to your question ("${q.question}"): ${q.reply}`;
+    appendBotMessageLive(`<p>${escHtml(msg)}</p>`);
+    addToHistory('bot', msg);
+  });
+}
+
+/* Questions pending for the current TL/PL, surfaced inside their own chatbot (mgr_reply_questions). */
+function getPendingTlPlQuestions() {
+  const myId = state.currentUser?.id;
+  return TL_PL_QUESTION_QUEUE.filter(q => q.toId === myId && !q.replied);
+}
+
+function toggleTlPlReplyBox(id) {
+  const box = document.getElementById(`tlPlReplyBox-${id}`);
+  if (!box) return;
+  box.classList.toggle('hidden');
+  if (!box.classList.contains('hidden')) document.getElementById(`tlPlReplyInput-${id}`)?.focus();
+}
+
+function sendTlPlReply(id) {
+  const q = TL_PL_QUESTION_QUEUE.find(x => x.id === id);
+  if (!q) return;
+  const input = document.getElementById(`tlPlReplyInput-${id}`);
+  const reply = input?.value?.trim();
+  if (!reply) { showToast('Please type a reply before sending.', 'warning'); return; }
+  q.replied = true;
+  q.reply = reply;
+  q.seenByRecipient = true;
+  showToast('Reply sent!', 'success');
+  updateUnreadBadge();
+
+  // Update this question's card in place, inside the chat.
+  const box = document.getElementById(`tlPlReplyBox-${id}`);
+  const btn = document.getElementById(`tlPlReplyBtn-${id}`);
+  if (box) box.innerHTML = '<p class="text-xs text-success font-semibold">✅ Reply sent</p>';
+  if (btn) btn.remove();
+
+  if (!getPendingTlPlQuestions().length) {
+    const msg = "All caught up — no more pending questions right now.";
+    appendBotMessageLive(`<p>${escHtml(msg)}</p>`);
+    addToHistory('bot', msg);
+    showPostHelpQuickReplies();
+  }
+}
+
+/* Replies to this counsellor's own questions — surfaced proactively in chat by
+   checkPendingTlPlReplies() (which also marks them seen), and counted for the bot bubble's
+   notification dot by updateUnreadBadge(). */
+function getUnseenTlPlRepliesForCounsellor() {
+  const myId = state.currentUser?.id;
+  return TL_PL_QUESTION_QUEUE.filter(q => q.fromCounsellorId === myId && q.replied && !q.seenByCounsellor);
+}
+
+/* Connect requests (Connect with SM / Connect with DS) pending for the current SM/Director,
+   surfaced inside their own chatbot (mgr_reply_questions) — mirrors getPendingTlPlQuestions(). */
+function getPendingConnectRequests() {
+  const myId = state.currentUser?.id;
+  return MGR_CONNECT_QUEUE.filter(r => r.toId === myId && !r.replied);
+}
+
+function toggleConnectReplyBox(id) {
+  const box = document.getElementById(`connectReplyBox-${id}`);
+  if (!box) return;
+  box.classList.toggle('hidden');
+  if (!box.classList.contains('hidden')) document.getElementById(`connectReplyInput-${id}`)?.focus();
+}
+
+function sendConnectReply(id) {
+  const r = MGR_CONNECT_QUEUE.find(x => x.id === id);
+  if (!r) return;
+  const input = document.getElementById(`connectReplyInput-${id}`);
+  const reply = input?.value?.trim();
+  if (!reply) { showToast('Please type a reply before sending.', 'warning'); return; }
+  r.replied = true;
+  r.reply = reply;
+  showToast('Reply sent!', 'success');
+  updateUnreadBadge();
+
+  const box = document.getElementById(`connectReplyBox-${id}`);
+  const btn = document.getElementById(`connectReplyBtn-${id}`);
+  if (box) box.innerHTML = '<p class="text-xs text-success font-semibold">✅ Reply sent</p>';
+  if (btn) btn.remove();
+
+  if (!getPendingConnectRequests().length) {
+    const msg = "All caught up — no more pending connect requests right now.";
+    appendBotMessageLive(`<p>${escHtml(msg)}</p>`);
+    addToHistory('bot', msg);
+    showPostHelpQuickReplies();
+  }
+}
+
+/* Surfaces any SM/Director replies to this user's own "Connect with SM/DS" messages — called
+   on bot open for every role (counsellor/TL/PL/SM can all be senders). Mirrors checkPendingTlPlReplies(). */
+function checkPendingConnectReplies() {
+  const myId = state.currentUser?.id;
+  const replies = MGR_CONNECT_QUEUE.filter(r => r.fromId === myId && r.replied && !r.seenBySender);
+  replies.forEach(r => {
+    r.seenBySender = true;
+    const recipientName = r.toRole === 'director'
+      ? (DIRECTORS.find(d => d.id === r.toId)?.name || 'The Director')
+      : (SENIOR_MANAGERS.find(s => s.id === r.toId)?.name || 'Your SM');
+    const msg = `💬 ${recipientName} replied to your message ("${r.message}"): ${r.reply}`;
+    appendBotMessageLive(`<p>${escHtml(msg)}</p>`);
+    addToHistory('bot', msg);
+  });
+}
+
+/* Unseen Connect-with-SM/DS replies for the current user as sender — counted for the bot
+   bubble's notification dot by updateUnreadBadge(). */
+function getUnseenConnectRepliesForSender() {
+  const myId = state.currentUser?.id;
+  return MGR_CONNECT_QUEUE.filter(r => r.fromId === myId && r.replied && !r.seenBySender);
+}
+
+/* ── Flow: raise_support_ticket_guide (Option 13) ── */
+function handleRaiseSupportTicketStep(userText) {
+  const bc = state.botConversation;
+
+  if (bc.step === 0) {
+    bc.step = 1;
+    const msg = `🎫 Need help with something? Let's get it fixed for you right away.\n\nShould I take you to the Raise Support Ticket page?`;
+    appendBotMessageLive(`<p>${formatBotText(msg)}</p>`);
+    addToHistory('bot', msg.replace(/\n\n/g,' '));
+    appendQuickReplies(['Yes, take me there!', 'No thanks']);
+
+  } else if (bc.step === 1) {
+    endFlow();
+    const lower = (userText || '').toLowerCase();
+    if (lower.includes('yes') || lower.includes('take') || lower.includes('there')) {
+      const msg = '🎁 Taking you to the Raise Support Ticket section!';
+      appendBotMessageLive(`<p>${escHtml(msg)}</p>`);
+      addToHistory('bot', msg);
+      setTimeout(() => { switchTab('tab3'); setTimeout(openTicketModal, 400); }, 600);
+    } else {
+      const msg = '👍 No problem! You can raise a ticket anytime from the Learning & Development tab.';
+      appendBotMessageLive(`<p>${escHtml(msg)}</p>`);
+      addToHistory('bot', msg);
+    }
+    showPostHelpQuickReplies();
+  }
+}
+
+/* ── Flow: incentive_details_guide (Option 8) ── */
+function handleIncentiveDetailsStep(userText) {
+  const bc = state.botConversation;
+
+  if (bc.step === 0) {
+    bc.step = 1;
+    const c = getCounselorData();
+    const earned = c.revenue ? `₹${(c.revenue / 1000).toFixed(0)}K` : '₹0';
+
+    const msg = `💰 **How your incentives work:**\n\n**Offers for Counsellors criteria:**\n• Enrolment Bonus: ₹6,000 per confirmed enrolment\n• Calls Slab: Bonus for hitting ≥80% of daily call target\n• Revenue Bonus: 1% of revenue above ₹2L threshold\n• Lock-in Sprint: ₹8,000 per lock-in achieved\n\n**Your current earning:** ${earned} this month\n\nSee the full breakdown in the Incentives tab.\n\n**Want to see the opportunity size?**`;
+    appendBotMessageLive(`<p>${formatBotText(msg)}</p>`);
+    addToHistory('bot', msg.replace(/\*\*/g,''));
+    appendQuickReplies(['→ See Incentive Breakdown', 'Yes, show me', 'No thanks']);
+
+  } else if (bc.step === 1) {
+    endFlow();
+    const lower = (userText || '').toLowerCase();
+    if (lower.includes('breakdown') || lower.includes('see incentive')) {
+      const msg = '🎁 Taking you to the Incentives & Earnings section!';
+      appendBotMessageLive(`<p>${escHtml(msg)}</p>`);
+      addToHistory('bot', msg);
+      setTimeout(() => switchTab('tab2'), 600);
+    } else if (lower.includes('yes') || lower.includes('show') || lower.includes('opportunity')) {
+      const msg = '🎁 Taking you to the Opportunity Pipeline section!';
+      appendBotMessageLive(`<p>${escHtml(msg)}</p>`);
+      addToHistory('bot', msg);
+      setTimeout(() => { switchTab('tab2'); setTimeout(openOpportunityDrawer, 400); }, 600);
+    } else {
+      const msg = '👍 Noted! The Incentives tab has your full breakdown anytime.';
+      appendBotMessageLive(`<p>${escHtml(msg)}</p>`);
+      addToHistory('bot', msg);
+    }
+    showPostHelpQuickReplies();
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   MANAGER ROLES — Helper functions & Render functions
+══════════════════════════════════════════════════════════════════ */
+
+function isManagerRole(r) {
+  return ['team_lead','pod_leader','senior_manager','director'].includes(r || state.role);
+}
+
+/* ── Hierarchy helpers ── */
+
+function getMyTLIds() {
+  const u = state.currentUser; const role = state.role;
+  if (role === 'team_lead')      return [u.id];
+  if (role === 'pod_leader')     return HIERARCHY.podToTLs[u.id] || [];
+  if (role === 'senior_manager') return (HIERARCHY.smToPods[u.id]||[]).flatMap(p => HIERARCHY.podToTLs[p]||[]);
+  if (role === 'director' || role === 'ops_admin') return TEAM_LEADS.map(t => t.id);
+  return [];
+}
+
+function getMyPodIds() {
+  const u = state.currentUser; const role = state.role;
+  if (role === 'pod_leader')     return [u.id];
+  if (role === 'senior_manager') return HIERARCHY.smToPods[u.id] || [];
+  if (role === 'director' || role === 'ops_admin') return POD_LEADERS.map(p => p.id);
+  return [];
+}
+
+function getFilteredCounselorPool() {
+  const f = state.managerFilters;
+  const myTLIds = getMyTLIds();
+  let pool = COUNSELORS.filter(c => myTLIds.some(tlId => (HIERARCHY.tlToCounselors[tlId]||[]).includes(c.id)));
+  if (f.sms.length > 0) {
+    const allowedPods = f.sms.flatMap(smId => HIERARCHY.smToPods[smId]||[]);
+    const allowedTLs  = allowedPods.flatMap(pid => HIERARCHY.podToTLs[pid]||[]);
+    pool = pool.filter(c => allowedTLs.some(tlId => (HIERARCHY.tlToCounselors[tlId]||[]).includes(c.id)));
+  }
+  if (f.pods.length > 0) {
+    const allowedTLs = f.pods.flatMap(pid => HIERARCHY.podToTLs[pid]||[]);
+    pool = pool.filter(c => allowedTLs.some(tlId => (HIERARCHY.tlToCounselors[tlId]||[]).includes(c.id)));
+  }
+  if (f.tls.length > 0) {
+    pool = pool.filter(c => f.tls.some(tlId => (HIERARCHY.tlToCounselors[tlId]||[]).includes(c.id)));
+  }
+  if (f.counselors.length > 0) pool = pool.filter(c => f.counselors.includes(c.id));
+  return pool;
+}
+
+function getFilteredTLPool() {
+  const f = state.managerFilters;
+  const myTLIds = getMyTLIds();
+  let pool = TEAM_LEADS.filter(t => myTLIds.includes(t.id));
+  if (f.sms.length > 0) {
+    const allowedPods = f.sms.flatMap(smId => HIERARCHY.smToPods[smId]||[]);
+    const allowedTLs  = allowedPods.flatMap(pid => HIERARCHY.podToTLs[pid]||[]);
+    pool = pool.filter(t => allowedTLs.includes(t.id));
+  }
+  if (f.pods.length > 0) {
+    const allowedTLs = f.pods.flatMap(pid => HIERARCHY.podToTLs[pid]||[]);
+    pool = pool.filter(t => allowedTLs.includes(t.id));
+  }
+  if (f.tls.length > 0) pool = pool.filter(t => f.tls.includes(t.id));
+  return pool;
+}
+
+/* ── Important Business Tasks (TL/POD personal task queues, rolled up for SM/Director) ── */
+
+const OWN_TASK_TYPES = [
+  { key:'islReviews',                 icon:'📝', label:'ISL Reviews Pending',
+    definition:'These are Initial Shortlists (ISLs) generated by the counsellors, pending review by the TL/POD.',
+    closure:'Review the shortlisted universities/courses and submit your feedback to close the task.' },
+  { key:'docsConditionalAdmit',       icon:'📄', label:'Review Docs For Conditional Admit',
+    definition:'These students have received a conditional admit and their documents are pending your review.',
+    closure:'Review the submitted documents and update their status to close the task.' },
+  { key:'verifyProbableConditions',   icon:'✅', label:'Verify the Probable Conditions marked in the Expected Outcome',
+    definition:'These are probable admit conditions flagged in the Expected Outcome that need your verification.',
+    closure:'Verify each flagged condition against the actual offer letter to close the task.' },
+  { key:'depositPaymentVerification', icon:'💳', label:'Deposit Payment Verification',
+    definition:"These students have made their deposit payment and it's awaiting your verification.",
+    closure:'Confirm the payment against the receipt/transaction ID to close the task.' },
+  { key:'applicantFeedback',          icon:'💬', label:'Applicant Feedback',
+    definition:'The TL/POD needs to call the student after their STI is done to ask about the application process and share feedback with them.',
+    closure:'Based on the call, create a task for the Counsellor or RM if further action is needed, or mark it as No Action Needed if not — either way, the task will be closed for you.' },
+  { key:'visaDropRequest',            icon:'🛂', label:'Visa Drop Request',
+    definition:"Visa Counsellors have raised a request to drop the student's visa process.",
+    closure:'Review the reason for drop and process/approve the request to close the task.' },
+  { key:'dropOffApproval',            icon:'📤', label:'Drop Off Approval',
+    definition:'These students have been marked as drop-off by the counsellor and are pending your approval.',
+    closure:'Validate the drop-off reason and approve to close the task.' },
+];
+
+/* Which TL/POD entities' own-task counts should roll up into the current user's view */
+function getOwnTaskScopeEntities() {
+  const role = state.role; const u = state.currentUser;
+  const f = state.managerFilters;
+
+  if (role === 'team_lead') return TEAM_LEADS.filter(t => t.id === u.id);
+
+  if (role === 'pod_leader') {
+    // POD leader defaults to their own tasks only — TL tasks are opt-in via the
+    // "TL" filter (header bar or the in-drawer filter panel), not shown by default.
+    const own = POD_LEADERS.filter(p => p.id === u.id);
+    if (!f.tls.length) return own;
+    const reportingTlIds = HIERARCHY.podToTLs[u.id] || [];
+    const selectedTlIds = reportingTlIds.filter(id => f.tls.includes(id));
+    return [...own, ...TEAM_LEADS.filter(t => selectedTlIds.includes(t.id))];
+  }
+
+  // senior_manager & director: view all TLs/POD leaders in scope by default, narrowed
+  // by the existing "PL"/"TL" filters (header bar or the in-drawer filter panel).
+  // getFilteredTLPool() applies the same POD -> TL cascading used elsewhere.
+  const tls = getFilteredTLPool();
+  const myPodIds = getMyPodIds();
+  const podIds = f.pods.length ? myPodIds.filter(id => f.pods.includes(id)) : myPodIds;
+  return [...tls, ...POD_LEADERS.filter(p => podIds.includes(p.id))];
+}
+
+function getReporteeList() {
+  const role = state.role; const u = state.currentUser;
+  const counselors = getFilteredCounselorPool();
+  const tls = getFilteredTLPool();
+  if (role === 'team_lead') return counselors;
+  if (role === 'pod_leader') return [...tls, ...counselors];
+  return [...SENIOR_MANAGERS.filter(s => s.id !== u.id), ...POD_LEADERS, ...tls, ...counselors];
+}
+
+/* ── Header Filter Bar ── */
+
+function buildMgrFilterBar() {
+  const role = state.role;
+  const smWrap  = document.getElementById('smFilterWrap');
+  const podWrap = document.getElementById('podFilterWrap');
+  const tlWrap  = document.getElementById('tlFilterWrap');
+  if (smWrap)  smWrap.classList.toggle('hidden',  !['director','ops_admin'].includes(role));
+  if (podWrap) podWrap.classList.toggle('hidden', !['senior_manager','director','ops_admin'].includes(role));
+  if (tlWrap)  tlWrap.classList.toggle('hidden',  role === 'team_lead');
+
+  // Populate SM list (director + ops_admin see all SMs; ops_admin has no single director's hierarchy to scope to)
+  if (['director','ops_admin'].includes(role)) {
+    const smList = document.getElementById('smFilterList');
+    if (smList) {
+      smList.innerHTML = '';
+      const mySMIds = role === 'ops_admin' ? SENIOR_MANAGERS.map(s => s.id) : (HIERARCHY.dirToSMs[state.currentUser.id] || []);
+      SENIOR_MANAGERS.filter(s => mySMIds.includes(s.id)).forEach(s =>
+        smList.appendChild(buildMgrCheckbox('sm', s.id, s.name))
+      );
+    }
+  }
+
+  // Populate POD list
+  if (['senior_manager','director','ops_admin'].includes(role)) {
+    const podList = document.getElementById('podFilterList');
+    if (podList) {
+      podList.innerHTML = '';
+      const myPods = POD_LEADERS.filter(p => getMyPodIds().includes(p.id));
+      myPods.forEach(p => podList.appendChild(buildMgrCheckbox('pod', p.id, p.name + ' (' + p.pod + ')')));
+    }
+  }
+
+  // Populate TL list
+  if (role !== 'team_lead') {
+    const tlList = document.getElementById('tlFilterList');
+    if (tlList) {
+      tlList.innerHTML = '';
+      TEAM_LEADS.filter(t => getMyTLIds().includes(t.id)).forEach(t =>
+        tlList.appendChild(buildMgrCheckbox('tl', t.id, t.name + ' (' + t.team + ')'))
+      );
+    }
+  }
+
+  // Populate Counsellor list
+  const clList = document.getElementById('clFilterList');
+  if (clList) {
+    clList.innerHTML = '';
+    const myTLIds = getMyTLIds();
+    COUNSELORS.filter(c => myTLIds.some(tl => (HIERARCHY.tlToCounselors[tl]||[]).includes(c.id)))
+      .forEach(c => clList.appendChild(buildMgrCheckbox('cl', c.id, c.name + ' (' + c.team + ')')));
+  }
+
+  updateMgrFilterLabels();
+}
+
+function buildMgrCheckbox(type, id, label) {
+  const div = document.createElement('div');
+  div.className = 'flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-surface cursor-pointer';
+  const f = state.managerFilters;
+  const arr = type === 'sm' ? f.sms : type === 'pod' ? f.pods : type === 'tl' ? f.tls : f.counselors;
+  const checked = arr.includes(id);
+  div.innerHTML = `
+    <input type="checkbox" id="mgrChk_${type}_${id}" ${checked ? 'checked' : ''} onchange="onMgrCheckChange('${type}',${id},this.checked)"
+      class="w-3.5 h-3.5 accent-accent cursor-pointer flex-shrink-0" />
+    <label for="mgrChk_${type}_${id}" class="text-xs text-text-main cursor-pointer leading-tight">${escHtml(label)}</label>`;
+  return div;
+}
+
+function onMgrCheckChange(type, id, checked) {
+  const f = state.managerFilters;
+  const arr = type === 'sm' ? f.sms : type === 'pod' ? f.pods : type === 'tl' ? f.tls : f.counselors;
+  if (checked && !arr.includes(id)) arr.push(id);
+  else if (!checked) { const i = arr.indexOf(id); if (i > -1) arr.splice(i,1); }
+}
+
+function toggleMgrDropdown(type, e) {
+  if (e) e.stopPropagation();
+  const ids = ['smFilterDropdown','podFilterDropdown','tlFilterDropdown','clFilterDropdown'];
+  const map = { sm:'smFilterDropdown', pod:'podFilterDropdown', tl:'tlFilterDropdown', cl:'clFilterDropdown' };
+  const target = map[type];
+  ids.forEach(id => {
+    const el = document.getElementById(id);
+    if (el && id !== target) el.classList.add('hidden');
+  });
+  const el = document.getElementById(target);
+  if (el) el.classList.toggle('hidden');
+}
+
+function applyMgrFilter(type) {
+  const dropMap = { sm:'smFilterDropdown', pod:'podFilterDropdown', tl:'tlFilterDropdown', cl:'clFilterDropdown' };
+  document.getElementById(dropMap[type] || 'clFilterDropdown')?.classList.add('hidden');
+  updateMgrFilterLabels();
+  renderMgrTab1(); renderMgrTab2(); renderMgrTicketSummary(); renderMgrTraining();
+  renderStandupTable();
+}
+
+function clearMgrFilter(type) {
+  if (type === 'sm') state.managerFilters.sms = [];
+  else if (type === 'pod') state.managerFilters.pods = [];
+  else if (type === 'tl') state.managerFilters.tls = [];
+  else state.managerFilters.counselors = [];
+  buildMgrFilterBar();
+  applyMgrFilter(type);
+}
+
+function updateMgrFilterLabels() {
+  const f = state.managerFilters;
+  const smLbl  = document.getElementById('smFilterLabel');
+  const podLbl = document.getElementById('podFilterLabel');
+  const tlLbl  = document.getElementById('tlFilterLabel');
+  const clLbl  = document.getElementById('clFilterLabel');
+  if (smLbl)  smLbl.textContent  = f.sms.length  ? `SM: ${f.sms.length} selected`   : 'SM: All';
+  if (podLbl) podLbl.textContent = f.pods.length ? `PL: ${f.pods.length} selected`  : 'PL: All';
+  if (tlLbl)  tlLbl.textContent  = f.tls.length  ? `TL: ${f.tls.length} selected`   : 'TL: All';
+  if (clLbl)  clLbl.textContent  = f.counselors.length ? `CL: ${f.counselors.length} selected` : 'CL: All';
+  const badge = document.getElementById('mgrViewAllBadge');
+  if (badge) badge.classList.toggle('hidden', f.sms.length + f.pods.length + f.tls.length + f.counselors.length > 0);
+}
+
+// Close dropdowns on outside click
+document.addEventListener('click', () => {
+  ['smFilterDropdown','podFilterDropdown','tlFilterDropdown','clFilterDropdown','drawerPodFilterDropdown','drawerTlFilterDropdown'].forEach(id => {
+    document.getElementById(id)?.classList.add('hidden');
+  });
+});
+
+/* ── Tab 1 — Manager Render ── */
+
+function renderMgrTab1() {
+  renderMgrBoostCards();
+  renderMgrBoostInput();
+  renderMgrOwnTasks();
+}
+
+/* Urgency is keyed off the pending COUNT (not "due today", which real Boost cards use but
+   which stays 0 for most own-task mock data) — red/amber/green tiers by volume, same visual
+   language (gradient + border + text color) as the Boost Output cards. */
+function _ownTaskUrgency(n) {
+  if (n > 20) return { bg:'linear-gradient(135deg,#fef2f2,#fee2e2)', border:'#fca5a5', textClr:'#b91c1c', badgeBg:'#fee2e2', label:'High' };
+  if (n >= 1) return { bg:'linear-gradient(135deg,#fffbeb,#fef3c7)', border:'#fcd34d', textClr:'#92400e', badgeBg:'#fef3c7', label:'Moderate' };
+  return             { bg:'linear-gradient(135deg,#f0fdf4,#dcfce7)', border:'#86efac', textClr:'#15803d', badgeBg:'#dcfce7', label:'Clear' };
+}
+
+function _ownTaskCounts(tt, entities) {
+  let due = 0, total = 0;
+  entities.forEach(e => {
+    const c = e.ownTaskCounts?.[tt.key];
+    if (c) { due += c.due; total += c.total; }
+  });
+  return { due, total };
+}
+
+function renderMgrOwnTasks() {
+  const wrap = document.getElementById('mgrOwnTasksGrid');
+  if (!wrap) return;
+
+  const entities = getOwnTaskScopeEntities();
+  const heading = document.getElementById('mgrOwnTasksHeading');
+  if (heading) {
+    const f = state.managerFilters;
+    let suffix = '';
+    if (state.role === 'pod_leader') suffix = f.tls.length ? ' — TL Rollup' : ' — My Own Tasks';
+    else if (state.role === 'senior_manager' || state.role === 'director') suffix = ' — TL & POD Rollup';
+    heading.textContent = `📋 Important Business Tasks${suffix}`;
+  }
+
+  const rows = OWN_TASK_TYPES.map(tt => ({ ...tt, ..._ownTaskCounts(tt, entities) }));
+  const total = rows.reduce((s, r) => s + r.total, 0);
+  const due   = rows.reduce((s, r) => s + r.due, 0);
+  const flagged = rows.filter(r => r.total > 0).length;
+  const overall = _ownTaskUrgency(total);
+
+  const tiles = rows.map(r => {
+    const u = _ownTaskUrgency(r.total);
+    return `
+      <button type="button" onclick="event.stopPropagation(); openMgrOwnTasksDrawer('${r.key}')"
+        class="text-left rounded-lg border px-3 py-2.5 transition-shadow hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 flex-1 basis-[140px]"
+        style="background:${u.bg};border-color:${u.border}">
+        <div class="flex items-start justify-between gap-1.5 mb-1.5">
+          <span class="text-base leading-none flex-shrink-0">${r.icon}</span>
+          <span class="text-lg font-black leading-none" style="color:${u.textClr}">${r.total}</span>
+        </div>
+        <p class="text-[10.5px] font-semibold leading-tight" style="color:${u.textClr}">${r.label}</p>
+        <p class="text-[9.5px] font-medium mt-1 uppercase tracking-wide" style="color:${u.textClr};opacity:0.75">${r.total === 0 ? 'Clear' : (r.due > 0 ? `${r.due} due today` : u.label)}</p>
+      </button>`;
+  }).join('');
+
+  wrap.innerHTML = `
+    <div class="rounded-xl border p-4 sm:p-5 cursor-pointer transition-shadow hover:shadow-md"
+      style="background:${overall.bg};border-color:${overall.border};box-shadow:0 2px 8px ${overall.border}55;"
+      onclick="openMgrOwnTasksDrawer()">
+      <div class="flex items-start justify-between gap-3 mb-4">
+        <div class="flex items-center gap-2.5 min-w-0">
+          <span class="text-xl leading-none flex-shrink-0">📋</span>
+          <div class="min-w-0">
+            <p class="text-sm font-bold truncate" style="color:${overall.textClr}">${total} pending${due ? ` · ${due} due today` : ''} across ${flagged}/${OWN_TASK_TYPES.length} categories</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-1.5 flex-shrink-0">
+          <span class="text-[10px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap" style="background:${overall.badgeBg};color:${overall.textClr}">${total === 0 ? '✓ All clear' : overall.label + ' load'}</span>
+          <button class="p-1 rounded-full hover:bg-black/10 transition-colors" onclick="event.stopPropagation(); renderMgrOwnTasks()" title="Refresh" aria-label="Refresh">
+            <svg class="w-3.5 h-3.5" style="color:${overall.textClr}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+      <div class="flex flex-wrap gap-2.5">
+        ${tiles}
+      </div>
+      <div class="mt-3.5 flex items-center gap-1 text-[11px] font-bold" style="color:${overall.textClr}">
+        View all tasks
+        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
+      </div>
+    </div>`;
+}
+
+/* ── Important Business Tasks Drawer — accordion of the 8 task types, same pattern as Boost Referrals ── */
+function openMgrOwnTasksDrawer(focusKey) {
+  setActiveDrawerRefresh(() => openMgrOwnTasksDrawer());
+  const entities = getOwnTaskScopeEntities();
+  const rows = OWN_TASK_TYPES.map(tt => ({ ...tt, ..._ownTaskCounts(tt, entities) }));
+  const totalPending = rows.reduce((s, r) => s + r.total, 0);
+  const totalDue      = rows.reduce((s, r) => s + r.due, 0);
+
+  let content = `
+    ${mgrDrawerFilterBar()}
+    <div class="mb-4 p-3.5 bg-indigo-50 border border-indigo-200 rounded-xl">
+      <div class="flex items-center gap-2 mb-1">
+        <span class="text-lg">📋</span>
+        <p class="font-bold text-sm text-indigo-800">Important Business Tasks</p>
+      </div>
+      <p class="text-xs text-indigo-600">${totalPending} task${totalPending !== 1 ? 's' : ''} pending across ${OWN_TASK_TYPES.length} categories${totalDue ? ` · ${totalDue} due today` : ''}</p>
+    </div>
+    <div class="space-y-2.5">
+  `;
+
+  rows.forEach(r => {
+    const u = _ownTaskUrgency(r.total);
+    content += `
+      <div class="border border-border rounded-xl overflow-hidden shadow-sm">
+        <button onclick="toggleMgrOwnTaskRow('${r.key}')" class="w-full flex items-center justify-between p-3.5 bg-white hover:bg-surface transition-colors text-left">
+          <div class="flex items-center gap-3">
+            <span class="text-xl leading-none">${r.icon}</span>
+            <div>
+              <p class="font-semibold text-sm text-text-main">${r.label}</p>
+              <p class="text-xs text-text-muted">${r.total} pending${r.due ? ` · ${r.due} due today` : ''}</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full border" style="background:${u.badgeBg};color:${u.textClr};border-color:${u.border}">${r.total}</span>
+            <svg id="mot-chev-${r.key}" class="w-4 h-4 text-text-muted transition-transform duration-200 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+            </svg>
+          </div>
+        </button>
+        <div id="mot-body-${r.key}" class="hidden border-t border-border p-3">
+          ${_metricDefBanner(escHtml(r.definition), escHtml(r.closure))}
+          ${_renderMgrOwnTaskItems(r, entities)}
+        </div>
+      </div>`;
+  });
+
+  content += `</div>`;
+  openDrawer('📋 Important Business Tasks', content, false);
+
+  if (focusKey) {
+    toggleMgrOwnTaskRow(focusKey);
+    document.getElementById(`mot-body-${focusKey}`)?.scrollIntoView({ block:'nearest' });
+  }
+}
+
+/* ── Generic in-drawer filter bar (PL/TL multi-select dropdowns) ──
+   Reusable across every manager drawer ("task box") that opens a side panel:
+   Important Business Tasks, Boost pipeline drawers, Standup drill-downs, etc.
+   Reads/writes the same state.managerFilters the header filter bar uses, so
+   the header dropdowns and this widget always stay in sync with each other.
+   Call setActiveDrawerRefresh() when opening a drawer so Apply/Clear here
+   know how to re-render that specific drawer's content in place. */
+function setActiveDrawerRefresh(fn) {
+  state.activeDrawerRefresh = fn;
+}
+
+function mgrDrawerFilterBar() {
+  const role = state.role;
+  if (role === 'team_lead') return '';
+  const f = state.managerFilters;
+  const u = state.currentUser;
+
+  function dropdown(type, label, options, selectedIds) {
+    const dropdownId = `drawer${type === 'pod' ? 'Pod' : 'Tl'}FilterDropdown`;
+    const btnLabel = selectedIds.length ? `${label}: ${selectedIds.length} selected` : `${label}: All`;
+    return `
+      <div class="relative inline-block" onclick="event.stopPropagation()">
+        <button type="button" onclick="toggleDrawerFilterDropdown('${type}', event)"
+          class="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 border border-border rounded-lg bg-white hover:bg-surface transition-colors">
+          ${escHtml(btnLabel)}
+          <svg class="w-3 h-3 text-text-muted flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        </button>
+        <div id="${dropdownId}" class="hidden absolute z-20 mt-1.5 w-60 bg-white border border-border rounded-xl shadow-lg p-2">
+          <div class="max-h-48 overflow-y-auto space-y-0.5">
+            ${options.map(o => `
+              <label class="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-surface cursor-pointer">
+                <input type="checkbox" ${selectedIds.includes(o.id) ? 'checked' : ''} onchange="onMgrCheckChange('${type}',${o.id},this.checked)"
+                  class="w-3.5 h-3.5 accent-accent cursor-pointer flex-shrink-0" />
+                <span class="text-xs text-text-main leading-tight">${escHtml(o.label)}</span>
+              </label>`).join('') || '<p class="text-xs text-text-muted px-2 py-1.5">None available</p>'}
+          </div>
+          <div class="flex items-center justify-between gap-2 mt-2 pt-2 border-t border-border">
+            <button onclick="clearDrawerFilter('${type}')" class="text-[11px] font-semibold text-text-muted hover:text-text-main">Clear</button>
+            <button onclick="applyDrawerFilter('${type}')" class="text-[11px] font-bold text-white bg-accent px-3 py-1 rounded-lg hover:opacity-90">Apply</button>
+          </div>
+        </div>
+      </div>`;
+  }
+
+  let widgets = '';
+  if (['senior_manager','director','ops_admin'].includes(role)) {
+    const pods = POD_LEADERS.filter(p => getMyPodIds().includes(p.id)).map(p => ({ id:p.id, label:`${p.name} (${p.pod})` }));
+    widgets += dropdown('pod', 'PL', pods, f.pods);
+  }
+  const reportingTlIds = role === 'pod_leader' ? (HIERARCHY.podToTLs[u.id]||[]) : getMyTLIds();
+  const tlOpts = TEAM_LEADS.filter(t => reportingTlIds.includes(t.id)).map(t => ({ id:t.id, label:`${t.name} (${t.team})` }));
+  widgets += dropdown('tl', 'TL', tlOpts, f.tls);
+
+  return widgets ? `<div class="flex flex-wrap items-center gap-2 mb-4">${widgets}</div>` : '';
+}
+
+function toggleDrawerFilterDropdown(type, e) {
+  if (e) e.stopPropagation();
+  const ids = ['drawerPodFilterDropdown','drawerTlFilterDropdown'];
+  const target = type === 'pod' ? 'drawerPodFilterDropdown' : 'drawerTlFilterDropdown';
+  ids.forEach(id => { const el = document.getElementById(id); if (el && id !== target) el.classList.add('hidden'); });
+  document.getElementById(target)?.classList.toggle('hidden');
+}
+
+function applyDrawerFilter(type) {
+  const target = type === 'pod' ? 'drawerPodFilterDropdown' : 'drawerTlFilterDropdown';
+  document.getElementById(target)?.classList.add('hidden');
+  buildMgrFilterBar();                 // keep the header dropdowns/labels in sync
+  renderMgrTab1();                     // refresh the dashboard cards behind the drawer
+  state.activeDrawerRefresh?.();       // re-render whichever drawer is currently open
+}
+
+function clearDrawerFilter(type) {
+  if (type === 'pod') state.managerFilters.pods = [];
+  else state.managerFilters.tls = [];
+  applyDrawerFilter(type);
+}
+
+function _renderMgrOwnTaskItems(tt, entities) {
+  let rows = '';
+  entities.forEach(e => {
+    const c = e.ownTaskCounts?.[tt.key];
+    if (!c || c.total === 0) return;
+    const roleLabel = e.role === 'team_lead' ? 'Team Lead' : 'POD Leader';
+    for (let i = 1; i <= c.total; i++) {
+      const isDue = i <= c.due;
+      rows += `
+        <div class="flex items-center justify-between px-3.5 py-2.5 border-b border-border/40 last:border-0 hover:bg-surface/40">
+          <div class="min-w-0">
+            <p class="text-sm font-medium text-text-main truncate">${escHtml(tt.label)} — Item #${i}</p>
+            <p class="text-[11px] text-text-muted">${escHtml(e.name)} · ${roleLabel}</p>
+          </div>
+          <span class="text-[10px] font-bold px-2 py-0.5 rounded-full flex-shrink-0 ${isDue ? 'bg-red-100 text-red-700' : 'bg-surface text-text-muted'}">${isDue ? '⚡ Due today' : 'Pending'}</span>
+        </div>`;
+    }
+  });
+  return rows || '<p class="text-xs text-text-muted text-center py-5">No pending items in this category</p>';
+}
+
+function toggleMgrOwnTaskRow(key) {
+  const body    = document.getElementById(`mot-body-${key}`);
+  const chevron = document.getElementById(`mot-chev-${key}`);
+  if (!body) return;
+  const isOpen = !body.classList.contains('hidden');
+  body.classList.toggle('hidden', isOpen);
+  if (chevron) chevron.style.transform = isOpen ? '' : 'rotate(180deg)';
+}
+
+function renderMgrBoostCards() {
+  const pool = getFilteredCounselorPool();
+  const grid = document.getElementById('mgrBoostCards');
+  if (!grid) return;
+
+  const poolIds = new Set(pool.map(c => c.id));
+  const poolStudents = STUDENTS.filter(s => poolIds.has(s.counselorId));
+  const todayStr = new Date().toISOString().split('T')[0];
+
+  function dueCount(arr) {
+    return arr.filter(s => s.followup && s.followup <= todayStr).length;
+  }
+  function urgency(due) {
+    if (due > 5)  return { bg:'linear-gradient(135deg,#fef2f2,#fee2e2)', border:'#fca5a5', textClr:'#dc2626', badgeBg:'#fee2e2' };
+    if (due >= 1) return { bg:'linear-gradient(135deg,#fff7ed,#ffedd5)', border:'#fdba74', textClr:'#ea580c', badgeBg:'#ffedd5' };
+    return               { bg:'linear-gradient(135deg,#f0fdf4,#dcfce7)', border:'#bbf7d0', textClr:'#16a34a', badgeBg:'#dcfce7' };
+  }
+
+  const stiStu = poolStudents.filter(s => s.stage === 'sti');
+  const depStu = poolStudents.filter(s => s.stage === 'deposit');
+  const revStu = poolStudents.filter(s => s.servicingType === 'partner' || s.servicingType === 'non-partner');
+  const refStu = poolStudents.filter(s => ['sti','deposit','lockin'].includes(s.stage));
+
+  const cards = [
+    { label:'Boost Referrals', icon:'🤝', count:refStu.length,  due:dueCount(refStu),  sub:`${refStu.length} students can refer`,          type:'referrals' },
+    { label:'Boost STI',       icon:'🎯', count:stiStu.length,  due:dueCount(stiStu),  sub:`${stiStu.length} students need attention`,      type:'sti' },
+    { label:'Boost Deposit',   icon:'📦', count:depStu.length,  due:dueCount(depStu),  sub:`${depStu.length} students need attention`,      type:'deposit' },
+    { label:'Boost Revenue',   icon:'💰', count:revStu.length,  due:dueCount(revStu),  sub:'Revenue opportunities',                         type:'revenue' },
+  ];
+
+  grid.innerHTML = cards.map(c => {
+    const u = urgency(c.due);
+    const dueTxt = `<span style="background:${u.badgeBg};color:${u.textClr}" class="text-[10px] font-bold px-2 py-0.5 rounded-full">${c.due} due today</span>`;
+    return `
+      <div class="boost-card relative cursor-pointer"
+        style="background:${u.bg};border:1px solid ${u.border};box-shadow:0 2px 8px ${u.border}55;"
+        onclick="openMgrBoostPipeline('${c.type}')">
+        <button class="absolute top-2 right-2 p-1 rounded-full hover:bg-black/10 z-10 transition-colors"
+          onclick="event.stopPropagation(); renderMgrBoostCards()" title="Refresh">
+          <svg class="w-3 h-3" style="color:${u.textClr}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+          </svg>
+        </button>
+        <div class="text-[11px] font-bold uppercase tracking-wide mb-1" style="color:${u.textClr};opacity:0.8">${c.icon} ${c.label}</div>
+        <div class="font-mono leading-none mb-1" style="font-size:2.4rem;font-weight:800;color:${u.textClr}">${c.count}</div>
+        <div class="text-xs mb-2" style="color:${u.textClr};opacity:0.7">${c.sub}</div>
+        <div class="mb-2">${dueTxt}</div>
+        <span class="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full"
+          style="color:${u.textClr};background:${u.badgeBg}">View Pipeline →</span>
+      </div>`;
+  }).join('');
+}
+
+/* Builds the "SM: X · POD: Y ..." pills bar reflecting the current global manager filters (or "Viewing all counsellors" when none applied) */
+function mgrFilterPillsBar() {
+  const f = state.managerFilters;
+  const filterPills = [];
+  if (f.sms.length) filterPills.push(`SM: ${f.sms.map(id => SENIOR_MANAGERS.find(s=>s.id===id)?.name||id).join(', ')}`);
+  if (f.pods.length) filterPills.push(`PL: ${f.pods.map(id => POD_LEADERS.find(p=>p.id===id)?.name||id).join(', ')}`);
+  if (f.tls.length) filterPills.push(`TL: ${f.tls.map(id => TEAM_LEADS.find(t=>t.id===id)?.name||id).join(', ')}`);
+  if (f.counselors.length) filterPills.push(`CL: ${f.counselors.map(id => COUNSELORS.find(c=>c.id===id)?.name||id).join(', ')}`);
+  return filterPills.length
+    ? `<div class="flex flex-wrap gap-1.5 px-4 py-2 bg-surface border-b border-border">${filterPills.map(p => `<span class="text-[10px] px-2 py-0.5 bg-accent/10 text-accent rounded-full font-medium border border-accent/20">${escHtml(p)}</span>`).join('')}</div>`
+    : `<div class="px-4 py-2 bg-surface border-b border-border"><span class="text-[10px] text-text-muted italic">Viewing all counsellors</span></div>`;
+}
+
+function openMgrBoostPipeline(type) {
+  setActiveDrawerRefresh(() => openMgrBoostPipeline(type));
+  const pool = getFilteredCounselorPool();
+  const poolIds = new Set(pool.map(c => c.id));
+  const poolStudents = STUDENTS.filter(s => poolIds.has(s.counselorId));
+  const todayStr = new Date().toISOString().split('T')[0];
+
+  const stageMap = {
+    referrals: { label:'Boost Referrals', filter: s => ['sti','deposit','lockin'].includes(s.stage), emoji:'🤝' },
+    sti:       { label:'Boost STI',       filter: s => s.stage === 'sti',                            emoji:'🎯' },
+    deposit:   { label:'Boost Deposit',   filter: s => s.stage === 'deposit',                        emoji:'📦' },
+    revenue:   { label:'Boost Revenue',   filter: s => s.servicingType === 'partner' || s.servicingType === 'non-partner', emoji:'💰' },
+  };
+  const def = stageMap[type] || stageMap.sti;
+  const students = poolStudents.filter(def.filter);
+
+  const rows = students.map(s => {
+    const counsellor = pool.find(c => c.id === s.counselorId);
+    const due = s.followup && s.followup <= todayStr;
+    return `
+      <div class="flex items-center justify-between px-4 py-3 border-b border-border hover:bg-surface/40 last:border-0">
+        <div class="flex-1 min-w-0">
+          <p class="text-sm font-semibold text-text-main truncate">${escHtml(s.name)}</p>
+          <p class="text-[11px] text-text-muted">${escHtml(s.course)} · ${escHtml(counsellor?.name || '')}</p>
+        </div>
+        <div class="flex items-center gap-2 ml-3">
+          <span class="text-[10px] font-bold px-2 py-0.5 rounded-full ${due ? 'bg-red-100 text-red-700' : 'bg-surface text-text-muted'}">${due ? '⚡ Due today' : s.followup || '—'}</span>
+        </div>
+      </div>`;
+  }).join('') || '<p class="text-sm text-text-muted text-center py-8">No students in this pipeline.</p>';
+
+  openDrawer(`${def.emoji} ${def.label} — ${students.length} students · ${pool.length} counsellors`, `
+    ${mgrDrawerFilterBar()}
+    <div class="divide-y divide-border">${rows}</div>`);
+}
+
+function renderMgrBoostInput() {
+  const pool = getFilteredCounselorPool();
+  const grid = document.getElementById('mgrBoostInput');
+  if (!grid || !pool.length) return;
+
+  const poolIds = new Set(pool.map(c => c.id));
+  const poolStudents = STUDENTS.filter(s => poolIds.has(s.counselorId));
+
+  // ISL
+  const avgISL = (pool.reduce((s,c) => s + (c.today.isl||0), 0) / pool.length).toFixed(1);
+  const islPct  = Math.round((avgISL / 5) * 100);
+  const bestISL = pool.reduce((b,c) => (c.today.isl||0) > (b.today.isl||0) ? c : b, pool[0]);
+
+  // Quality
+  const sorted = [...pool].sort((a,b) => ((b.today.q1score+b.today.q2score)/2) - ((a.today.q1score+a.today.q2score)/2));
+  const q1  = Math.round((sorted[0]?.today.q1score + sorted[0]?.today.q2score) / 2 || 0);
+  const q2  = Math.round((sorted[1]?.today.q1score + sorted[1]?.today.q2score) / 2 || 0);
+  const avgQ = Math.round(pool.reduce((s,c) => s + ((c.today.q1score+c.today.q2score)/2||0), 0) / pool.length);
+  const bestQ = sorted[0];
+
+  // Potential Escalations aggregation
+  let customerSupport = 0, lowISL = 0, waActive = 0, waInactive = 0, notJoined = 0, studentNotJoined = 0, notReplied = 0;
+  poolStudents.forEach(s => {
+    if (s.hasEscalation) customerSupport++;
+    if (s.islRating < 8 && !s.hasEscalation) lowISL++;
+    if ((WA_UNANSWERED[s.id] || []).length > 0) notReplied++;
+    let hasJoined = false;
+    (s.whatsappGroups || []).forEach(g => {
+      if (g.counselorJoined && g.studentJoined) { waActive++; hasJoined = true; }
+      else if (!g.counselorJoined) waInactive++;
+      if (!g.studentJoined) notJoined++;
+    });
+    if (!hasJoined && (s.whatsappGroups||[]).length > 0) studentNotJoined++;
+  });
+  // Same aggregate the WA Summary drawer panel uses to color itself
+  const waIssueCount = computeWAIssueCount(poolStudents);
+
+  // Own tasks
+  const ownCount = (state.ownTasks || []).filter(t => !t.done).length;
+
+  function subRow(label, count, urgency) {
+    const cfg = {
+      good:   { bg:'bg-emerald-50', border:'border-emerald-200', numCls:'text-emerald-700 bg-emerald-100', lbl:'text-emerald-700' },
+      warn:   { bg:'bg-amber-50',   border:'border-amber-200',   numCls:'text-amber-700 bg-amber-100',     lbl:'text-amber-700' },
+      danger: { bg:'bg-red-50',     border:'border-red-200',     numCls:'text-red-700 bg-red-100',         lbl:'text-red-700' },
+    }[urgency];
+    return `<div class="flex items-center justify-between px-2.5 py-1.5 rounded-lg border ${cfg.bg} ${cfg.border} mb-1 last:mb-0">
+      <span class="text-[10px] font-semibold ${cfg.lbl}">${label}</span>
+      <span class="text-[11px] font-bold px-1.5 py-0.5 rounded-full ${cfg.numCls}">${count}</span>
+    </div>`;
+  }
+
+  grid.innerHTML = `
+    <!-- ISL Feedback Rating -->
+    <div class="metric-card rounded-xl border p-3 shadow-sm cursor-pointer hover:shadow-md transition-shadow"
+      style="background:linear-gradient(135deg,#eff6ff 0%,#dbeafe 100%);border-color:#93c5fd;">
+      <p class="text-xs font-semibold uppercase tracking-wide mb-2 text-blue-700">📞 ISL Feedback Rating</p>
+      <div class="flex items-end gap-1 mb-1">
+        <span class="font-mono font-black text-blue-700" style="font-size:2rem">${avgISL}</span>
+        <span class="text-sm text-blue-400 font-normal mb-1">/ 5</span>
+      </div>
+      <p class="text-xs text-blue-500 mb-2">${islPct}%</p>
+      <div class="w-full bg-blue-100 rounded-full h-1.5 mb-2">
+        <div class="bg-blue-500 h-1.5 rounded-full" style="width:${islPct}%"></div>
+      </div>
+      <p class="text-[10px] text-blue-600">🏆 Best: <strong>${bestISL.name} · ${bestISL.today.isl}/5</strong></p>
+    </div>
+
+    <!-- Potential Escalations IMP -->
+    <div class="metric-card rounded-xl border p-3 cursor-pointer hover:shadow-md transition-shadow"
+      style="background:linear-gradient(135deg,#ecfdf5 0%,#d1fae5 100%);border-color:#6ee7b7;"
+      onclick="openWAGroupDetailsDrawer()">
+      <p class="text-xs font-semibold uppercase tracking-wide mb-2 text-emerald-700">🎯 Potential Escalations <span class="ml-1 text-[9px] font-bold bg-red-100 text-red-600 px-1.5 py-0.5 rounded-full">IMP</span></p>
+      <div class="space-y-0.5">
+        ${subRow('Customer Support',        customerSupport, customerSupport > 0 ? 'danger' : 'good')}
+        ${subRow('Low ISL Feedback',        lowISL,          lowISL > 0 ? 'danger' : 'good')}
+        ${subRow('Messages Not Replied',    notReplied,      waIssueCount > 0 ? 'danger' : 'good')}
+        ${subRow('IS Pending and Breached', 0,               'good')}
+      </div>
+      <div class="mt-2 flex items-center gap-1 text-[10px] font-semibold text-emerald-700">
+        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+        View all groups →
+      </div>
+    </div>
+
+    <!-- Own Tasks -->
+    <div class="metric-card rounded-xl border p-3 shadow-sm"
+      style="background:linear-gradient(135deg,#fefce8 0%,#fef9c3 100%);border-color:#fde047;">
+      <p class="text-xs font-semibold uppercase tracking-wide mb-2 text-yellow-700">📋 Own Tasks</p>
+      <div class="font-mono font-black text-yellow-700 mb-1" style="font-size:2rem">${ownCount}</div>
+      <p class="text-xs text-yellow-600">${ownCount === 1 ? '1 pending reminder' : ownCount + ' pending reminders'}</p>
+    </div>
+
+    <!-- Quality Score -->
+    <div class="metric-card rounded-xl border p-3 shadow-sm cursor-pointer hover:shadow-md transition-shadow"
+      style="background:linear-gradient(135deg,#f0fdf4 0%,#dcfce7 100%);border-color:#86efac;">
+      <p class="text-xs font-semibold uppercase tracking-wide mb-2 text-green-700">⭐ Quality Score</p>
+      <div class="flex items-end gap-3 mb-1">
+        <div><span class="font-mono font-black text-green-700" style="font-size:1.6rem">${q1}%</span> <span class="text-[10px] text-green-500 font-bold">1st</span></div>
+        <div><span class="font-mono font-black text-green-600" style="font-size:1.6rem">${q2}%</span> <span class="text-[10px] text-green-400 font-bold">2nd</span></div>
+      </div>
+      <p class="text-[10px] text-green-500 mb-2">1st: ${q1}% | 2nd: ${q2}%</p>
+      <div class="w-full bg-green-100 rounded-full h-1.5 mb-2">
+        <div class="bg-green-500 h-1.5 rounded-full" style="width:${avgQ}%"></div>
+      </div>
+      <p class="text-[10px] text-green-600">🏆 Best: <strong>${bestQ?.name} · ${Math.round((bestQ?.today.q1score+bestQ?.today.q2score)/2)}%</strong></p>
+    </div>
+  `;
+}
+
+/* Top Performers is shown to every role with all 4 tiers always available —
+   not gated by the viewer's own role/hierarchy (rankings are org-wide). */
+function renderMgrLeaderToggle() {
+  const toggleWrap = document.getElementById('mgrLeaderToggle');
+  if (!toggleWrap) return;
+
+  const tiers = [
+    { id:'counsellor', label:'CL' },
+    { id:'teamlead',   label:'TL' },
+    { id:'pod',        label:'PL' },
+    { id:'sm',         label:'SM' },
+  ];
+
+  toggleWrap.innerHTML = tiers.map(t => `
+    <button class="mgr-leader-btn ${state.mgrLeaderView === t.id ? 'active bg-white shadow-sm text-primary' : 'text-text-muted hover:text-text-main'} text-xs px-3 py-1 rounded-md transition-colors cursor-pointer"
+      onclick="switchMgrLeaderView('${t.id}',this)">${t.label}</button>
+  `).join('');
+
+  // Update drill-down dropdown
+  updateMgrLeaderDrillDown();
+}
+
+function updateMgrLeaderDrillDown() {
+  const sel = document.getElementById('mgrLeaderDrillDown');
+  if (!sel) return;
+  sel.innerHTML = '<option value="">View All</option>';
+
+  const view = state.mgrLeaderView;
+  let items = [];
+
+  if (view === 'counsellor') {
+    // Show all TLs as drill-down (to filter by team) — org-wide, not scoped to viewer
+    items = TEAM_LEADS.map(t => ({ id:'tl:'+t.id, label:t.name + ' team' }));
+  } else if (view === 'teamlead') {
+    // Show all PODs as drill-down — org-wide, not scoped to viewer
+    items = POD_LEADERS.map(p => ({ id:'pod:'+p.id, label:p.pod }));
+  } else {
+    sel.disabled = true; return;
+  }
+
+  sel.disabled = false;
+  items.forEach(it => {
+    const o = document.createElement('option');
+    o.value = it.id; o.textContent = it.label;
+    sel.appendChild(o);
+  });
+}
+
+function switchMgrLeaderView(view, btn) {
+  state.mgrLeaderView = view;
+  document.querySelectorAll('.mgr-leader-btn').forEach(b => {
+    b.classList.remove('active','bg-white','shadow-sm','text-primary');
+    b.classList.add('text-text-muted');
+  });
+  if (btn) { btn.classList.add('active','bg-white','shadow-sm','text-primary'); btn.classList.remove('text-text-muted'); }
+  updateMgrLeaderDrillDown();
+  renderMgrLeaderboard();
+}
+
+function switchMgrLeaderPeriod(period, btn) {
+  state.mgrLeaderPeriod = period;
+  document.querySelectorAll('#body-mgrTopPerf .period-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  renderMgrLeaderboard();
+}
+
+/* Builds one row per entity in the selected tier, aggregating up from individual
+   counsellors' `today` figures for TL/PL/SM tiers. `leads` doubles as the "CA"
+   (cases assigned) volume gate used by the percentage-based metric cards. */
+function _buildTierMetricRows(view, drillVal) {
+  const agg = cs => ({
+    stis:     cs.reduce((s,c) => s + (c.today.stis||0), 0),
+    leads:    cs.reduce((s,c) => s + (c.today.leads||0), 0),
+    deposits: cs.reduce((s,c) => s + (c.today.deposits||0), 0),
+    lockins:  cs.reduce((s,c) => s + (c.today.lockins||0), 0),
+    f2f:      cs.reduce((s,c) => s + (c.today.f2f||0), 0),
+    revenue:  cs.reduce((s,c) => s + (c.today.revenue||0), 0),
+  });
+
+  if (view === 'counsellor') {
+    let pool = COUNSELORS;
+    if (drillVal.startsWith('tl:')) {
+      const tlId = parseInt(drillVal.split(':')[1]);
+      pool = pool.filter(c => (HIERARCHY.tlToCounselors[tlId]||[]).includes(c.id));
+    }
+    return pool.map(c => ({
+      name:c.name, stis:c.today.stis||0, leads:c.today.leads||0, deposits:c.today.deposits||0,
+      lockins:c.today.lockins||0, f2f:c.today.f2f||0, revenue:c.today.revenue||0,
+    }));
+  }
+
+  if (view === 'teamlead') {
+    let pool = TEAM_LEADS;
+    if (drillVal.startsWith('pod:')) {
+      const podId = parseInt(drillVal.split(':')[1]);
+      const tlIds = HIERARCHY.podToTLs[podId]||[];
+      pool = pool.filter(t => tlIds.includes(t.id));
+    }
+    return pool.map(t => {
+      const cs = COUNSELORS.filter(c => (HIERARCHY.tlToCounselors[t.id]||[]).includes(c.id));
+      return { name:t.name, ...agg(cs) };
+    });
+  }
+
+  if (view === 'pod') {
+    return POD_LEADERS.map(p => {
+      const tlIds = HIERARCHY.podToTLs[p.id]||[];
+      const cs = COUNSELORS.filter(c => tlIds.some(tl => (HIERARCHY.tlToCounselors[tl]||[]).includes(c.id)));
+      return { name:p.name, ...agg(cs) };
+    });
+  }
+
+  if (view === 'sm') {
+    return SENIOR_MANAGERS.map(s => {
+      const podIds = HIERARCHY.smToPods[s.id]||[];
+      const tlIds  = podIds.flatMap(pid => HIERARCHY.podToTLs[pid]||[]);
+      const cs = COUNSELORS.filter(c => tlIds.some(tl => (HIERARCHY.tlToCounselors[tl]||[]).includes(c.id)));
+      return { name:s.name, ...agg(cs) };
+    });
+  }
+
+  return [];
+}
+
+function renderMgrLeaderboard() {
+  const grid = document.getElementById('mgrLeaderboardGrid');
+  if (!grid) return;
+
+  // Yesterday = single-day figures as-is; This Month / Last 3 Months scale the daily
+  // mock count/revenue figures up to approximate a multi-day total (~22 working
+  // days/month) — percentage metrics aren't scaled, only counted/summed ones are.
+  const mult = { yesterday:1, month:22, quarter:66 }[state.mgrLeaderPeriod] || 1;
+  const MIN_CA = 20;
+
+  const view = state.mgrLeaderView;
+  const drillSel = document.getElementById('mgrLeaderDrillDown');
+  const drillVal = drillSel ? drillSel.value : '';
+  const rows = _buildTierMetricRows(view, drillVal);
+
+  const pct  = (num, den) => den > 0 ? Math.round((num/den)*1000)/10 : null;
+  const gate = r => r.leads >= MIN_CA;
+
+  const metrics = [
+    { title:'STIs Submitted',            value: r => r.stis * mult,                          fmt: v => `${Math.round(v)}` },
+    { title:'CA→STI (30D, min CA 20)',   value: r => gate(r) ? pct(r.stis, r.leads) : null,    fmt: v => `${v}%` },
+    { title:'Deposits',                  value: r => r.deposits * mult,                       fmt: v => `${Math.round(v)}` },
+    { title:'Lock-ins (min CA 20)',      value: r => gate(r) ? pct(r.lockins, r.leads) : null, fmt: v => `${v}%` },
+    { title:'Revenue',                   value: r => r.revenue * mult,                        fmt: v => `₹${(v/100000).toFixed(1)}L` },
+    { title:'F2F % (min CA 20)',         value: r => gate(r) ? pct(r.f2f, r.leads) : null,     fmt: v => `${v}%` },
+  ];
+
+  const trophyColors = ['#f59e0b','#94a3b8','#92400e'];
+
+  grid.innerHTML = metrics.map(m => {
+    const ranked = rows
+      .map(r => ({ name:r.name, value:m.value(r) }))
+      .filter(r => r.value !== null && r.value !== undefined)
+      .sort((a,b) => b.value - a.value)
+      .slice(0,3);
+    return `
+      <div class="rounded-xl border border-border p-4">
+        <p class="text-[10px] font-bold text-text-muted uppercase tracking-wide mb-3">${escHtml(m.title)}</p>
+        <div class="space-y-2.5">
+          ${ranked.length ? ranked.map((r,i) => `
+            <div class="flex items-center gap-3">
+              <span class="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0" style="background:${trophyColors[i]}22;color:${trophyColors[i]}">🏆</span>
+              <span class="flex-1 text-sm font-semibold text-text-main truncate">${escHtml(r.name)}</span>
+              <span class="text-sm font-bold text-text-main flex-shrink-0">${m.fmt(r.value)}</span>
+            </div>`).join('') : '<p class="text-xs text-text-muted text-center py-3">No data for selected filters.</p>'}
+        </div>
+      </div>`;
+  }).join('');
+}
+
+/* ── Tab 2 — Manager Render ── */
+
+function renderMgrTab2() {
+  const u = state.currentUser;
+  const inc = MGR_INCENTIVE[u.id] || { monthly:0, alltime:0, components:[] };
+  const pool = getFilteredCounselorPool();
+
+  // My Earnings
+  const myEl = document.getElementById('mgrMyEarningsAmt');
+  if (myEl) myEl.textContent = `₹${(inc.monthly/1000).toFixed(0)}K`;
+
+  const myBreakdown = document.getElementById('mgrMyEarningsBreakdown');
+  if (myBreakdown) {
+    myBreakdown.innerHTML = inc.components.map(comp => `
+      <div class="flex items-center justify-between py-1.5 border-b border-border last:border-0">
+        <span class="text-sm text-text-main">${escHtml(comp.name)}</span>
+        <span class="font-mono font-bold text-success text-sm">₹${(comp.earned/1000).toFixed(0)}K</span>
+      </div>
+    `).join('') || '<p class="text-sm text-text-muted">No breakdown available.</p>';
+  }
+
+  // Reportees' Earnings
+  const teamTotal = pool.reduce((s,c) => s + ((MGR_INCENTIVE[c.id]?.monthly) || 38000), 0);
+  const teamEl = document.getElementById('mgrTeamEarningsAmt');
+  if (teamEl) teamEl.textContent = `₹${(teamTotal/1000).toFixed(0)}K`;
+
+  const teamBreakdown = document.getElementById('mgrTeamEarningsBreakdown');
+  if (teamBreakdown) {
+    teamBreakdown.innerHTML = pool.slice(0,6).map(c => `
+      <div class="flex items-center justify-between py-1.5 border-b border-border last:border-0">
+        <div class="flex items-center gap-2">
+          <div class="w-6 h-6 rounded-full bg-primary text-white text-[10px] font-bold flex items-center justify-center">${escHtml(c.avatar)}</div>
+          <span class="text-sm text-text-main">${escHtml(c.name.split(' ')[0])}</span>
+        </div>
+        <span class="font-mono font-bold text-primary text-sm">₹${(((MGR_INCENTIVE[c.id]?.monthly) || 38000)/1000).toFixed(0)}K</span>
+      </div>
+    `).join('') || '<p class="text-sm text-text-muted">No reportees found.</p>';
+  }
+
+  // Opportunity Size
+  const stiPipe    = pool.reduce((s,c) => s + (c.today.stis||0) * 45000, 0);
+  const depPipe    = pool.reduce((s,c) => s + (c.today.deposits||0) * 80000, 0);
+  const revPipe    = pool.reduce((s,c) => s + (c.today.revenue||0) * 0.01, 0);
+  const totalPipe  = stiPipe + depPipe + revPipe;
+  const fmt = v => `₹${v>=100000?(v/100000).toFixed(1)+'L':(v/1000).toFixed(0)+'K'}`;
+  const setEl = (id,v) => { const el = document.getElementById(id); if(el) el.textContent = fmt(v); };
+  setEl('mgrTotalOpportunity', totalPipe);
+  setEl('mgrStiPipeline', stiPipe);
+  setEl('mgrDepositPipeline', depPipe);
+  setEl('mgrRevenuePipeline', revPipe);
+
+  // Ongoing Offers — manager row rendered via renderMgrManagerOffers()
+  renderMgrManagerOffers();
+
+  // Top Earners
+  renderMgrEarnerToggle();
+  renderMgrEarnerLists();
+}
+
+function renderMgrManagerOffers() {
+  const el = document.getElementById('mgrManagerOffersRow');
+  if (!el) return;
+  const role = state.role;
+  // Tier visibility: TL sees TL-tier; POD sees TL+POD; SM/Director/OpsAdmin see all
+  const visibleTiers = role === 'team_lead'
+    ? ['team_lead']
+    : role === 'pod_leader'
+      ? ['team_lead', 'pod_leader']
+      : ['team_lead', 'pod_leader', 'senior_manager'];
+  const visible = MGR_OFFERS.filter(o => visibleTiers.includes(o.tier));
+  el.innerHTML = visible.map(o => `
+    <div class="flex-shrink-0 w-64 rounded-xl border-2 border-purple-200 bg-purple-50 p-4">
+      <p class="font-bold text-purple-700 text-sm mb-1">${escHtml(o.title)}</p>
+      <p class="text-xs text-text-muted mb-3 line-clamp-2">${escHtml(o.desc)}</p>
+      <p class="text-[10px] text-purple-600 font-semibold">Expires: ${escHtml(o.expiry)}</p>
+    </div>
+  `).join('') || '<p class="text-sm text-text-muted">No manager offers at the moment.</p>';
+}
+
+function renderMgrEarnerToggle() {
+  const role = state.role;
+  const wrap = document.getElementById('mgrEarnerToggle');
+  if (!wrap) return;
+  const tiers = [{ id:'counsellor', label:'CL' }];
+  if (['pod_leader','senior_manager','director'].includes(role)) tiers.push({ id:'teamlead', label:'TL' });
+  if (['senior_manager','director'].includes(role)) tiers.push({ id:'pod', label:'PL' });
+  wrap.innerHTML = tiers.map(t => `
+    <button class="mgr-earner-btn ${state.mgrEarnerView===t.id?'active bg-white shadow-sm text-primary':'text-text-muted hover:text-text-main'} text-xs px-3 py-1 rounded-md transition-colors cursor-pointer"
+      onclick="switchMgrEarnerView('${t.id}',this)">${t.label}</button>
+  `).join('');
+}
+
+function switchMgrEarnerView(view, btn) {
+  state.mgrEarnerView = view;
+  document.querySelectorAll('.mgr-earner-btn').forEach(b => {
+    b.classList.remove('active','bg-white','shadow-sm','text-primary');
+    b.classList.add('text-text-muted');
+  });
+  if (btn) { btn.classList.add('active','bg-white','shadow-sm','text-primary'); btn.classList.remove('text-text-muted'); }
+  renderMgrEarnerLists();
+}
+
+function renderMgrEarnerLists() {
+  const view = state.mgrEarnerView;
+  let items = [];
+
+  if (view === 'counsellor') {
+    items = getFilteredCounselorPool().map(c => ({
+      name:c.name, avatar:c.avatar, monthPct:Math.round(((MGR_INCENTIVE[c.id]?.monthly||38000)/72000)*100), allTimePct:Math.round(((MGR_INCENTIVE[c.id]?.alltime||480000)/1200000)*100)
+    })).sort((a,b) => b.monthPct - a.monthPct);
+  } else if (view === 'teamlead') {
+    items = getFilteredTLPool().map(t => ({
+      name:t.name, avatar:t.avatar, monthPct:Math.round(((MGR_INCENTIVE[t.id]?.monthly||50000)/120000)*100), allTimePct:Math.round(((MGR_INCENTIVE[t.id]?.alltime||480000)/1200000)*100)
+    })).sort((a,b) => b.monthPct - a.monthPct);
+  } else {
+    items = POD_LEADERS.filter(p => getMyPodIds().includes(p.id)).map(p => ({
+      name:p.name, avatar:p.avatar, monthPct:Math.round(((MGR_INCENTIVE[p.id]?.monthly||80000)/200000)*100), allTimePct:Math.round(((MGR_INCENTIVE[p.id]?.alltime||900000)/2000000)*100)
+    })).sort((a,b) => b.monthPct - a.monthPct);
+  }
+
+  const renderList = (containerId, pctKey) => {
+    const el = document.getElementById(containerId);
+    if (!el) return;
+    el.innerHTML = items.slice(0,5).map((item,i) => {
+      const pct = item[pctKey];
+      const bar = pct >= 80 ? 'bg-success' : pct >= 50 ? 'bg-accent' : 'bg-danger';
+      return `
+        <div class="flex items-center gap-3">
+          <span class="text-xs text-text-muted w-4 flex-shrink-0">${i+1}</span>
+          <div class="w-7 h-7 rounded-full bg-primary text-white text-[10px] font-bold flex items-center justify-center flex-shrink-0">${escHtml(item.avatar)}</div>
+          <div class="flex-1 min-w-0">
+            <p class="text-xs font-semibold text-text-main truncate">${escHtml(item.name.split(' ')[0])}</p>
+            <div class="flex items-center gap-1.5 mt-0.5">
+              <div class="flex-1 h-1.5 bg-surface rounded-full overflow-hidden">
+                <div class="${bar} h-full rounded-full transition-all" style="width:${pct}%"></div>
+              </div>
+              <span class="text-[10px] text-text-muted w-8 flex-shrink-0">${pct}%</span>
+            </div>
+          </div>
+        </div>`;
+    }).join('');
+  };
+  renderList('mgrEarnerMonthList', 'monthPct');
+  renderList('mgrEarnerAllList', 'allTimePct');
+}
+
+/* ── Tab 3 — Manager Render ── */
+
+function renderMgrTicketSummary() {
+  const pool = getFilteredCounselorPool();
+  // Aggregate counsellor ticket data (using mock COUNSELLOR_TICKETS)
+  const allTickets = typeof COUNSELLOR_TICKETS !== 'undefined' ? COUNSELLOR_TICKETS : [];
+  const teamCLIds = pool.map(c => c.id);
+
+  // Since COUNSELLOR_TICKETS doesn't have counselorId, use mock multiplied totals
+  const total    = allTickets.length + pool.length * 2;
+  const resolved = allTickets.filter(t => t.status === 'Resolved').length + pool.length;
+  const open     = total - resolved;
+  const avgTat   = resolved > 0 ? Math.round(allTickets.filter(t=>t.status==='Resolved').reduce((s,t)=>s+(t.tat||6),0)/Math.max(1,resolved)) : 0;
+
+  const setEl = (id,v) => { const el = document.getElementById(id); if(el) el.textContent = v; };
+  setEl('mgrTicketAll', total);
+  setEl('mgrTicketResolved', resolved);
+  setEl('mgrTicketOpen', open);
+  const tatEl = document.getElementById('mgrTicketAvgTat');
+  if (tatEl) tatEl.textContent = resolved > 0 ? `Avg TAT: ${avgTat} days` : '';
+}
+
+function openMgrTicketList(filter) {
+  const allTickets = typeof COUNSELLOR_TICKETS !== 'undefined' ? COUNSELLOR_TICKETS : [];
+  const page = document.getElementById('mgrTicketListPage');
+  const title = document.getElementById('mgrTicketListTitle');
+  const body  = document.getElementById('mgrTicketListBody');
+  if (!page || !body) return;
+
+  const filtered = filter === 'all' ? allTickets : allTickets.filter(t => t.status === filter);
+  const titleMap = { all:'All Tickets', Resolved:'Resolved Tickets', Open:'Open Tickets' };
+  if (title) title.textContent = titleMap[filter] || 'Tickets';
+
+  body.innerHTML = filtered.length ? filtered.map(t => `
+    <div class="px-5 py-3 flex items-start justify-between gap-4 hover:bg-surface/50 transition-colors">
+      <div class="flex-1 min-w-0">
+        <p class="text-sm font-semibold text-text-main truncate">${escHtml(t.subject||t.id)}</p>
+        <p class="text-xs text-text-muted mt-0.5">${escHtml(t.counselor||'—')} · ${escHtml(t.category||'—')}</p>
+        ${t.resolvedDate ? `<p class="text-xs text-text-muted mt-0.5">Resolved: ${escHtml(t.resolvedDate)} · TAT: ${t.tat||'—'} days</p>` : ''}
+      </div>
+      <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold flex-shrink-0 ${t.status==='Resolved'?'bg-green-100 text-green-700':'bg-red-100 text-red-600'}">${escHtml(t.status)}</span>
+    </div>
+  `).join('') : '<p class="text-center text-text-muted text-sm py-10">No tickets in this category.</p>';
+
+  page.classList.remove('hidden');
+}
+
+function renderMgrTraining() {
+  const pool = getFilteredCounselorPool();
+  const el = document.getElementById('mgrTrainingList');
+  if (!el || !pool.length) return;
+
+  const modules = ['Soft Training','Domain Training','System Training','New Features'];
+  const completions = { 1:[1,1,1,0], 2:[1,1,0,0], 3:[1,0,0,0], 4:[1,1,1,1], 5:[1,1,0,0], 6:[1,1,1,0], 7:[1,0,0,0], 8:[1,1,0,0] };
+
+  el.innerHTML = pool.map(c => {
+    const done = completions[c.id] || [1,0,0,0];
+    const pct = Math.round(done.filter(Boolean).length / modules.length * 100);
+    return `
+      <div class="rounded-xl border border-border overflow-hidden">
+        <div class="flex items-center justify-between px-4 py-3 bg-surface/40 border-b border-border">
+          <div class="flex items-center gap-2">
+            <div class="w-7 h-7 rounded-full bg-primary text-white text-xs font-bold flex items-center justify-center">${escHtml(c.avatar)}</div>
+            <div>
+              <p class="text-sm font-semibold text-text-main">${escHtml(c.name)}</p>
+              <p class="text-xs text-text-muted">${escHtml(c.designation)}</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-3">
+            <div class="flex items-center gap-1.5">
+              <div class="w-24 h-1.5 bg-border rounded-full overflow-hidden">
+                <div class="${pct===100?'bg-success':pct>=50?'bg-accent':'bg-danger'} h-full rounded-full" style="width:${pct}%"></div>
+              </div>
+              <span class="text-xs font-semibold text-text-muted">${pct}%</span>
+            </div>
+            ${pct < 100 ? `<button onclick="sendTrainingReminder(${c.id},'${escHtml(c.name)}')" class="text-xs px-3 py-1 bg-primary/10 text-primary hover:bg-primary hover:text-white rounded-lg transition-colors cursor-pointer font-medium flex items-center gap-1">
+              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+              Send Reminder
+            </button>` : '<span class="text-xs text-success font-semibold">✓ Complete</span>'}
+          </div>
+        </div>
+        <div class="grid grid-cols-4 divide-x divide-border">
+          ${modules.map((m,i) => `
+            <div class="px-3 py-2 text-center">
+              <p class="text-[10px] text-text-muted font-semibold">${m}</p>
+              <span class="text-sm">${done[i] ? '✅' : '⬜'}</span>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function sendTrainingReminder(counselorId, counselorName) {
+  showToast(`📩 Training reminder sent to ${counselorName.split(' ')[0]}!`);
+}
+
+function saveMgrReminder() {
+  const title = document.getElementById('mgrReminderTitle')?.value.trim();
+  const assignee = document.getElementById('mgrReminderAssignee')?.value;
+  if (!title) { showToast('Please enter a reminder title.'); return; }
+  const assigneeName = assignee === 'self' ? 'yourself' :
+    (getReporteeList().find(r => String(r.id) === assignee)?.name?.split(' ')[0] || 'the assignee');
+  showToast(`✅ Reminder saved & sent to ${assigneeName}!`);
+  document.getElementById('mgrReminderTitle').value = '';
+}
+
