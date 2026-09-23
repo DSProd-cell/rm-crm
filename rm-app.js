@@ -2533,17 +2533,16 @@ function toggleWaGroup(key) {
 const CL_TASK_TYPES = [
   { value:'FILE_MORE_APPLICATIONS', label:'File More Applications' },
   { value:'CONNECT_WITH_STUDENT', label:'Connect with Student' },
-  { value:'INTERESTED_FOR_IELTS_BOOKING', label:'Interested for IELTS Booking' },
   { value:'STUDENT_DEFERRED', label:'Student Deferred' },
   { value:'STUDENT_DROPPED', label:'Student Dropped' },
-  { value:'UPDATE_APP_PRIORITY', label:'Update App Priority' },
-  { value:'NO_ACTION_NEEDED', label:'No Action Needed' },
+  { value:'OTHERS', label:'Others' },
 ];
 const RM_TASK_TYPES = [
   { value:'BOOK_UPDATE_IELTS_EXAM', label:'Book/Update IELTS Exam' },
   { value:'DOCUMENT_COLLECTION', label:'Document Collection' },
 ];
-function clTaskTypeLabel(taskType, direction) {
+function clTaskTypeLabel(taskType, direction, otherSpecify) {
+  if (taskType === 'OTHERS') return otherSpecify ? `Others: ${otherSpecify}` : 'Others';
   const list = direction === 'rm_to_cl' ? CL_TASK_TYPES : RM_TASK_TYPES;
   return (list.find(t => t.value === taskType) || {}).label || taskType;
 }
@@ -2554,7 +2553,7 @@ const CL_TASKS_MOCK = [
     taskType:'CONNECT_WITH_STUDENT', notes:'Student is asking if the scholarship can still be applied post CF — please confirm eligibility with them directly.',
     dueDate:'2026-09-10', createdDate:'2026-09-05', status:'open' },
   { id:'CT-1051', pipeline:'sti', leadId:'RM-2089', leadName:'Karan Mehta', direction:'rm_to_cl',
-    taskType:'UPDATE_APP_PRIORITY', notes:'Student wants to switch preferred country from Germany to UK post F2F — please reprioritise applications.',
+    taskType:'OTHERS', otherSpecify:'Reprioritise applications after country switch', notes:'Student wants to switch preferred country from Germany to UK post F2F — please reprioritise applications.',
     dueDate:'2026-09-12', createdDate:'2026-09-06', status:'done' },
   { id:'CT-1063', pipeline:'revenue', leadId:'RM-2045', leadName:'Tanvir Ahmed', direction:'cl_to_rm',
     taskType:'BOOK_UPDATE_IELTS_EXAM', notes:'Student has raised a concern about the Prime pricing shared — please re-walk them through it and confirm the IELTS exam date.',
@@ -2580,7 +2579,7 @@ function clTaskCardHtml(t) {
       <span class="text-[10px] font-bold px-2 py-0.5 rounded-full flex-shrink-0" style="background:${dirColor.bg};color:${dirColor.text};border:1px solid ${dirColor.border}">${dirLabel}</span>
     </div>
     <div class="flex items-center gap-2 mb-1.5 flex-wrap">
-      <span class="text-xs font-semibold text-text-main">${clTaskTypeLabel(t.taskType, t.direction)}</span>
+      <span class="text-xs font-semibold text-text-main">${clTaskTypeLabel(t.taskType, t.direction, t.otherSpecify)}</span>
       ${isOpen ? `<span class="ai-badge pending">Open</span>` : `<span class="ai-badge completed">Done</span>`}
     </div>
     ${t.notes ? `<div class="text-xs text-text-muted mb-2 leading-relaxed">${escHtml(t.notes)}</div>` : ''}
@@ -2607,10 +2606,19 @@ function markClTaskDone(id) {
 
 // ─── CREATE TASK FOR CL — MODAL (from the lead detail page) ────────────────────
 let clTaskModalCtx = null;
+function toggleClTaskOtherField(selectId, wrapId) {
+  const sel = document.getElementById(selectId);
+  const wrap = document.getElementById(wrapId);
+  if (!sel || !wrap) return;
+  wrap.classList.toggle('hidden', sel.value !== 'OTHERS');
+}
+
 function openClTaskModal(pipeline, leadId, leadName) {
   clTaskModalCtx = { pipeline, leadId, leadName };
   document.getElementById('clTaskLeadName').textContent = leadName;
   document.getElementById('clTaskType').value = '';
+  document.getElementById('clTaskOtherSpecify').value = '';
+  document.getElementById('clTaskOtherWrap').classList.add('hidden');
   document.getElementById('clTaskNotes').value = '';
   document.getElementById('clTaskDueDate').value = '';
   const m = document.getElementById('clTaskModal');
@@ -2627,12 +2635,14 @@ function submitClTask() {
   if (!clTaskModalCtx) return;
   const typeSel = document.getElementById('clTaskType');
   if (!typeSel.value) { showToast('Please select a task type.', 'error'); return; }
+  const otherSpecify = document.getElementById('clTaskOtherSpecify').value.trim();
+  if (typeSel.value === 'OTHERS' && !otherSpecify) { showToast('Please specify the task.', 'error'); return; }
   const notes = document.getElementById('clTaskNotes').value.trim();
   const dueDate = document.getElementById('clTaskDueDate').value;
   const { pipeline, leadId, leadName } = clTaskModalCtx;
   CL_TASKS_MOCK.unshift({
     id: `CT-${++clTaskIdCounter}`, pipeline, leadId, leadName, direction:'rm_to_cl',
-    taskType: typeSel.value, notes, dueDate: dueDate || null, createdDate: todayISO(), status:'open',
+    taskType: typeSel.value, otherSpecify: typeSel.value === 'OTHERS' ? otherSpecify : '', notes, dueDate: dueDate || null, createdDate: todayISO(), status:'open',
   });
   closeClTaskModal();
   showToast('Task created for the counsellor.', 'success');
@@ -2673,21 +2683,26 @@ function onClTaskLeadChange(selectId, infoId) {
   info.innerHTML = `<strong>Counsellor:</strong> ${escHtml(lead.clName)} — this task will be routed to them.`;
 }
 
-function submitStandaloneClTask(selectId, typeId, notesId, dueId) {
+function submitStandaloneClTask(selectId, typeId, otherId, notesId, dueId) {
   const sel = document.getElementById(selectId);
   const typeSel = document.getElementById(typeId);
+  const otherEl = document.getElementById(otherId);
   const notesEl = document.getElementById(notesId);
   const dueEl = document.getElementById(dueId);
   if (!sel.value) { showToast('Please select a Lead ID.', 'error'); return; }
   if (!typeSel.value) { showToast('Please select a task type.', 'error'); return; }
+  const otherSpecify = otherEl.value.trim();
+  if (typeSel.value === 'OTHERS' && !otherSpecify) { showToast('Please specify the task.', 'error'); return; }
   const lead = findLeadByCompoundId(sel.value);
   if (!lead) { showToast('Selected lead no longer has an active task.', 'error'); return; }
   CL_TASKS_MOCK.unshift({
     id: `CT-${++clTaskIdCounter}`, pipeline: lead.pipeline, leadId: lead.id, leadName: lead.name, direction:'rm_to_cl',
-    taskType: typeSel.value, notes: notesEl.value.trim(), dueDate: dueEl.value || null, createdDate: todayISO(), status:'open',
+    taskType: typeSel.value, otherSpecify: typeSel.value === 'OTHERS' ? otherSpecify : '', notes: notesEl.value.trim(), dueDate: dueEl.value || null, createdDate: todayISO(), status:'open',
   });
   sel.value = '';
   typeSel.value = '';
+  otherEl.value = '';
+  document.getElementById(otherId + 'Wrap').classList.add('hidden');
   notesEl.value = '';
   dueEl.value = '';
   const infoId = selectId === 'rmClTaskLeadId' ? 'rmClTaskCounsellorInfo' : 'mgrClTaskCounsellorInfo';
