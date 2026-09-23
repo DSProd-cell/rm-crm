@@ -2544,6 +2544,9 @@ const CL_TASK_TYPES = [
 const RM_TASK_TYPES = [
   { value:'BOOK_UPDATE_IELTS_EXAM', label:'Book/Update IELTS Exam' },
   { value:'DOCUMENT_COLLECTION', label:'Document Collection' },
+  { value:'CONNECT_WITH_STUDENT', label:'Connect with Student' },
+  { value:'BOOK_LOAN_VC', label:'Book Loan VC' },
+  { value:'OTHERS', label:'Others' },
 ];
 function clTaskTypeLabel(taskType, direction, otherSpecify) {
   if (taskType === 'OTHERS') return otherSpecify ? `Others: ${otherSpecify}` : 'Others';
@@ -2568,6 +2571,9 @@ const CL_TASKS_MOCK = [
   { id:'CT-1071', pipeline:'loan', leadId:'RM-2051', leadName:'Rahul Jain', direction:'cl_to_rm',
     taskType:'DOCUMENT_COLLECTION', notes:'PF portal is asking for an updated bank statement — please collect it from the student.',
     dueDate:'2026-09-09', createdDate:'2026-09-04', status:'open' },
+  { id:'CT-1082', pipeline:'loan', leadId:'RM-2068', leadName:'Lakshmi Venkat', direction:'cl_to_rm',
+    taskType:'BOOK_LOAN_VC', notes:'College Finalised is done — please book a Loan VC slot for the student.',
+    dueDate:'2026-09-16', createdDate:'2026-09-08', status:'open' },
 ];
 
 function clTaskPendingCount() { return CL_TASKS_MOCK.filter(t => t.direction === 'cl_to_rm' && t.status === 'open').length; }
