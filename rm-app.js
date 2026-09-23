@@ -2530,6 +2530,10 @@ function toggleWaGroup(key) {
 // type, an optional note and a due date. 'rm_to_cl' tasks are ones this RM raised
 // for the counsellor to act on; 'cl_to_rm' tasks are ones the counsellor raised
 // for this RM — those are the ones this RM can mark complete.
+// Retention once a task is closed out:
+//   - cl_to_rm: the RM marking it complete removes it from the list immediately.
+//   - rm_to_cl: once the counsellor closes it out, it shows as Done for 1 day
+//     (tracked via closedDate), then disappears from the list on its own.
 const CL_TASK_TYPES = [
   { value:'FILE_MORE_APPLICATIONS', label:'File More Applications' },
   { value:'CONNECT_WITH_STUDENT', label:'Connect with Student' },
@@ -2554,7 +2558,10 @@ const CL_TASKS_MOCK = [
     dueDate:'2026-09-10', createdDate:'2026-09-05', status:'open' },
   { id:'CT-1051', pipeline:'sti', leadId:'RM-2089', leadName:'Karan Mehta', direction:'rm_to_cl',
     taskType:'OTHERS', otherSpecify:'Reprioritise applications after country switch', notes:'Student wants to switch preferred country from Germany to UK post F2F — please reprioritise applications.',
-    dueDate:'2026-09-12', createdDate:'2026-09-06', status:'done' },
+    dueDate:'2026-09-12', createdDate:'2026-09-06', status:'done', closedDate: todayISO() },
+  { id:'CT-1039', pipeline:'sti', leadId:'RM-2041', leadName:'Ananya Sharma', direction:'rm_to_cl',
+    taskType:'STUDENT_DEFERRED', notes:'Student is deferring to the next intake — please note it on the college portal.',
+    dueDate:'2026-09-08', createdDate:'2026-09-02', status:'done', closedDate:'2026-09-05' },
   { id:'CT-1063', pipeline:'revenue', leadId:'RM-2045', leadName:'Tanvir Ahmed', direction:'cl_to_rm',
     taskType:'BOOK_UPDATE_IELTS_EXAM', notes:'Student has raised a concern about the Prime pricing shared — please re-walk them through it and confirm the IELTS exam date.',
     dueDate:'2026-09-14', createdDate:'2026-09-07', status:'open' },
@@ -2564,6 +2571,22 @@ const CL_TASKS_MOCK = [
 ];
 
 function clTaskPendingCount() { return CL_TASKS_MOCK.filter(t => t.direction === 'cl_to_rm' && t.status === 'open').length; }
+
+function daysBetween(isoA, isoB) {
+  return Math.round((new Date(isoB + 'T00:00:00') - new Date(isoA + 'T00:00:00')) / 86400000);
+}
+
+// cl_to_rm tasks never persist as 'done' — marking one complete removes it outright.
+// rm_to_cl tasks stay visible for 1 day after the counsellor closes them out (closedDate), then drop off.
+function visibleClTasks() {
+  const today = todayISO();
+  return CL_TASKS_MOCK.filter(t => {
+    if (t.status !== 'done') return true;
+    if (t.direction === 'cl_to_rm') return false;
+    if (!t.closedDate) return true;
+    return daysBetween(t.closedDate, today) < 1;
+  });
+}
 
 function clTaskCardHtml(t) {
   const dirLabel = t.direction === 'rm_to_cl' ? 'You → CL' : 'CL → You';
@@ -2592,14 +2615,15 @@ function clTaskCardHtml(t) {
 }
 
 function buildClTasksBody() {
-  if (!CL_TASKS_MOCK.length) return `<div class="text-center text-sm text-text-muted py-6">No tasks yet.</div>`;
-  return CL_TASKS_MOCK.map(t => clTaskCardHtml(t)).join('');
+  const visible = visibleClTasks();
+  if (!visible.length) return `<div class="text-center text-sm text-text-muted py-6">No tasks yet.</div>`;
+  return visible.map(t => clTaskCardHtml(t)).join('');
 }
 
 function markClTaskDone(id) {
-  const t = CL_TASKS_MOCK.find(x => x.id === id);
-  if (!t) return;
-  t.status = 'done';
+  const idx = CL_TASKS_MOCK.findIndex(x => x.id === id);
+  if (idx === -1) return;
+  CL_TASKS_MOCK.splice(idx, 1);
   showToast('Task marked complete.', 'success');
   openNotifPanel();
 }
@@ -2727,7 +2751,7 @@ function notifCount(key) {
 function notifSubtitle(key, count) {
   if (key === 'own') return `${count} pending reminders`;
   if (key === 'cs') return `${count} students need attention`;
-  if (key === 'clTasks') return count ? `${count} awaiting your action` : `${CL_TASKS_MOCK.length} tasks · all caught up`;
+  if (key === 'clTasks') return count ? `${count} awaiting your action` : `${visibleClTasks().length} tasks · all caught up`;
   return '';
 }
 
