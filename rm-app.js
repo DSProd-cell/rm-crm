@@ -12,7 +12,7 @@ const MOCK_LEADS = {
     { id:'RM-2171', name:'Aisha Khan', intake:'Apr 2027', country:'Canada', status:'F2F Missed', caDate:'2026-08-18', f2fDate:'2026-08-25', lockinDate:'2026-08-28', appReadyDate:null, stiDate:null, lastConnect:'2026-08-31 15:00', clName:'Priya CL', overdue:true, notes:['Needs IELTS score before app ready'] },
   ],
   revenue: [
-    { id:'RM-2045', name:'Tanvir Ahmed', intake:'Sep 2026', country:'Germany', status:'Prime', caDate:'2026-08-10', f2fDate:'2026-08-20', lockinDate:null, appReadyDate:null, stiDate:null, lastConnect:'2026-09-01 13:00', clName:'Priya CL', overdue:true, notes:['F2F done, deciding on lock-in','Scholarship query raised to counsellor'] },
+    { id:'RM-2045', name:'Tanvir Ahmed', intake:'Sep 2026', country:'Germany', status:'Prime', caDate:'2026-08-10', f2fDate:'2026-08-20', lockinDate:null, appReadyDate:null, stiDate:null, lastConnect:'2026-09-01 13:00', clName:'Priya CL', overdue:true, notes:['F2F done, deciding on lock-in','Scholarship task raised for counsellor'] },
     { id:'RM-2062', name:'Meera Pillai', intake:'Jan 2027', country:'UK', status:'C2I', caDate:'2026-08-25', f2fDate:'2026-09-01', lockinDate:null, appReadyDate:null, stiDate:null, lastConnect:'2026-09-02 10:00', clName:'Amit CL', overdue:false, dueToday:true, notes:['Interested, needs parent meeting'] },
     { id:'RM-2076', name:'Saurav Das', intake:'Apr 2027', country:'Canada', status:'Prime', caDate:'2026-09-01', f2fDate:'2026-09-02', lockinDate:null, appReadyDate:null, stiDate:null, lastConnect:'2026-09-03 10:45', clName:'Rahul CL', overdue:false, notes:['Just did F2F today, very positive'] },
     { id:'RM-2099', name:'Fatima Shaikh', intake:'Sep 2026', country:'Australia', status:'C2I', caDate:'2026-08-15', f2fDate:'2026-08-28', lockinDate:null, appReadyDate:null, stiDate:null, lastConnect:'2026-08-30 14:30', clName:'Priya CL', overdue:true, notes:['Comparing with another provider'] },
@@ -82,7 +82,7 @@ const TEAM_IBT = [
   { label:'Lock-in Confirmation', count:21, cls:'text-danger' },
   { label:'Loan VC Booking', count:9, cls:'text-accent' },
   { label:'STI Docs Collection', count:3, cls:'text-success' },
-  { label:'Query Resolutions', count:12, cls:'text-accent' },
+  { label:'CL Task Resolutions', count:12, cls:'text-accent' },
 ];
 
 const TRAINING_CATS = [
@@ -101,7 +101,7 @@ const TRAINING_CATS = [
   { key:'system', name:'System Training', lessons:[
     { name:'RM CRM Navigation & Features', desc:'Walkthrough of the CRM — pipelines, tasks, and drawers.', type:'video' },
     { name:'Logging Notes & Follow-ups', desc:'How to log notes and set follow-up reminders correctly.', type:'document' },
-    { name:'Query Raising to Counsellor', desc:'When and how to raise a query for the counsellor.', type:'document' },
+    { name:'Task Creation for CL', desc:'When and how to create a task for the counsellor.', type:'document' },
   ]},
   { key:'newfeat', name:'New Features', lessons:[
     { name:'Pipeline Auto-movement Rules', desc:'How leads move automatically between pipeline stages.', type:'video' },
@@ -127,7 +127,7 @@ const PERF_METRICS = {
     { name:'Loan VC Joined', target:10, achieved:5 },
     { name:'Docs Collected', target:25, achieved:18 },
     { name:'App Ready Completed', target:20, achieved:12 },
-    { name:'Queries to Counsellor', target:8, achieved:11 },
+    { name:'Tasks by Counsellor', target:8, achieved:11 },
     { name:'C2I Revenue', target:14, achieved:9 },
     { name:'Total Drop', target:5, achieved:8 },
   ],
@@ -136,7 +136,7 @@ const PERF_METRICS = {
     { name:'Lock-in Conversion Rate', target:'50%', achieved:'37.5%', pct:75 },
     { name:'Loan VC Conversion Rate', target:'80%', achieved:'71%', pct:89 },
     { name:'App Ready Conversion Rate', target:'85%', achieved:'60%', pct:71 },
-    { name:'Query Resolution Rate', target:'90%', achieved:'82%', pct:91 },
+    { name:'CL Task Resolution Rate', target:'90%', achieved:'82%', pct:91 },
   ]
 };
 
@@ -149,7 +149,7 @@ const TEAM_PERF_METRICS = {
     { name:'Loan VC Joined', target:50, achieved:29 },
     { name:'Docs Collected', target:125, achieved:96 },
     { name:'App Ready Completed', target:100, achieved:64 },
-    { name:'Queries to Counsellor', target:40, achieved:52 },
+    { name:'Tasks by Counsellor', target:40, achieved:52 },
     { name:'C2I Revenue', target:70, achieved:46 },
     { name:'Total Drop', target:25, achieved:37 },
   ],
@@ -158,7 +158,7 @@ const TEAM_PERF_METRICS = {
     { name:'Lock-in Conversion Rate', target:'50%', achieved:'39%', pct:78 },
     { name:'Loan VC Conversion Rate', target:'80%', achieved:'76%', pct:95 },
     { name:'App Ready Conversion Rate', target:'85%', achieved:'64%', pct:75 },
-    { name:'Query Resolution Rate', target:'90%', achieved:'84%', pct:93 },
+    { name:'CL Task Resolution Rate', target:'90%', achieved:'84%', pct:93 },
   ]
 };
 
@@ -4047,7 +4047,7 @@ function openProfile() {
     <div class="rounded-lg p-3.5 mb-3.5 text-center text-white" style="background:linear-gradient(90deg,#0C1A2E,#1D4ED8)">
       <div class="text-[10px] font-bold uppercase tracking-wide text-white/60 mb-1">Performance Rating</div>
       <div class="text-xl font-extrabold text-accent font-mono">7.2 / 10</div>
-      <div class="text-[11px] text-white/70 mt-1">Based on STI, Lock-ins (C2I/Prime), Loan VC, F2F, Docs/App Ready, Queries &amp; Quality Score</div>
+      <div class="text-[11px] text-white/70 mt-1">Based on STI, Lock-ins (C2I/Prime), Loan VC, F2F, Docs/App Ready, CL Tasks &amp; Quality Score</div>
     </div>
     <div class="grid grid-cols-2 gap-3">
       <div><div class="text-[10px] font-bold uppercase text-text-muted mb-0.5">Joining Date</div><div class="text-sm font-medium">Jan 12, 2025</div></div>
@@ -4693,7 +4693,7 @@ function showAskForm(recipientName) {
 // ─── ADMIN ────────────────────────────────────────────────────────────────────
 const ADMIN_METRICS = [
   'Leads Assigned', 'F2F Attended', 'Lock-ins (C2I + Prime)', 'Loan VC Booked',
-  'Loan VC Joined', 'Docs Collected', 'App Ready Completed', 'Queries to Counsellor',
+  'Loan VC Joined', 'Docs Collected', 'App Ready Completed', 'Tasks by Counsellor',
   'C2I Revenue', 'Total Drop'
 ];
 const ADMIN_METRIC_TARGETS = [80, 30, 15, 12, 10, 25, 20, 8, 14, 5];
