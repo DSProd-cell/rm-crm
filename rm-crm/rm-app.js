@@ -33,15 +33,15 @@ const MOCK_LEADS = {
 };
 
 const MGR_TEAM = [
-  { id:'R01', name:'Arjun Patel', initials:'AP', color:'#f97316', sti:7, revenue:4, loan:9, quality:'72%', overdue:5, status:'On Track', tl:'TL01', stisSubmitted:7, caToStiPct:40, deposits:4, lockinPct:26 },
-  { id:'R02', name:'Sneha Rao', initials:'SR', color:'#0369a1', sti:2, revenue:6, loan:3, quality:'88%', overdue:1, status:'Good', tl:'TL01', stisSubmitted:9, caToStiPct:46, deposits:6, lockinPct:33 },
-  { id:'R05', name:'Tanvir Ali', initials:'TA', color:'#dc2626', sti:8, revenue:1, loan:7, quality:'63%', overdue:6, status:'On Track', tl:'TL01', stisSubmitted:5, caToStiPct:29, deposits:3, lockinPct:19 },
-  { id:'R03', name:'Vikram D.', initials:'VD', color:'#7c3aed', sti:10, revenue:2, loan:12, quality:'54%', overdue:9, status:'Focus', tl:'TL02', stisSubmitted:4, caToStiPct:22, deposits:2, lockinPct:14 },
-  { id:'R04', name:'Meera Nair', initials:'MN', color:'#16a34a', sti:4, revenue:3, loan:5, quality:'81%', overdue:2, status:'Good', tl:'TL02', stisSubmitted:8, caToStiPct:38, deposits:5, lockinPct:30 },
-  { id:'R08', name:'Naina Joshi', initials:'NJ', color:'#be185d', sti:11, revenue:1, loan:10, quality:'48%', overdue:8, status:'Focus', tl:'TL02', stisSubmitted:3, caToStiPct:18, deposits:1, lockinPct:11 },
-  { id:'R06', name:'Ritu Kapoor', initials:'RK', color:'#0891b2', sti:5, revenue:5, loan:4, quality:'76%', overdue:3, status:'Good', tl:'TL03', stisSubmitted:6, caToStiPct:33, deposits:3, lockinPct:24 },
-  { id:'R07', name:'Aditya Verma', initials:'AV', color:'#65a30d', sti:3, revenue:7, loan:2, quality:'91%', overdue:1, status:'Good', tl:'TL03', stisSubmitted:10, caToStiPct:50, deposits:7, lockinPct:37 },
-  { id:'R09', name:'Farhan Sheikh', initials:'FS', color:'#ca8a04', sti:6, revenue:4, loan:6, quality:'70%', overdue:4, status:'On Track', tl:'TL03', stisSubmitted:7, caToStiPct:36, deposits:4, lockinPct:27 },
+  { id:'R01', name:'Arjun Patel', initials:'AP', color:'#f97316', sti:7, revenue:4, loan:9, quality:'72%', overdue:5, status:'On Track', tl:'TL01', revenueEarned:24600, caF2fPct:45, loanVcBooked:5, appReadyDone:8 },
+  { id:'R02', name:'Sneha Rao', initials:'SR', color:'#0369a1', sti:2, revenue:6, loan:3, quality:'88%', overdue:1, status:'Good', tl:'TL01', revenueEarned:23800, caF2fPct:54, loanVcBooked:7, appReadyDone:11 },
+  { id:'R05', name:'Tanvir Ali', initials:'TA', color:'#dc2626', sti:8, revenue:1, loan:7, quality:'63%', overdue:6, status:'On Track', tl:'TL01', revenueEarned:14000, caF2fPct:36, loanVcBooked:3, appReadyDone:6 },
+  { id:'R03', name:'Vikram D.', initials:'VD', color:'#7c3aed', sti:10, revenue:2, loan:12, quality:'54%', overdue:9, status:'Focus', tl:'TL02', revenueEarned:22000, caF2fPct:29, loanVcBooked:2, appReadyDone:5 },
+  { id:'R04', name:'Meera Nair', initials:'MN', color:'#16a34a', sti:4, revenue:3, loan:5, quality:'81%', overdue:2, status:'Good', tl:'TL02', revenueEarned:16400, caF2fPct:47, loanVcBooked:6, appReadyDone:9 },
+  { id:'R08', name:'Naina Joshi', initials:'NJ', color:'#be185d', sti:11, revenue:1, loan:10, quality:'48%', overdue:8, status:'Focus', tl:'TL02', revenueEarned:18200, caF2fPct:24, loanVcBooked:2, appReadyDone:4 },
+  { id:'R06', name:'Ritu Kapoor', initials:'RK', color:'#0891b2', sti:5, revenue:5, loan:4, quality:'76%', overdue:3, status:'Good', tl:'TL03', revenueEarned:23400, caF2fPct:41, loanVcBooked:5, appReadyDone:7 },
+  { id:'R07', name:'Aditya Verma', initials:'AV', color:'#65a30d', sti:3, revenue:7, loan:2, quality:'91%', overdue:1, status:'Good', tl:'TL03', revenueEarned:27400, caF2fPct:58, loanVcBooked:9, appReadyDone:12 },
+  { id:'R09', name:'Farhan Sheikh', initials:'FS', color:'#ca8a04', sti:6, revenue:4, loan:6, quality:'70%', overdue:4, status:'On Track', tl:'TL03', revenueEarned:22000, caF2fPct:43, loanVcBooked:4, appReadyDone:8 },
 ];
 
 // RM → TL → SM hierarchy: every RM reports to exactly one of these 3 TLs, all 3 report to the SM (Shubham Sharma)
@@ -2941,11 +2941,9 @@ function setMgrPerfScope(scope, btn) {
   renderMgrTopPerformers();
 }
 
-const MGR_RANK_COLORS = ['#F97316', '#94A3B8', '#C2410C'];
-
 function topPerfRows(metric) {
   const period = state.mgrPerfPeriod || 'yesterday';
-  const isPct = metric === 'caToStiPct' || metric === 'lockinPct';
+  const isPct = metric === 'caF2fPct';
   const mult = MGR_PERIOD_MULT[period];
   const delta = MGR_PCT_PERIOD_DELTA[period];
 
@@ -2959,13 +2957,12 @@ function topPerfRows(metric) {
       const value = isPct
         ? Math.min(100, Math.round(rms.reduce((s, r) => s + r[metric], 0) / (rms.length || 1)) + delta)
         : Math.round(rms.reduce((s, r) => s + r[metric], 0) * mult);
-      return { name:tl.name, value, onclick:'' };
+      return { name:tl.name, value };
     });
   } else {
     entries = visibleTeam().map(rm => ({
       name: rm.name,
       value: isPct ? Math.min(100, rm[metric] + delta) : Math.round(rm[metric] * mult),
-      onclick: `openMgrDrilldown('${rm.id}')`,
     }));
   }
   return entries.sort((a, b) => b.value - a.value).slice(0, 3);
@@ -2973,18 +2970,14 @@ function topPerfRows(metric) {
 
 function topPerformersCategoryBox(title, metric, formatFn) {
   const rows = topPerfRows(metric);
-  return `<div class="rounded-xl border border-border overflow-hidden">
-    <div class="px-4 py-2.5 bg-surface text-[10px] font-bold uppercase tracking-wide text-text-muted">${title}</div>
-    <div class="divide-y divide-border">
-      ${rows.length ? rows.map((r, i) => `
-        <div class="flex items-center gap-3 px-4 py-3 ${r.onclick ? 'cursor-pointer hover:bg-surface/60 transition-colors' : ''}" ${r.onclick ? `onclick="${r.onclick}"` : ''}>
-          <div class="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0" style="background:${MGR_RANK_COLORS[i]}">
-            <svg class="w-3.5 h-3.5" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M8 21h8M12 17v4"/><path d="M7 4h10v5a5 5 0 01-10 0V4z"/><path d="M7 5H4.5a2.5 2.5 0 002.5 2.5M17 5h2.5A2.5 2.5 0 0117 7.5"/></svg>
-          </div>
-          <span class="flex-1 text-sm font-medium text-text-main truncate">${r.name}</span>
-          <span class="text-sm font-bold text-text-main">${formatFn(r.value)}</span>
-        </div>`).join('') : `<div class="text-center text-xs text-text-muted py-4">No data for this selection.</div>`}
-    </div>
+  return `<div class="border border-border rounded-xl p-3.5 mb-3">
+    <div class="text-[10px] font-bold uppercase tracking-wide text-text-muted mb-2">${title}</div>
+    ${rows.length ? rows.map((r, i) => `
+      <div class="flex items-center gap-3 py-1.5">
+        <div class="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0" style="background:${i === 0 ? '#F97316' : i === 1 ? '#94A3B8' : '#B45309'}">🏆</div>
+        <span class="flex-1 text-sm font-medium truncate">${r.name}</span>
+        <span class="text-sm font-bold font-mono">${formatFn(r.value)}</span>
+      </div>`).join('') : `<div class="text-center text-xs text-text-muted py-4">No data for this selection.</div>`}
   </div>`;
 }
 
@@ -2992,10 +2985,10 @@ function renderMgrTopPerformers() {
   const grid = document.getElementById('mgrTopPerfGrid');
   if (!grid) return;
   grid.innerHTML = [
-    topPerformersCategoryBox('STIs Submitted', 'stisSubmitted', v => v),
-    topPerformersCategoryBox('CA → STI (30D, Min CA 20)', 'caToStiPct', v => `${v}%`),
-    topPerformersCategoryBox('Deposits', 'deposits', v => v),
-    topPerformersCategoryBox('Lock-ins (Min CA 20)', 'lockinPct', v => `${v}%`),
+    topPerformersCategoryBox('Revenue', 'revenueEarned', v => formatLeaderVal(v, '₹')),
+    topPerformersCategoryBox('CA → F2F (14D)', 'caF2fPct', v => `${v}%`),
+    topPerformersCategoryBox('Loan VC Booked', 'loanVcBooked', v => v),
+    topPerformersCategoryBox('App Ready Done', 'appReadyDone', v => v),
   ].join('');
 }
 
@@ -3944,20 +3937,16 @@ function setPerfWindow(window, btn) {
 
 // ─── TOP PERFORMERS (multi-metric leaderboard) ────────────────────────────────
 const ORG_LEADERBOARD_BASE = {
-  sti: [{ name:'Rahul Kumar', color:'#f97316', val:12 }, { name:'Priya Joshi', color:'#6d28d9', val:10 }, { name:'Amit Khurana', color:'#0369a1', val:8 }],
-  ca_sti: [{ name:'Sneha Rao', color:'#0369a1', val:41 }, { name:'Meera Nair', color:'#16a34a', val:38 }, { name:'Tanvir Ali', color:'#dc2626', val:35 }],
-  loan: [{ name:'Arjun Patel', color:'#f97316', val:9 }, { name:'Rahul Kumar', color:'#f97316', val:7 }, { name:'Vikram D.', color:'#7c3aed', val:6 }],
-  lockins: [{ name:'Priya Joshi', color:'#6d28d9', val:44 }, { name:'Sneha Rao', color:'#0369a1', val:40 }, { name:'Amit Khurana', color:'#0369a1', val:37 }],
   revenue: [{ name:'Rahul Kumar', color:'#f97316', val:120000 }, { name:'Priya Joshi', color:'#6d28d9', val:100000 }, { name:'Meera Nair', color:'#16a34a', val:86000 }],
-  f2f: [{ name:'Amit Khurana', color:'#0369a1', val:62 }, { name:'Sneha Rao', color:'#0369a1', val:55 }, { name:'Tanvir Ali', color:'#dc2626', val:48 }],
+  ca_f2f: [{ name:'Sneha Rao', color:'#0369a1', val:52 }, { name:'Meera Nair', color:'#16a34a', val:47 }, { name:'Amit Khurana', color:'#0369a1', val:44 }],
+  loan_vc_booked: [{ name:'Rahul Kumar', color:'#f97316', val:9 }, { name:'Arjun Patel', color:'#f97316', val:8 }, { name:'Vikram D.', color:'#7c3aed', val:6 }],
+  app_ready_done: [{ name:'Priya Joshi', color:'#6d28d9', val:14 }, { name:'Rahul Kumar', color:'#f97316', val:12 }, { name:'Sneha Rao', color:'#0369a1', val:10 }],
 };
 const TOP_PERFORMER_SECTIONS = [
-  { key:'sti', label:'STIs Submitted', suffix:'' },
-  { key:'ca_sti', label:'CA→STI (30D, MIN CA 20)', suffix:'%' },
-  { key:'loan', label:'Loan Bookings', suffix:'' },
-  { key:'lockins', label:'Lock-ins (MIN CA 20)', suffix:'%' },
   { key:'revenue', label:'Revenue', suffix:'₹' },
-  { key:'f2f', label:'F2F % (MIN CA 20)', suffix:'%' },
+  { key:'ca_f2f', label:'CA→F2F (14D)', suffix:'%' },
+  { key:'loan_vc_booked', label:'Loan VC Booked', suffix:'' },
+  { key:'app_ready_done', label:'App Ready Done', suffix:'' },
 ];
 const WINDOW_MULTIPLIER = { yesterday:1, month:4.2, '3months':11.5 };
 
