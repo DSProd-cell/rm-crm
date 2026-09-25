@@ -61,6 +61,135 @@ const HIERARCHY = {
   dirToSMs:      { 40:[30]    },
 };
 
+/* ═══════════════════════════════════════════════════════
+   EWS (EARLY WARNING SYSTEM) LEADS
+   Extracted from Gangajal. The CRM only displays each alert and
+   closes it when Gangajal marks it closed (or, for the two
+   auto-detectable types below, when the underlying student field
+   flips). Escalation tier is derived purely from days-open:
+     L1 Counsellor (0-1d) → L2 Team Lead (1-3d) → L3 POD/SM (3-5d)
+     → L4 Director (5-7d), a 7-day window total. Each role sees its
+   own tier and everything below it (Counsellor always sees their
+   own open alerts for the full window; TL sees L1-L2; POD sees
+   L1-L3; SM/Director/Ops Admin see all four tiers).
+═══════════════════════════════════════════════════════ */
+const EWS_ALERT_TYPES = [
+  { key:'BAD_1ST_CALL', icon:'📞', label:'Bad 1st Call',
+    definition:'User had a bad 1st counselling call; poor score in 1st call.',
+    closure:'Revive the lead by driving either 2nd F2F attendance, lock-in conversion, or STI completion.' },
+  { key:'BAD_2ND_CALL', icon:'📞', label:'Bad 2nd Call',
+    definition:'User had a bad 2nd counselling call; poor score in 2nd call.',
+    closure:'Revive the lead by driving either 2nd F2F attendance, lock-in conversion, or STI completion.' },
+  { key:'LGC_NEG_SENTIMENT', icon:'😟', label:'LGC Negative Sentiment',
+    definition:"User's messages in the Leap Group Chat show negative sentiment.",
+    closure:'Revive the lead by driving either 2nd F2F attendance, lock-in conversion, or STI completion.' },
+  { key:'LGC_NEEDS_HELP', icon:'🆘', label:'LGC User Needs Help',
+    definition:'User has explicitly asked for help or raised a query in the Leap Group Chat.',
+    closure:'Revive the lead by driving either 2nd F2F attendance, lock-in conversion, or STI completion.' },
+  { key:'LGC_LOW_ENGAGEMENT', icon:'💤', label:'LGC Low Engagement',
+    definition:'User has been inactive or minimally active in the Leap Group Chat.',
+    closure:'Revive the lead by driving either 2nd F2F attendance, lock-in conversion, or STI completion.' },
+  { key:'APP_NOT_DOWNLOADED', icon:'📵', label:'App Not Downloaded',
+    definition:'User has not downloaded the Leap app despite being expected to.',
+    closure:'Once the student downloads the app, the task auto-closes.' },
+  { key:'LGC_NOT_JOINED', icon:'🚪', label:'LGC Not Joined',
+    definition:'User has not joined their Leap Group Chat.',
+    closure:'Once the student joins the group, the task auto-closes.' },
+];
+
+const EWS_ALERTS = [
+  { id:'EWS-1',  type:'BAD_1ST_CALL',       studentId:'U1004', createdDate:'2026-09-24' },
+  { id:'EWS-2',  type:'BAD_1ST_CALL',       studentId:'U1007', createdDate:'2026-09-19' },
+  { id:'EWS-3',  type:'BAD_2ND_CALL',       studentId:'U1002', createdDate:'2026-09-22' },
+  { id:'EWS-4',  type:'LGC_NEG_SENTIMENT',  studentId:'U1008', createdDate:'2026-09-21' },
+  { id:'EWS-5',  type:'LGC_NEG_SENTIMENT',  studentId:'U1011', createdDate:'2026-09-24' },
+  { id:'EWS-6',  type:'LGC_NEEDS_HELP',     studentId:'U1001', createdDate:'2026-09-24' },
+  { id:'EWS-7',  type:'LGC_LOW_ENGAGEMENT', studentId:'U1003', createdDate:'2026-09-23' },
+  { id:'EWS-8',  type:'LGC_LOW_ENGAGEMENT', studentId:'U1013', createdDate:'2026-09-20' },
+  { id:'EWS-9',  type:'APP_NOT_DOWNLOADED', studentId:'U1002', createdDate:'2026-09-20' },
+  { id:'EWS-10', type:'APP_NOT_DOWNLOADED', studentId:'U1007', createdDate:'2026-09-24' },
+  { id:'EWS-11', type:'LGC_NOT_JOINED',     studentId:'U1002', createdDate:'2026-09-22', groupName:'BBA General – Jun 2026' },
+  { id:'EWS-12', type:'LGC_NOT_JOINED',     studentId:'U1004', createdDate:'2026-09-18', groupName:'MBA General – Jun 2026' },
+];
+
+function ewsDaysOpen(createdDate) {
+  const created = new Date(createdDate + 'T00:00:00');
+  const today = new Date(new Date().toISOString().split('T')[0] + 'T00:00:00');
+  return Math.max(0, Math.round((today - created) / 86400000));
+}
+function ewsTier(createdDate) {
+  const d = ewsDaysOpen(createdDate);
+  if (d < 1) return 1;
+  if (d < 3) return 2;
+  if (d < 5) return 3;
+  return 4;
+}
+const EWS_TIER_OWNER = { 1:'Counsellor', 2:'Team Lead', 3:'POD Leader', 4:'Director' };
+const EWS_TIER_COLOR = {
+  1:{ bg:'bg-slate-100',  text:'text-slate-600'  },
+  2:{ bg:'bg-amber-100',  text:'text-amber-700'  },
+  3:{ bg:'bg-orange-100', text:'text-orange-700' },
+  4:{ bg:'bg-red-100',    text:'text-red-700'    },
+};
+// Highest tier each role may still see (Counsellor keeps seeing their own alert the whole window;
+// TL/POD are capped to their own escalation level; SM/Director/Ops Admin see everything).
+const EWS_ROLE_TIER_CEILING = { counselor:4, team_lead:2, pod_leader:3, senior_manager:4, director:4, ops_admin:4 };
+
+function ewsAlertOpen(alert) {
+  const s = STUDENTS.find(x => x.id === alert.studentId);
+  if (!s) return false;
+  if (alert.type === 'APP_NOT_DOWNLOADED') return !s.appDownloaded;
+  if (alert.type === 'LGC_NOT_JOINED') {
+    const g = (s.whatsappGroups || []).find(g => g.groupName === alert.groupName);
+    return g ? !g.studentJoined : true;
+  }
+  return true; // revival-type alerts stay open until Gangajal marks them closed
+}
+function ewsCeilingForRole(role) { return EWS_ROLE_TIER_CEILING[role] ?? 4; }
+function ewsCountsForStudents(students, ceiling) {
+  const ids = new Set(students.map(s => s.id));
+  return EWS_ALERT_TYPES.map(t => ({
+    type: t,
+    count: EWS_ALERTS.filter(a => a.type === t.key && ids.has(a.studentId) && ewsAlertOpen(a) && ewsTier(a.createdDate) <= ceiling).length,
+  }));
+}
+function ewsAlertsForStudents(students, typeKey, ceiling) {
+  const ids = new Set(students.map(s => s.id));
+  return EWS_ALERTS.filter(a => a.type === typeKey && ids.has(a.studentId) && ewsAlertOpen(a) && ewsTier(a.createdDate) <= ceiling);
+}
+
+function ewsDefClosureHtml(def, closure) {
+  return `
+    <div class="mb-2.5 rounded-lg overflow-hidden border border-gray-100">
+      <div class="px-2.5 py-2 bg-blue-50 border-b border-gray-100">
+        <p class="text-[10px] font-bold text-blue-700 mb-0.5">ℹ️ Definition</p>
+        <p class="text-[10px] text-blue-600 leading-relaxed">${def}</p>
+      </div>
+      <div class="px-2.5 py-2 bg-green-50">
+        <p class="text-[10px] font-bold text-green-700 mb-0.5">✅ Task Closure</p>
+        <p class="text-[10px] text-green-600 leading-relaxed">${closure}</p>
+      </div>
+    </div>`;
+}
+function ewsStudentCardHtml(alert, s) {
+  const tier = ewsTier(alert.createdDate);
+  const tc = EWS_TIER_COLOR[tier];
+  const owner = EWS_TIER_OWNER[tier];
+  return `<div class="bg-white rounded-xl border border-border p-3 mb-2 last:mb-0">
+    <div class="flex items-start justify-between gap-2 mb-2">
+      <div>
+        <p class="text-xs font-semibold text-text-main">${escHtml(s.name)}</p>
+        <p class="text-[10px] text-text-muted">${s.id} · ${escHtml(s.course)}</p>
+      </div>
+      <span class="text-[10px] font-bold px-1.5 py-0.5 rounded-full ${tc.bg} ${tc.text} flex-shrink-0">L${tier} · ${owner}</span>
+    </div>
+    <div class="flex gap-2">
+      <button onclick="openStudentDetail('${s.id}');state.drawerPrevMode='waGroup';" class="flex-1 text-[10px] px-2 py-1.5 bg-primary/5 text-primary border border-primary/20 rounded-lg font-semibold hover:bg-primary/10 cursor-pointer text-center">View Student</button>
+      <button onclick="viewStudentTask('${s.id}')" class="flex-1 text-[10px] px-2 py-1.5 bg-primary/5 text-primary border border-primary/20 rounded-lg font-semibold hover:bg-primary/10 cursor-pointer text-center">View Task</button>
+    </div>
+  </div>`;
+}
+
 // Mock manager incentive data
 const MGR_INCENTIVE = {
   9:  { monthly:52000, alltime:480000, components:[{name:'Team STI Bonus',earned:22000},{name:'Deposit Slab',earned:18000},{name:'Revenue Override',earned:12000}] },
@@ -2571,7 +2700,6 @@ function renderMetricCards() {
   const totalStudents = getViewingStudents().length;
 
   const allStudents = getViewingStudents();
-  const customerSupportCount = allStudents.filter(s => s.hasEscalation).length;
   const lowISLCount = allStudents.filter(s => s.islRating < 8 && !s.hasEscalation).length;
   const deferralCount = getDeferralOpportunityStudents().length;
   const ownCount = state.ownTasks.filter(t => !t.done).length;
@@ -2593,7 +2721,7 @@ function renderMetricCards() {
       bestLabel: bestISL ? `🏆 Best: ${bestISL.name} · ${bestISL.value.toFixed(1)}/5` : '' },
     { label:'Quality Score',             value:null,              target:100,                extra:'', unit:'', isDual:true, q1:c.q1score, q2:c.q2score,
       bestLabel: bestQ1 ? `🏆 Best: ${bestQ1.name} · ${bestQ1.value}%` : '' },
-    { label:'WA Group Details',          value:null,              target:0,                  extra:'', unit:'', isWAGroups:true, waStats, customerSupportCount, lowISLCount, waIssueCount: computeWAIssueCount(allStudents) },
+    { label:'WA Group Details',          value:null,              target:0,                  extra:'', unit:'', isWAGroups:true, waStats, lowISLCount, waIssueCount: computeWAIssueCount(allStudents), ewsCounts: ewsCountsForStudents(allStudents, ewsCeilingForRole(state.role)) },
   ];
 
   // Own Tasks: Red+First if pending, Green+Last if clear
@@ -2609,10 +2737,11 @@ function renderMetricGrid(elId, metrics) {
     // ── Special: WA Group Details card ──
     if (m.isWAGroups) {
       const ws = m.waStats;
-      const csCount = m.customerSupportCount || 0;
       const islCount = m.lowISLCount || 0;
       const waIssues = m.waIssueCount || 0; // same aggregate the WA Summary drawer panel uses to color itself
       const breachedCount = 0; // no SLA/breach-tracking system yet
+      const ewsCounts = m.ewsCounts || [];
+      const ewsTotal = ewsCounts.reduce((sum, e) => sum + e.count, 0);
 
       function subRow(label, count, urgency) {
         // urgency: 'good'=green, 'warn'=amber, 'danger'=red, 'info'=blue
@@ -2628,19 +2757,24 @@ function renderMetricGrid(elId, metrics) {
         </div>`;
       }
 
+      const hasIssue = islCount > 0 || ewsTotal > 0 || waIssues > 0 || breachedCount > 0;
+      const cardBg     = hasIssue ? 'linear-gradient(135deg,#fef2f2 0%,#fee2e2 100%)' : 'linear-gradient(135deg,#ecfdf5 0%,#d1fae5 100%)';
+      const cardBorder = hasIssue ? '#fca5a5' : '#6ee7b7';
+      const cardText   = hasIssue ? 'text-red-700' : 'text-emerald-700';
+
       return `
         <div class="metric-card rounded-xl border p-3 cursor-pointer hover:shadow-md transition-shadow"
-          style="background:linear-gradient(135deg,#ecfdf5 0%,#d1fae5 100%);border-color:#6ee7b7;"
+          style="background:${cardBg};border-color:${cardBorder};"
           onclick="openWAGroupDetailsDrawer()">
           <div class="metric-deco"></div>
-          <p class="text-xs font-semibold uppercase tracking-wide mb-2 text-emerald-700">🎯 Potential Escalations <span class="ml-1 text-[9px] font-bold bg-red-100 text-red-600 px-1.5 py-0.5 rounded-full">IMP</span></p>
+          <p class="text-xs font-semibold uppercase tracking-wide mb-2 ${cardText}">🎯 Potential Escalations <span class="ml-1 text-[9px] font-bold bg-red-100 text-red-600 px-1.5 py-0.5 rounded-full">IMP</span></p>
           <div class="space-y-0.5">
-            ${subRow('Customer Support',        csCount,       csCount > 0 ? 'danger' : 'good')}
+            ${subRow('EWS Alerts',              ewsTotal,      ewsTotal > 0 ? 'danger' : 'good')}
             ${subRow('Low ISL Feedback',        islCount,      islCount > 0 ? 'danger' : 'good')}
             ${subRow('Messages Not Replied',    ws.notReplied, waIssues > 0 ? 'danger' : 'good')}
             ${subRow('IS Pending and Breached', breachedCount, breachedCount > 0 ? 'danger' : 'good')}
           </div>
-          <div class="mt-2 flex items-center gap-1 text-[10px] font-semibold text-emerald-700">
+          <div class="mt-2 flex items-center gap-1 text-[10px] font-semibold ${cardText}">
             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
             View all groups →
           </div>
@@ -8550,7 +8684,17 @@ function openGroupsDetail(mode) {
 ═══════════════════════════════════════════════════════ */
 
 function openWAGroupDetailsDrawer() {
-  const students = getViewingStudents();
+  // Manager roles see their whole (filter-narrowed) team here, matching the aggregate counts
+  // the Potential Escalations dashboard card already shows via getFilteredCounselorPool();
+  // a plain counsellor sees only their own leads.
+  const managerRoles = ['team_lead', 'pod_leader', 'senior_manager', 'director', 'ops_admin'];
+  let students;
+  if (managerRoles.includes(state.role)) {
+    const poolIds = new Set(getFilteredCounselorPool().map(c => c.id));
+    students = STUDENTS.filter(s => poolIds.has(s.counselorId));
+  } else {
+    students = STUDENTS.filter(s => s.counselorId === state.currentUser.id);
+  }
 
   // Build flat list of student-group pairs
   const pairs = [];
@@ -8801,21 +8945,40 @@ function openWAGroupDetailsDrawer() {
     <p class="text-[11px] text-text-muted mb-2.5">Tasks that have crossed the 24-hour closure window.</p>
     <p class="text-xs text-text-muted italic text-center py-6">No pending breached tasks right now 🎉</p>`;
 
+  // ── EWS (Early Warning System) leads — 7 alert types, each its own accordion row inside
+  // "Students Requiring Action", capped per-role by EWS_ROLE_TIER_CEILING.
+  const ewsCeiling = ewsCeilingForRole(state.role);
+  const ewsTypeRows = EWS_ALERT_TYPES.map(t => {
+    const alerts = ewsAlertsForStudents(students, t.key, ewsCeiling);
+    const [tCls, tBg, tBorder] = issueColor(alerts.length, 'text-red-700', 'bg-red-50', 'border-red-200');
+    const body = ewsDefClosureHtml(t.definition, t.closure) + (alerts.length
+      ? alerts.map(a => ewsStudentCardHtml(a, STUDENTS.find(s => s.id === a.studentId))).join('')
+      : `<p class="text-xs text-text-muted italic text-center py-4">No open alerts right now 🎉</p>`);
+    return accordion('req-' + t.key.toLowerCase().replace(/_/g, '-'), t.icon, t.label, alerts.length, tCls, tBg, tBorder, body);
+  }).join('');
+
   // Card color: red/pink when there's something needing attention, green when clear
   const statusCls = count => count > 0
     ? { border: 'border-red-200',     bg: 'bg-red-50',     text: 'text-red-800' }
     : { border: 'border-emerald-200', bg: 'bg-emerald-50', text: 'text-emerald-800' };
 
   const waIssueCount = inactiveGroups.length + notJoinedGroups.length + notRepliedStudents.length + groupNotCreatedList.length;
-  const csCls  = statusCls(escalationStudents2.length);
-  const islCls = statusCls(lowRatingStudents.length);
+  const ewsTotal = EWS_ALERT_TYPES.reduce((sum, t) => sum + ewsAlertsForStudents(students, t.key, ewsCeiling).length, 0);
+  const requiringActionTotal = escalationStudents2.length + lowRatingStudents.length + ewsTotal;
+  const raCls  = statusCls(requiringActionTotal);
   const waCls  = statusCls(waIssueCount);
   const brCls  = statusCls(0);
 
+  const [csCls1, csCls2, csCls3] = issueColor(escalationStudents2.length, 'text-red-700', 'bg-red-50', 'border-red-200');
+  const [islCls1, islCls2, islCls3] = issueColor(lowRatingStudents.length, 'text-red-700', 'bg-red-50', 'border-red-200');
+  const requiringActionInner =
+    accordion('req-customer-support', '💬', 'Customer Support', escalationStudents2.length, csCls1, csCls2, csCls3, customerSupportInner) +
+    accordion('req-low-isl',          '🚩', 'Low ISL Feedback', lowRatingStudents.length,   islCls1, islCls2, islCls3, lowISLInner) +
+    ewsTypeRows;
+
   const content = `
     <p class="text-xs text-text-muted italic mb-3">Note: All task must be closed with in 24 hours</p>
-    ${channelCard('unhappy',   '💬', 'Customer Support',        `${escalationStudents2.length} students need attention`, csCls.border,  csCls.bg,  csCls.text,  customerSupportInner)}
-    ${channelCard('low-isl',   '🚩', 'Low ISL Feedback',        `${lowRatingStudents.length} students need attention`,   islCls.border, islCls.bg, islCls.text, lowISLInner)}
+    ${channelCard('requiring-action', '🚩', 'Students Requiring Action', `${requiringActionTotal} students need attention`, raCls.border, raCls.bg, raCls.text, requiringActionInner)}
     ${channelCard('non-voice', '💬', 'WA Summary',              'WhatsApp Group Activity',                                waCls.border,  waCls.bg,  waCls.text,  nonVoiceInner)}
     ${channelCard('breached',  '🚨', 'IS Pending and Breached', '0 students with pending breached tasks',                 brCls.border,  brCls.bg,  brCls.text,  breachedInner)}
   `;
@@ -10499,6 +10662,8 @@ function renderMgrBoostInput() {
   });
   // Same aggregate the WA Summary drawer panel uses to color itself
   const waIssueCount = computeWAIssueCount(poolStudents);
+  const ewsCounts = ewsCountsForStudents(poolStudents, ewsCeilingForRole(state.role));
+  const ewsTotal = ewsCounts.reduce((sum, e) => sum + e.count, 0);
 
   // Own tasks
   const ownCount = (state.ownTasks || []).filter(t => !t.done).length;
@@ -10514,6 +10679,11 @@ function renderMgrBoostInput() {
       <span class="text-[11px] font-bold px-1.5 py-0.5 rounded-full ${cfg.numCls}">${count}</span>
     </div>`;
   }
+
+  const mgrHasIssue = lowISL > 0 || ewsTotal > 0 || waIssueCount > 0;
+  const mgrCardBg     = mgrHasIssue ? 'linear-gradient(135deg,#fef2f2 0%,#fee2e2 100%)' : 'linear-gradient(135deg,#ecfdf5 0%,#d1fae5 100%)';
+  const mgrCardBorder = mgrHasIssue ? '#fca5a5' : '#6ee7b7';
+  const mgrCardText   = mgrHasIssue ? 'text-red-700' : 'text-emerald-700';
 
   grid.innerHTML = `
     <!-- ISL Feedback Rating -->
@@ -10533,16 +10703,16 @@ function renderMgrBoostInput() {
 
     <!-- Potential Escalations IMP -->
     <div class="metric-card rounded-xl border p-3 cursor-pointer hover:shadow-md transition-shadow"
-      style="background:linear-gradient(135deg,#ecfdf5 0%,#d1fae5 100%);border-color:#6ee7b7;"
+      style="background:${mgrCardBg};border-color:${mgrCardBorder};"
       onclick="openWAGroupDetailsDrawer()">
-      <p class="text-xs font-semibold uppercase tracking-wide mb-2 text-emerald-700">🎯 Potential Escalations <span class="ml-1 text-[9px] font-bold bg-red-100 text-red-600 px-1.5 py-0.5 rounded-full">IMP</span></p>
+      <p class="text-xs font-semibold uppercase tracking-wide mb-2 ${mgrCardText}">🎯 Potential Escalations <span class="ml-1 text-[9px] font-bold bg-red-100 text-red-600 px-1.5 py-0.5 rounded-full">IMP</span></p>
       <div class="space-y-0.5">
-        ${subRow('Customer Support',        customerSupport, customerSupport > 0 ? 'danger' : 'good')}
+        ${subRow('EWS Alerts',              ewsTotal,        ewsTotal > 0 ? 'danger' : 'good')}
         ${subRow('Low ISL Feedback',        lowISL,          lowISL > 0 ? 'danger' : 'good')}
         ${subRow('Messages Not Replied',    notReplied,      waIssueCount > 0 ? 'danger' : 'good')}
         ${subRow('IS Pending and Breached', 0,               'good')}
       </div>
-      <div class="mt-2 flex items-center gap-1 text-[10px] font-semibold text-emerald-700">
+      <div class="mt-2 flex items-center gap-1 text-[10px] font-semibold ${mgrCardText}">
         <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
         View all groups →
       </div>
