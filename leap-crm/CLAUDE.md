@@ -31,6 +31,16 @@ Mid-session, a **separate** Claude session pushed a commit directly to `main` (a
 
 Production (`leap-crm.vercel.app`) was verified working end-to-end after the mid-session outage was fixed, and again after each subsequent change.
 
+## Direct 2nd Call pilot (Skipping 1st Call Counsellor)
+
+- Role `skip_counselor` (first option on the login screen and in the hub's own top "Viewing as" bar — the hub no longer injects anything into either app's header). `bootApp()` maps it to `role = 'counselor'` with `state.d2cPilot = true`, skips the 10x banner, then calls `initDirect2nd()`.
+- All pilot UI lives in `direct2nd.js` (own scoped CSS under `.d2c`, mock leads, own state): red count + next-call card on the header's existing View assigned leads button (card closes on any outside click), the assigned-leads page from github.com/ayush-puhan/skip-1st-call, case study / timeline pop-ups, intake profile drawer, and the outcome buttons on finished calls — "Completed" opens the second-call disposition (`dispoDialog()`), which requires IELTS Status + Service Type before tasks are created. These two fields are not on the card.
+- Header matches production for every role: CRM logo (`assets/crm-logo.png`), search, View assigned leads, For call merge (custom dropdown: Active / break 15·30·60 mins, auto-returns to Active), bell, avatar.
+- View assigned leads is a full page matching production's Internal Portal (`#assignedLeadsPage` in index.html, `assets/ip-logo.png`): Go back, System / Manually Assigned tabs, one row per lead with View ISL discussion. Pilot counsellors get the Direct 2nd Call cards inside the same page (`renderDirect2nd()`). Counsellors now get it too (no badge strip); `headerLeadPool()` scopes search / assigned leads to the counsellor's own students.
+- Pilot lead cards are compact: View Profile opens the ISL Discussion summary modal (Course Finder layout: Academics / Target Course / English Exam / Work Experience / Other Preferences), whose View Complete Details opens the lead page (`leadPage()`, same layout as RM CRM's `openLeadDetail()`: Back bar, Lead Details sidebar, 8 tabs, Student Profile field cards with every intake + counsellor-marked field); Back returns to View assigned leads; View Summary renders a generated markdown profile summary (`summaryMd()` + small `mdToHtml()`).
+- Performance table has a Lead Type filter (`standupLeadType`: product-led-paid / regular) feeding `computeExtraFilterMultiplier()`.
+- PRD v2: `rm-crm/docs/deliverables/Direct 2nd Call Pilot — PRD v2.docx`.
+
 ## What's untested / pending
 
 - **Chat bucketization is only product-verified for the Counsellor role.** The code change (`showPostHelpQuickReplies()`) is *not* role-gated, so it's technically live for every role that reaches that code path, but the user explicitly said "let's fix the counsellor first" — other roles' bucket content/labels haven't been reviewed and may need role-specific adjustments.

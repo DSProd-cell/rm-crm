@@ -8,7 +8,11 @@
 <style>
   *{box-sizing:border-box}
   html,body{margin:0;padding:0;height:100%;background:#fff}
-  #frameWrap{position:relative;width:100vw;height:100vh}
+  #hubBar{height:36px;display:flex;align-items:center;gap:8px;padding:0 16px;background:#F8FAFC;border-bottom:1px solid #E2E8F0;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;font-size:12px;color:#64748B}
+  #hubBar b{color:#0F172A;font-weight:600}
+  #hubRoleSelect{height:26px;font:inherit;font-size:12.5px;font-weight:600;color:#0F172A;background:#fff;border:1px solid #CBD5E1;border-radius:6px;padding:0 8px;cursor:pointer}
+  #frameWrap{position:relative;width:100vw;height:calc(100vh - 36px)}
   #appFrame{width:100%;height:100%;border:none;display:block}
   #loadingOverlay{
     position:absolute;inset:0;background:#fff;display:flex;flex-direction:column;
@@ -22,6 +26,7 @@
 </style>
 </head>
 <body>
+<div id="hubBar"><b>Demo</b><span>Viewing as</span><select id="hubRoleSelect" aria-label="Role"></select></div>
 <div id="frameWrap">
   <iframe id="appFrame" title="CRM"></iframe>
   <div id="loadingOverlay"><div class="spinner"></div><div id="loadingText">Loading…</div></div>
@@ -29,18 +34,15 @@
 
 <script>
 /*
- * Unifies RM CRM and Counsellor (Leap) CRM into one page with ONE visible
- * header — whichever app's own header is currently on screen. There is no
- * separate shell top bar. Instead, the existing role control already built
- * into each app is extended (RM CRM's real <select id="rolePicker">, and a
- * matching control injected into Leap CRM's header, which has no built-in
- * one) with extra options for the OTHER product's roles too. Picking one
- * either calls that app's own role-switch function directly (same product,
- * instant, no reload) or asks this parent page to swap the iframe to the
- * other app and land on that role (cross-product, one reload).
+ * Unifies RM CRM and Counsellor (Leap) CRM into one page. A thin demo bar
+ * at the top (#hubBar) holds the role picker for both products, so each
+ * app's own header stays exactly as it is. Picking a role either calls that
+ * app's own role-switch function directly (same product, instant, no
+ * reload) or swaps the iframe to the other app and lands on that role
+ * (cross-product, one reload).
  *
- * Neither app's own source files are modified — everything here is done by
- * scripting the (same-origin) iframe's DOM after it loads.
+ * Neither app's own source files are modified for this — the hub only calls
+ * into the (same-origin) iframe after it loads.
  */
 
 const HUB = {
@@ -60,6 +62,7 @@ const HUB = {
     label: 'Counsellor CRM',
     url: 'leap-crm/index.html',
     roles: [
+      { value:'skip_counselor', label:'Skipping 1st Call Counsellor' },
       { value:'counselor',      label:'Counsellor' },
       { value:'team_lead',      label:'Counsellor TL' },
       { value:'pod_leader',     label:'Counsellor POD Leader' },
@@ -69,7 +72,7 @@ const HUB = {
     ],
     defaultRole: 'counselor',
     defaultEmail: {
-      counselor:'priya@edu.in', team_lead:'sneha@edu.in', pod_leader:'arjun.m@edu.in',
+      skip_counselor:'priya@edu.in', counselor:'priya@edu.in', team_lead:'sneha@edu.in', pod_leader:'arjun.m@edu.in',
       senior_manager:'nisha.sm@edu.in', director:'rajesh@edu.in', ops_admin:'nisha@edu.in',
     },
     applyRole(win, role) { if (typeof win.bootApp === 'function') win.bootApp(role, this.defaultEmail[role]); },
@@ -93,6 +96,7 @@ function hideLoading() { loadingOverlay.classList.add('hidden'); }
 function hubGoTo(product, role) {
   if (product === currentProduct) {
     currentRole = role;
+    syncHubSelect();
     const win = frameEl.contentWindow;
     if (win) HUB[product].applyRole(win, role);
     return;
@@ -104,61 +108,26 @@ function hubGoTo(product, role) {
 }
 window.hubGoTo = hubGoTo;
 
-// ── Build the <option>/<optgroup> list for "the other product's roles",
-// used to extend whichever app's control is currently on screen.
-function otherProductOptionsHtml(product) {
-  const other = product === 'rm' ? 'leap' : 'rm';
-  const cfg = HUB[other];
-  const opts = cfg.roles.map(r => `<option value="${other}:${r.value}">${r.label}</option>`).join('');
-  return `<optgroup label="${cfg.label}">${opts}</optgroup>`;
-}
+// ── Role picker lives in its own top bar (#hubBar), outside both apps, so
+// neither CRM's header is modified.
+const hubSel = document.getElementById('hubRoleSelect');
+hubSel.innerHTML = Object.entries(HUB).map(([product, cfg]) =>
+  `<optgroup label="${cfg.label}">${cfg.roles.map(r => `<option value="${product}:${r.value}">${r.label}</option>`).join('')}</optgroup>`
+).join('');
+function syncHubSelect() { hubSel.value = currentProduct + ':' + currentRole; }
+hubSel.onchange = function () {
+  const [product, role] = this.value.split(':');
+  hubGoTo(product, role);
+};
 
-// ── RM CRM: extend its own real #rolePicker select in place.
-function wireRmHeader(doc) {
+// RM CRM keeps its own built-in #rolePicker; mirror its changes into the hub bar.
+function watchRmPicker(doc) {
   const sel = doc.getElementById('rolePicker');
-  if (!sel || sel.dataset.hubWired) { if (sel) sel.value = currentRole; return; }
-  sel.dataset.hubWired = '1';
-  sel.insertAdjacentHTML('beforeend', otherProductOptionsHtml('rm'));
+  if (!sel) return;
   sel.value = currentRole;
-  sel.onchange = function () {
-    const v = this.value;
-    if (v.startsWith('leap:')) { hubGoTo('leap', v.slice(5)); return; }
-    hubGoTo('rm', v);
-  };
-}
-
-// ── Leap CRM: it has no built-in role control, so inject one that matches
-// its own header's visual style, placed inline before the profile button
-// (same row, not a second bar).
-function wireLeapHeader(doc) {
-  let sel = doc.getElementById('hubRolePicker');
-  if (sel) { sel.value = currentRole; return; }
-  const header = doc.querySelector('header');
-  if (!header) return;
-  const avatar = doc.getElementById('headerAvatar');
-  const profileWrap = avatar ? avatar.closest('.relative') : null; // the Profile block specifically, not the search box's own .relative wrapper
-  const wrapHtml = `
-    <div id="hubRolePickerWrap" style="display:flex;align-items:center;gap:6px;padding:6px 10px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:8px;margin-right:10px;flex-shrink:0">
-      <span style="font-size:10px;color:rgba(255,255,255,.5);white-space:nowrap">Role</span>
-      <select id="hubRolePicker" style="font-size:12px;color:#fff;background:transparent;border:none;outline:none;cursor:pointer;font-weight:600;appearance:none">
-        ${HUB.leap.roles.map(r => `<option value="leap:${r.value}" style="color:#0F172A">${r.label}</option>`).join('')}
-        ${otherProductOptionsHtml('leap')}
-      </select>
-    </div>`;
-  if (profileWrap) profileWrap.insertAdjacentHTML('beforebegin', wrapHtml);
-  else header.insertAdjacentHTML('beforeend', wrapHtml);
-  sel = doc.getElementById('hubRolePicker');
-  sel.value = 'leap:' + currentRole;
-  sel.onchange = function () {
-    const v = this.value;
-    const [product, role] = v.includes(':') ? v.split(':') : ['leap', v];
-    hubGoTo(product, role);
-  };
-}
-
-function wireHeaderFor(product, doc) {
-  if (product === 'rm') wireRmHeader(doc);
-  else wireLeapHeader(doc);
+  if (sel.dataset.hubWatched) return;
+  sel.dataset.hubWatched = '1';
+  sel.addEventListener('change', () => { currentRole = sel.value; syncHubSelect(); });
 }
 
 frameEl.addEventListener('load', () => {
@@ -166,7 +135,8 @@ frameEl.addEventListener('load', () => {
   const doc = frameEl.contentDocument;
   setTimeout(() => {
     try { HUB[currentProduct].applyRole(win, currentRole); } catch (e) { /* app kept its own default role — fine */ }
-    try { wireHeaderFor(currentProduct, doc); } catch (e) { /* header markup not ready — non-fatal */ }
+    if (currentProduct === 'rm') { try { watchRmPicker(doc); } catch (e) { /* header markup not ready — non-fatal */ } }
+    syncHubSelect();
     hideLoading();
   }, 60);
 });

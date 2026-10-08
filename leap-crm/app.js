@@ -1147,6 +1147,10 @@ function showError(msg) {
 /* ═══════════════ BOOT ═══════════════ */
 
 function bootApp(role, email) {
+  // Skipping 1st Call Counsellor (Direct 2nd Call pilot) runs the normal counsellor
+  // dashboard plus the pilot layer from direct2nd.js.
+  state.d2cPilot = role === 'skip_counselor';
+  if (state.d2cPilot) role = 'counselor';
   // Determine current user
   if (role === 'counselor') {
     state.currentUser = COUNSELORS.find(c => c.email === email) || COUNSELORS[0];
@@ -1221,20 +1225,22 @@ function bootApp(role, email) {
 
   // TL/POD/SM/Director/Ops Admin: CRM-style header bar (search + view assigned leads + call merge)
   // and the relocated global filter row (POD/SM/TL/Counsellor) — hide the badge strip to match
-  if (isHeaderMgr) {
-    const crmBar = document.getElementById('mgrCrmBar');
+  // Counsellors get the same production CRM header (search + View assigned leads + call merge),
+  // without the manager filter row
+  const crmBar = document.getElementById('mgrCrmBar');
+  const callMerge = document.getElementById('mgrCallMergeWrap');
+  const badgeStripEl = document.getElementById('badgeStrip');
+  if (isHeaderMgr || role === 'counselor') {
     if (crmBar) crmBar.classList.remove('hidden');
-    const callMerge = document.getElementById('mgrCallMergeWrap');
     if (callMerge) callMerge.classList.remove('hidden');
-    const badgeStrip = document.getElementById('badgeStrip');
-    if (badgeStrip) badgeStrip.classList.add('hidden');
-
+    if (badgeStripEl) badgeStripEl.classList.add('hidden');
+  }
+  if (isHeaderMgr) {
     const gfb = document.getElementById('globalFilterBar');
     if (gfb) { gfb.classList.remove('hidden'); gfb.classList.add('flex'); }
     buildMgrFilterBar();
-  } else {
-    const badgeStrip = document.getElementById('badgeStrip');
-    if (badgeStrip) badgeStrip.classList.remove('hidden');
+  } else if (role !== 'counselor') {
+    if (badgeStripEl) badgeStripEl.classList.remove('hidden');
   }
 
   // Manager roles: show manager aggregate panels
@@ -1304,12 +1310,16 @@ function bootApp(role, email) {
     const podSel = document.getElementById('standupPODFilter');
     const tlSel  = document.getElementById('standupTLFilter');
     const cfSel  = document.getElementById('standupCounsellorFilter');
+    const smWrap  = document.getElementById('standupSMFilterWrap');
+    const podWrap = document.getElementById('standupPODFilterWrap');
+    const tlWrap  = document.getElementById('standupTLFilterWrap');
+    const cfWrap  = document.getElementById('standupCounsellorFilterWrap');
 
     if (smSel) {
       const showSM = ['director','ops_admin'].includes(role);
-      smSel.classList.toggle('hidden', !showSM);
+      if (smWrap) smWrap.classList.toggle('hidden', !showSM);
       if (showSM) {
-        smSel.innerHTML = '<option value="">All SM</option>';
+        smSel.innerHTML = '<option value="">All Select SM</option>';
         const mySMIds = role === 'ops_admin' ? SENIOR_MANAGERS.map(s => s.id) : (HIERARCHY.dirToSMs[state.currentUser.id] || []);
         SENIOR_MANAGERS.filter(s => mySMIds.includes(s.id)).forEach(s => {
           const o = document.createElement('option'); o.value = s.id; o.textContent = s.name; smSel.appendChild(o);
@@ -1319,9 +1329,9 @@ function bootApp(role, email) {
 
     if (podSel) {
       const showPOD = ['senior_manager','director','ops_admin'].includes(role);
-      podSel.classList.toggle('hidden', !showPOD);
+      if (podWrap) podWrap.classList.toggle('hidden', !showPOD);
       if (showPOD) {
-        podSel.innerHTML = '<option value="">All PL</option>';
+        podSel.innerHTML = '<option value="">All Select POD</option>';
         POD_LEADERS.filter(p => getMyPodIds().includes(p.id)).forEach(p => {
           const o = document.createElement('option'); o.value = p.id; o.textContent = p.name + ' (' + p.pod + ')'; podSel.appendChild(o);
         });
@@ -1330,9 +1340,9 @@ function bootApp(role, email) {
 
     if (tlSel) {
       const showTL = role !== 'team_lead';
-      tlSel.classList.toggle('hidden', !showTL);
+      if (tlWrap) tlWrap.classList.toggle('hidden', !showTL);
       if (showTL) {
-        tlSel.innerHTML = '<option value="">All TL</option>';
+        tlSel.innerHTML = '<option value="">All Select Team Leader</option>';
         TEAM_LEADS.filter(t => getMyTLIds().includes(t.id)).forEach(t => {
           const o = document.createElement('option'); o.value = t.id; o.textContent = t.name + ' (' + t.team + ')'; tlSel.appendChild(o);
         });
@@ -1340,8 +1350,8 @@ function bootApp(role, email) {
     }
 
     if (cfSel) {
-      cfSel.classList.remove('hidden');
-      cfSel.innerHTML = '<option value="">All CL</option>';
+      if (cfWrap) cfWrap.classList.remove('hidden');
+      cfSel.innerHTML = '<option value="">All Select Counsellor</option>';
       const cList = (role === 'team_lead')
         ? COUNSELORS.filter(c => c.team === state.currentUser.team)
         : COUNSELORS.filter(c => getMyTLIds().some(tl => (HIERARCHY.tlToCounselors[tl]||[]).includes(c.id)));
@@ -1433,7 +1443,14 @@ function bootApp(role, email) {
   renderAll();
   switchTab('tab1');
   // Show 10x banner immediately on login — counsellors only, and only while 10x is live (10am–8pm IST)
-  if (role === 'counselor' && is10xLiveNow()) show10xBanner();
+  // Pilot counsellors are locked On break in 10X, so no Join 10x banner for them
+  if (role === 'counselor' && !state.d2cPilot && is10xLiveNow()) show10xBanner();
+  else dismiss10xBanner();
+  // Every login / role switch lands on the dashboard, not a leftover assigned-leads page
+  state.assignedLeadsTab = 'system';
+  document.getElementById('assignedLeadsPage').classList.add('hidden');
+  document.body.style.overflow = '';
+  if (typeof initDirect2nd === 'function') initDirect2nd(state.d2cPilot);
   // Clear chat and show IST time-based greeting on every fresh login — counsellors only. Managers
   // get their own greeting lazily on first bot-panel open (renderMgrBotGreeting(), in toggleBot()) —
   // calling initBotWithGreeting() here for managers too used to pre-seed botConversation.history
@@ -3660,10 +3677,17 @@ function openQuickLink(type) {
 
 /* ═══════════════ MGR CRM BAR ═══════════════ */
 
+// Leads the header search / View assigned leads look at: a counsellor's own, a manager's filtered pool
+function headerLeadPool() {
+  return state.role === 'counselor' ? [state.currentUser] : getFilteredCounselorPool();
+}
+
+function handleViewAssignedLeads() { openAssignedLeadsPage(); }
+
 function handleMgrGlobalSearch(query) {
   const q = query.trim().toLowerCase();
   if (!q) return;
-  const pool = getFilteredCounselorPool();
+  const pool = headerLeadPool();
   const matchedStudents = STUDENTS.filter(s =>
     pool.some(c => c.id === s.counselorId) &&
     (String(s.id).toLowerCase().includes(q) ||
@@ -3681,7 +3705,7 @@ function handleMgrGlobalSearch(query) {
     return;
   }
   const rows = matchedStudents.slice(0, 20).map(s => {
-    const cl = getFilteredCounselorPool().find(c => c.id === s.counselorId);
+    const cl = pool.find(c => c.id === s.counselorId);
     return `<div class="flex items-center justify-between px-4 py-3 hover:bg-surface/60 border-b border-border/50 last:border-0 cursor-pointer" onclick="openStudentDetail('${s.id}');closeDrawer()">
       <div>
         <p class="text-sm font-semibold text-text-main">${escHtml(s.name)}</p>
@@ -3694,33 +3718,127 @@ function handleMgrGlobalSearch(query) {
   document.getElementById('mgrGlobalSearch').value = '';
 }
 
-function openAssignedLeadsDrawer() {
-  const pool = getFilteredCounselorPool();
-  const students = STUDENTS.filter(s => pool.some(c => c.id === s.counselorId));
-  if (!students.length) { showToast('No leads in your assigned pool.', 'info'); return; }
-  const rows = students.slice(0, 50).map(s => {
-    const cl = pool.find(c => c.id === s.counselorId);
-    const stageCls = { sti:'bg-blue-100 text-primary', deposit:'bg-yellow-100 text-yellow-700', lockin:'bg-green-100 text-success', application:'bg-purple-100 text-purple-700' };
-    const sc = stageCls[s.stage] || 'bg-gray-100 text-gray-600';
-    return `<div class="flex items-center gap-3 px-4 py-3 hover:bg-surface/60 border-b border-border/50 last:border-0 cursor-pointer" onclick="openStudentDetail('${s.id}');closeDrawer()">
-      <div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary flex-shrink-0">
-        ${escHtml((s.name||'?').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase())}
-      </div>
-      <div class="flex-1 min-w-0">
-        <p class="text-sm font-semibold text-text-main truncate">${escHtml(s.name)}</p>
-        <p class="text-xs text-text-muted truncate">${escHtml(cl?.name||'—')} · ${escHtml(s.course||'—')}</p>
-      </div>
-      <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full ${sc} flex-shrink-0">${escHtml(s.stage||'—')}</span>
-    </div>`;
-  }).join('');
-  openDrawer(`📋 Assigned Leads — ${students.length} students`, `<div class="divide-y divide-border">${rows}</div>`);
+/* ═══════════════ VIEW ASSIGNED LEADS PAGE ═══════════════ */
+// Full-page view matching production's Internal Portal page: grey header with the
+// LeapScholar logo + Logout, Go back, System / Manually Assigned tabs, one row per lead.
+// Direct 2nd Call pilot counsellors get the pilot cards inside the same page (direct2nd.js).
+
+const ASSIGNED_AVATAR_COLORS = ['#2A6477', '#22B811', '#54A21D', '#7B1FA2', '#E65100', '#1565C0'];
+
+function openAssignedLeadsPage() {
+  state.assignedLeadsTab = state.assignedLeadsTab || 'system';
+  document.getElementById('assignedLeadsPage').classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+  renderAssignedLeadsPage();
 }
 
+function closeAssignedLeadsPage() {
+  document.getElementById('assignedLeadsPage').classList.add('hidden');
+  document.body.style.overflow = '';
+  if (state.d2cPilot && typeof renderDirect2nd === 'function') renderDirect2nd();
+}
+
+function switchAssignedLeadsTab(tab) {
+  state.assignedLeadsTab = tab;
+  renderAssignedLeadsPage();
+}
+
+// Mock "assigned on" timestamp + system/manual split, stable per student
+function assignedLeadMeta(s) {
+  const n = parseInt(String(s.id).replace(/\D/g, ''), 10) || 0;
+  const d = new Date(2026, 9, 7, 11, 0, 48);
+  d.setDate(d.getDate() - (n % 40) * 3);
+  d.setHours((n * 7) % 24, (n * 13) % 60, (n * 29) % 60);
+  const p = x => String(x).padStart(2, '0');
+  return {
+    manual: n % 4 === 0,
+    at: `${p(d.getDate())}/${p(d.getMonth() + 1)}/${d.getFullYear()}, ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`,
+    ts: d.getTime(),
+    color: ASSIGNED_AVATAR_COLORS[n % ASSIGNED_AVATAR_COLORS.length],
+  };
+}
+
+function renderAssignedLeadsPage() {
+  const tab = state.assignedLeadsTab || 'system';
+  document.querySelectorAll('[data-al-tab]').forEach(b => {
+    const on = b.dataset.alTab === tab;
+    b.setAttribute('aria-selected', on);
+    b.style.color = on ? '#443EFF' : '#1C1C1C';
+    b.style.borderBottomColor = on ? '#443EFF' : 'transparent';
+  });
+  const body = document.getElementById('assignedLeadsBody');
+  if (state.d2cPilot && typeof renderDirect2nd === 'function') { renderDirect2nd(); return; }
+
+  const pool = headerLeadPool();
+  const rows = STUDENTS.filter(s => pool.some(c => c.id === s.counselorId))
+    .map(s => ({ s, m: assignedLeadMeta(s) }))
+    .filter(r => r.m.manual === (tab === 'manual'))
+    .sort((a, b) => b.m.ts - a.m.ts);
+  if (!rows.length) {
+    body.innerHTML = `<div class="py-16 text-center text-[#636363]">
+      <svg class="w-12 h-12 mx-auto mb-3 text-[#BDBDBD]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a4 4 0 00-5-3.87M9 20H4v-2a4 4 0 015-3.87m6-4a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+      No Lead Assigned today</div>`;
+    return;
+  }
+  body.innerHTML = rows.map(({ s, m }) => `
+    <div class="group flex items-center gap-4 min-h-[100px] px-4 border border-transparent border-b-[#E9E9E9] rounded hover:border-[#9495C7]">
+      <div class="w-11 h-11 rounded-full flex items-center justify-center text-white text-xl flex-shrink-0" style="background:${m.color}">${escHtml((s.name || '?')[0].toUpperCase())}</div>
+      <div class="flex-1 min-w-0">
+        <p class="text-[17px] text-black leading-snug">${escHtml(s.name)}</p>
+        <p class="text-[15px] text-[#1E1E1E] leading-snug">${escHtml(s.country || '—')}</p>
+        <p class="text-sm text-[#636363] leading-snug">Assigned on — ${m.at}</p>
+      </div>
+      <button onclick="openStudentDetail('${s.id}')" class="h-[42px] px-2.5 rounded bg-[#443EFF] hover:bg-[#3530D9] text-white text-base cursor-pointer flex-shrink-0">View ISL discussion</button>
+    </div>`).join('');
+}
+
+/* ═══════════════ FOR CALL MERGE STATUS ═══════════════ */
+// Production dropdown: Active, or "Set on break time" for 15 / 30 / 60 mins.
+// A break returns to Active on its own when the time is up.
+let callMergeBreakTimer = null;
+
+function toggleCallMergeMenu(e) {
+  if (e) e.stopPropagation();
+  const menu = document.getElementById('callMergeMenu');
+  setCallMergeMenuOpen(menu.classList.contains('hidden'));
+}
+
+function setCallMergeMenuOpen(open) {
+  const menu = document.getElementById('callMergeMenu');
+  const btn = document.getElementById('callMergeBtn');
+  if (!menu || !btn) return;
+  menu.classList.toggle('hidden', !open);
+  btn.setAttribute('aria-expanded', open);
+  btn.style.borderColor = open ? '#3C36FF' : '';
+  btn.style.boxShadow = open ? '0 0 0 1px #3C36FF' : '';
+  document.getElementById('callMergeChevron').style.transform = open ? 'translateY(-50%) rotate(180deg)' : '';
+  const cur = state.callMergeStatus || 'active';
+  menu.querySelectorAll('[data-cm]').forEach(o => {
+    o.setAttribute('aria-selected', o.dataset.cm === cur);
+    o.querySelector('[data-cm-check]').classList.toggle('hidden', o.dataset.cm !== cur);
+  });
+}
+
+document.addEventListener('click', e => {
+  const wrap = document.getElementById('mgrCallMergeWrap');
+  if (wrap && !wrap.contains(e.target)) setCallMergeMenuOpen(false);
+});
+
 function updateCallMergeStatus(val) {
+  state.callMergeStatus = val;
   const dot = document.getElementById('callMergeDot');
-  if (!dot) return;
-  const colors = { active: 'bg-success', busy: 'bg-danger', away: 'bg-accent' };
-  dot.className = `w-2 h-2 rounded-full flex-shrink-0 ${colors[val] || 'bg-success'}`;
+  const label = document.getElementById('callMergeLabel');
+  clearTimeout(callMergeBreakTimer);
+  if (val === 'active') {
+    if (dot) dot.style.background = '#48713B';
+    if (label) label.textContent = 'Active';
+  } else {
+    if (dot) dot.style.background = '#B13434';
+    if (label) label.textContent = `On break · ${val} mins`;
+    showToast(`You're on break for ${val} mins. Calls won't be merged to you until then.`, 'info');
+    callMergeBreakTimer = setTimeout(() => updateCallMergeStatus('active'), Number(val) * 60000);
+  }
+  setCallMergeMenuOpen(false);
 }
 
 function openImpLink(type) {
@@ -7862,7 +7980,12 @@ const AVG_COUNSELOR_PERF_WEIGHT = COUNSELORS.reduce((s, c) => s + counselorPerfW
 function computeExtraFilterMultiplier(filters) {
   let m = 1;
   if (filters.intake)  m *= 0.55;
+  if (filters.bucket === 'hot')       m *= 0.4;
+  else if (filters.bucket === 'cold') m *= 0.6;
   if (filters.country) m *= 0.6;
+  // Product led paid leads (Direct 2nd Call pilot) are a small slice of total volume
+  if (filters.leadType === 'product-led-paid') m *= 0.08;
+  else if (filters.leadType === 'regular')     m *= 0.92;
   if (filters.servicingType === 'partner')          m *= 0.55;
   else if (filters.servicingType === 'non-partner') m *= 0.45;
   if (filters.caDateFrom || filters.caDateTo) {
@@ -7970,6 +8093,8 @@ function buildPerfRows(pool, extMult) {
 function renderStandupTable(filterData) {
   const filters = filterData || {
     intake:         document.getElementById('standupIntake')?.value            || '',
+    bucket:         document.getElementById('standupBucket')?.value            || '',
+    leadType:       document.getElementById('standupLeadType')?.value          || '',
     country:        document.getElementById('standupCountry')?.value           || '',
     counsellor:     document.getElementById('standupCounsellorFilter')?.value  || '',
     tl:             document.getElementById('standupTLFilter')?.value           || '',
@@ -8231,9 +8356,9 @@ function applyStandupFilters() {
 }
 
 function resetStandupFilters() {
-  const fields = ['standupIntake','standupCountry','standupCounsellorFilter','standupTLFilter','standupPODFilter','standupSMFilter','standupCADateFrom','standupCADateTo','standupServicingType'];
+  const fields = ['standupIntake','standupBucket','standupLeadType','standupCountry','standupCounsellorFilter','standupTLFilter','standupPODFilter','standupSMFilter','standupCADateFrom','standupCADateTo','standupServicingType'];
   fields.forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
-  renderStandupTable({ intake:'', location:'', country:'', counsellor:'', tl:'', pod:'', sm:'', caDateFrom:'', caDateTo:'', servicingType:'' });
+  renderStandupTable({ intake:'', bucket:'', leadType:'', location:'', country:'', counsellor:'', tl:'', pod:'', sm:'', caDateFrom:'', caDateTo:'', servicingType:'' });
 }
 
 /* ── Standup Achv drill-down ── */
