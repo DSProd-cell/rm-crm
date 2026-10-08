@@ -6,8 +6,8 @@
  * Logged in as role "skip_counselor", bootApp() runs the normal counsellor
  * dashboard (state.role = 'counselor') with state.d2cPilot = true, then calls
  * initDirect2nd(true), which adds:
- *   - Header: a red count on the existing "View assigned leads" button and
- *     the next-call card under it (closes on any outside click).
+ *   - Header: the existing "View assigned leads" button shows the number of
+ *     upcoming 2nd calls in plain text. No badge and no pop-up.
  *   - Inside the shared View assigned leads page (production shell in
  *     index.html): Next 2nd call panel + one card per lead
  *     (design: github.com/ayush-puhan/skip-1st-call).
@@ -46,7 +46,7 @@
       f:{ career:'Automotive R&D in Germany', priority:'Public universities', budget:'₹10–15 lakh', funding:'Education loan', parents:'Yes', qual:"Bachelor's", bachelors:'B.E. Mechanical', score:'7.6 CGPA', gap:'Yes', gapMonths:'6', workEx:'0', salary:'', email:'sneha.iyer@gmail.com', city:'Chennai', questions:'' },
       c:{ who:'Vignesh S.', story:'B.E. Mechanical, no work experience, low-tuition budget. Joined a public university in Germany for Sep 2025.', why:['Same course','Same country','Fresher'], sim:[['Harish N.','B.E. Mech, fresher','MS Automotive, Germany'],['Divya K.','B.Tech Mech, 1 year','MS Mechatronics, Germany'],['Arvind P.','B.E. Production, fresher','MS Manufacturing, Germany']] },
       later:[['Applications','Jan–Mar 2027','Apply via uni-assist'],['Offers and funding','Apr–Jun 2027','Admits and blocked account'],['Visa and fly','Jul–Aug 2027','Visa, then fly']] },
-    { id:'LD-483210', name:'Karan Malhotra', day:1, slot:'11:00 AM', mins:1148, done:false, sku:'Prime', studentIn:false, app:null, mentor:'Priya', country:'USA', course:'MS Computer Science', intake:'Fall 2027', fly:'Aug 2027',
+    { id:'LD-483210', name:'Karan Malhotra', day:1, resched:{ n:1, was:'Today, 2:00 PM' }, slot:'11:00 AM', mins:1148, done:false, sku:'Prime', studentIn:false, app:null, mentor:'Priya', country:'USA', course:'MS Computer Science', intake:'Fall 2027', fly:'Aug 2027',
       one:'MS Computer Science in the USA for Fall 2027, ₹40–45 lakh on a loan, 2 years as a developer. GRE planned for Dec; wants top-50 colleges.',
       f:{ career:'Software engineer in the US', priority:'Highly ranked colleges', budget:'₹40–45 lakh', funding:'Education loan', parents:'Yes', qual:"Bachelor's", bachelors:'B.Tech Computer Science', score:'8.4 CGPA', gap:'No', gapMonths:'', workEx:'2', salary:'₹14 LPA', email:'karan.m@gmail.com', city:'Gurugram', questions:'Should I take the GRE before applying?' },
       c:{ who:'Varun T.', story:'B.Tech CS, 2 years as a backend developer, loan-funded. Joined an MS in CS in the USA for Fall 2025 and interned at a fintech.', why:['Same course','Same country','2 years of work','Loan-funded'], sim:[['Ishaan R.','B.Tech IT, 2 years','MS CS, USA, Fall 2025'],['Nikita J.','B.E. CS, 3 years','MS CS, USA, Fall 2026'],['Rohit B.','B.Tech ECE, 1 year','MS CE, USA, Fall 2025']] },
@@ -70,7 +70,7 @@
 
   const S = {
     on:false, laterOpen:false, dlg:null, isl:null, summary:null, dispo:null, profile:null, leadTab:'Student Profile', backToLeads:false, notes:{},
-    joined:{ 'LD-483077':false }, popHidden:null, remind:{}, lgcAgain:{}, phase:{}, type:{},
+    joined:{ 'LD-483077':false }, remind:{}, lgcAgain:{}, phase:{}, type:{},
     sent:{ 'case:LD-482913':'4:05 PM', 'timeline:LD-482913':'4:09 PM', 'case:LD-482650':'11:20 AM', 'timeline:LD-482650':'11:24 AM' },
     ielts:{ 'LD-482913':'Preparing' }, ieltsScore:{}, service:{}, outcome:{}, timer:null,
   };
@@ -97,7 +97,6 @@
   const pageEl = () => document.getElementById('assignedLeadsPage');
   const pageOpen = () => !!pageEl() && !pageEl().classList.contains('hidden');
   const leadsForTab = () => LEADS.filter(l => (state.assignedLeadsTab === 'manual') ? l.manual : !l.manual);
-  const needsAction = l => (!l.done && inWindow(l) && !ready(l)) || needsOutcome(l);
 
   const I = {
     link:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg>',
@@ -122,14 +121,6 @@
 @keyframes d2cspin{to{transform:rotate(360deg)}}
 @media (prefers-reduced-motion:reduce){.d2c *{animation:none!important}}
 /* header */
-.d2c-badge{position:absolute;top:-8px;right:-8px;min-width:20px;height:20px;border-radius:999px;background:#DC2626;color:#fff;font-size:11.5px;font-weight:800;display:flex;align-items:center;justify-content:center;padding:0 5px;box-shadow:0 0 0 2px #0C1A2E;font-family:'Figtree',system-ui,sans-serif}
-.d2c-pop{position:absolute;top:46px;left:0;width:330px;background:#1C2340;color:#fff;border-radius:12px;padding:12px 12px 12px 14px;display:grid;grid-template-columns:10px 1fr auto;gap:10px;align-items:center;box-shadow:0 12px 30px rgba(28,35,64,.3);z-index:45;font-family:'Figtree',system-ui,sans-serif}
-.d2c-pop::before{content:"";position:absolute;top:-6px;left:28px;width:12px;height:12px;background:#1C2340;transform:rotate(45deg)}
-.d2c-pop .dot{width:9px;height:9px;border-radius:50%;background:#F5A524}
-.d2c-pop.ok .dot{background:#22C55E}
-.d2c-pop span{font-size:13px;line-height:1.4;color:#D5D8EA;display:flex;flex-direction:column}
-.d2c-pop b{color:#fff;font-size:14px}
-.d2c-go{min-height:34px;padding:0 12px;border-radius:8px;border:0;background:#fff;color:#2B2F94;font-size:13px;font-weight:700;cursor:pointer}
 /* page */
 .d2c.main{display:flex;flex-direction:column;gap:20px}
 .d2c .pilotbar{display:flex;flex-wrap:wrap;gap:8px 18px;align-items:center;background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px 16px;font-size:13px;color:var(--muted)}
@@ -152,6 +143,7 @@
 .d2c .tag{font-size:12px;font-weight:700;border-radius:999px;padding:3px 10px}
 .d2c .tag.sku{background:var(--indigo-bg);color:var(--indigo-dk)}
 .d2c .tag.hot{background:#FDE7E1;color:#B42318}
+.d2c .tag.rs{background:#FFF4E0;color:#8A4F00;border:1px solid #F1C886}
 .d2c .tag.plp{background:#E8F7F0;color:#0E6B4A;border:1px solid #A9DCC5}
 .d2c .status{display:flex;flex-direction:column;gap:6px;align-items:flex-end}
 .d2c .st{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:600;white-space:nowrap}
@@ -406,21 +398,10 @@
     }
   }
 
-  // ── header: badge + next-call card on the existing "View assigned leads" button ──
-  function nextCall() { return [...LEADS].filter(l => !l.done).sort((a, b) => a.mins - b.mins)[0]; }
+  // ── header: plain count of upcoming 2nd calls on the "View assigned leads" button ──
   function renderHeader() {
     const btn = document.getElementById('hdrViewAssignedBtn');
-    const wrap = document.getElementById('hdrViewAssignedWrap');
-    if (!btn || !wrap) return;
-    document.getElementById('d2cBadge')?.remove();
-    document.getElementById('d2cPop')?.remove();
-    const pending = LEADS.filter(needsAction);
-    if (pending.length) btn.insertAdjacentHTML('beforeend', `<span id="d2cBadge" class="d2c-badge" aria-label="${pending.length} 2nd calls need action">${pending.length}</span>`);
-    const nxt = nextCall();
-    // The card closes on any click outside it and stays closed until the next call changes
-    if (!nxt || pageOpen() || S.profile || S.popHidden === nxt.id) return;
-    const msg = !youIn(nxt) ? 'Join the LGC first.' : (!stuIn(nxt) ? first(nxt) + ' hasn’t joined the LGC.' : 'All set.');
-    wrap.insertAdjacentHTML('beforeend', `<div id="d2cPop" class="d2c-pop ${msg === 'All set.' ? 'ok' : ''}" role="status"><span class="dot"></span><span><b>Next 2nd call in ${fmtIn(nxt.mins)}</b>${nxt.name}, ${nxt.slot}. ${msg}</span><button class="d2c-go" data-d2c="open">Open</button></div>`);
+    if (btn) btn.textContent = `View assigned leads (${LEADS.filter(l => !l.done).length})`;
   }
 
   // ── lead card ──
@@ -463,7 +444,7 @@
     return `<li class="card ${l.done ? 'done' : ''} ${amber ? 'blocked' : ''}">
       <div class="r1">
         <span class="time"><strong>${l.slot}</strong><span class="${!l.done && l.mins < 60 ? 'soon' : ''}">${slotNote}</span></span>
-        <div class="who"><span class="nm">${l.name}<span class="tag sku">${l.sku}</span><span class="tag hot">Hot</span><span class="tag plp">Product led paid</span></span>
+        <div class="who"><span class="nm">${l.name}<span class="tag sku">${l.sku}</span><span class="tag hot">Hot</span><span class="tag plp">Product led paid</span>${l.resched ? `<span class="tag rs">Rescheduled${l.resched.n > 1 ? ' ' + l.resched.n + '×' : ''} · was ${l.resched.was}</span>` : ''}</span>
           <span class="meta">${l.course} · ${l.country} · ${l.intake}<span class="id">${l.id}</span></span></div>
         <div class="status">${lgc}${app}</div>
       </div>
@@ -769,7 +750,8 @@ ${f.parents === 'No' ? '- Whether parents are on board with the plan and budget.
       ? `<div class="lp-card">${S.outcome[l.id].tasks.map(t => `<div class="lp-task">${I.check}<span>${t}</span></div>`).join('')}</div>`
       : empty('No tasks yet. Tasks are created when the 2nd call is marked Completed, from the IELTS Status and Service Type you mark in the call.');
     if (tab === 'Activity Logs') {
-      const log = [['Intake submitted in the product', '19 fields'], ['Token payment received', 'Product led paid lead'], ['2nd call booked', `${dayLabel(dayOf(l))}, ${l.slot} with ${l.mentor}`], ['LGC created', 'Counsellor + Leap admin']];
+      const log = [['Intake submitted in the product', '19 fields'], ['Token payment received', 'Product led paid lead'], ['ISL discussion stage marked done', 'Intake complete, token paid and slot booked'], ['2nd call booked', `${dayLabel(dayOf(l))}, ${l.slot} with ${l.mentor}`], ['LGC created', 'Counsellor + Leap admin']];
+      if (l.resched) log.push([`Rescheduled by the student (${l.resched.n} of 2)`, `Was ${l.resched.was}; now ${dayLabel(dayOf(l))}, ${l.slot}`]);
       if (youIn(l)) log.push(['Counsellor joined the LGC', 'Group link sent to the student']);
       if (S.sent['case:' + l.id]) log.push(['Case study sent', S.sent['case:' + l.id]]);
       if (S.sent['timeline:' + l.id]) log.push(['Timeline sent', S.sent['timeline:' + l.id]]);
@@ -860,8 +842,6 @@ ${f.parents === 'No' ? '- Whether parents are on board with the plan and budget.
   }
 
   function onClick(e) {
-    const pop = document.getElementById('d2cPop');
-    if (pop && !pop.contains(e.target)) { const n = nextCall(); S.popHidden = n && n.id; pop.remove(); }
     const t = e.target.closest('[data-d2c],[data-d2c-join],[data-d2c-again],[data-d2c-dlg],[data-d2c-type],[data-d2c-retype],[data-d2c-send],[data-d2c-close],[data-d2c-remind],[data-d2c-later],[data-d2c-tab],[data-d2c-profile],[data-d2c-isl],[data-d2c-isltab],[data-d2c-summary],[data-d2c-full],[data-d2c-leadtab],[data-d2c-toast],[data-d2c-edit],[data-d2c-reveal],[data-d2c-note],[data-d2c-shortlist],[data-d2c-oc],[data-d2c-dispo],[data-d2c-bg]');
     if (!t || t.disabled) return;
     const d = t.dataset;
@@ -901,7 +881,7 @@ ${f.parents === 'No' ? '- Whether parents are on board with the plan and budget.
       if (k === 'Completed') { if (!marked(l)) return; S.dispo = null; S.outcome[id] = { k, at: nowStr(), tasks: buildTasks(l) }; toast(`Call marked Completed. ${S.outcome[id].tasks.length} tasks created for ${l.name}.`); }
       else {
         const note = k === 'Student no-show' ? `Reschedule link sent to ${first(l)}. A second no-show goes to ops.`
-          : k === 'Rescheduled' ? `Reschedule link sent to ${first(l)}; the booking moves to the new slot and counts on that day.`
+          : k === 'Rescheduled' ? `Reschedule link sent to ${first(l)} (${(l.resched ? l.resched.n : 0) + 1} of 2 reschedules). The card moves to the new slot once they pick one; the old meeting is removed.`
           : 'Booking cancelled; the slot is freed for another student.';
         S.outcome[id] = { k, at: nowStr(), note };
         toast(note, 'info');
@@ -927,8 +907,8 @@ ${f.parents === 'No' ? '- Whether parents are on board with the plan and budget.
 
   window.initDirect2nd = function (on) {
     S.on = !!on;
-    document.getElementById('d2cBadge')?.remove();
-    document.getElementById('d2cPop')?.remove();
+    const hb = document.getElementById('hdrViewAssignedBtn');
+    if (hb) hb.textContent = 'View assigned leads';
     document.getElementById('d2cOverlay')?.remove();
     S.backToLeads = false;
     if (!S.on) { S.dlg = null; S.isl = null; S.summary = null; S.dispo = null; S.profile = null; return; }
