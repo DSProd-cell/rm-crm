@@ -1,26 +1,27 @@
 /* ═══════════════ DIRECT 2ND CALL (SKIPPING 1ST CALL COUNSELLOR) ═══════════════
  * Pilot role for counsellors who only take Direct 2nd Call leads: students who
  * filled the 19-field intake in the product and paid a token, so they skip the
- * 1st call and book a 2nd call straight away. Tagged "Product led paid lead".
+ * 1st call and book a 2nd call straight away. App bookings are paid ("Product
+ * led paid lead"); web bookings aren't ("Product led lead").
  *
  * Logged in as role "skip_counselor", bootApp() runs the normal counsellor
  * dashboard (state.role = 'counselor') with state.d2cPilot = true, then calls
  * initDirect2nd(true), which adds:
  *   - Header: the existing "View assigned leads" button shows the number of
- *     upcoming 2nd calls in plain text. No badge and no pop-up.
+ *     today's 2nd-call meetings in plain text, set once in the morning. No
+ *     badge and no pop-up. Clicking it shows all meetings.
  *   - Inside the shared View assigned leads page (production shell in
  *     index.html): Next 2nd call panel + one card per lead
  *     (design: github.com/ayush-puhan/skip-1st-call).
- *   - IELTS Status and Service Type: not on the card. "Completed" opens the
- *     second-call disposition, which requires both. Without the 1st call nobody
- *     else captures them, and the new CRM won't create tasks without them.
+ *   - The call outcome is captured by the system (no outcome buttons on the
+ *     card). IELTS Status and Service Type are marked in the second-call
+ *     disposition; the CRM creates tasks from them.
  *   - Case study / timeline pop-ups; View Profile (ISL Discussion summary, as in
  *     Course Finder) → View Complete Details (the lead page, same layout as
- *     the RM CRM's); View Summary (markdown profile summary).
+ *     the RM CRM's).
  * All data is mock, like the rest of this app.
  */
 (function () {
-  const IELTS_OPTIONS = ['Not started', 'Preparing', 'Exam booked', 'Given (score)', 'Not required (waiver)'];
   const SERVICE_OPTIONS = [
     { value: 'partner',              label: 'Free service (Partner)' },
     { value: 'np-premium',           label: 'Paid service · Premium universities' },
@@ -31,37 +32,37 @@
   const DAILY_MIN = 4, DAILY_MAX = 6;
 
   const LEADS = [
-    { id:'LD-483077', name:'Arjun Mehta', slot:'4:30 PM', mins:38, done:false, sku:'Premium', studentIn:false, app:null, mentor:'Priya', country:'UK', course:'MBA', intake:'Jan 2027', fly:'Jan 2027',
+    { id:'LD-483077', src:'App', bucket:'Hot', name:'Arjun Mehta', slot:'4:30 PM', mins:38, done:false, sku:'Premium', studentIn:false, app:null, mentor:'Priya', country:'UK', course:'MBA', intake:'Jan 2027', fly:'Jan 2027',
       one:'MBA in the UK for Jan 2027, ₹30–35 lakh self-funded, 3 years of work. Wants highly ranked colleges; parents not consulted yet.',
       f:{ career:'Consulting / strategy roles in the UK', priority:'Highly ranked colleges', budget:'₹30–35 lakh', funding:'Self-funded', parents:'No', qual:"Bachelor's", bachelors:'B.Com', score:'72%', gap:'No', gapMonths:'', workEx:'3', salary:'₹9 LPA', email:'arjun.mehta@gmail.com', city:'Pune', questions:'Is GMAT mandatory for a one-year MBA?' },
       c:{ who:'Rohan K.', story:'B.Com, 3 years in audit, similar budget and no GMAT. Got into a one-year UK MBA for Jan 2026 and now works in consulting in London.', why:['Same course','Similar budget','3 years of work','No GMAT'], sim:[['Neha S.','B.Com, 4 years in finance','MBA, UK, Jan 2026'],['Aditya P.','BBA, 3 years in sales','MBA, UK, Sep 2025'],['Simran K.','B.Com, 2 years in audit','MBA, UK, Jan 2026']] },
       later:[['Applications','Nov 2026','Apply to 4–5 universities, with SOP and LORs done by your SOP expert'],['Offers and funding','Dec 2026','Offers, deposit and proof of funds'],['Visa and fly','Jan 2027','Visa with your visa counsellor, then fly']] },
-    { id:'LD-482913', name:'Riya Sharma', slot:'6:00 PM', mins:128, done:false, sku:'Prime', studentIn:true, app:'Android app, active 2h ago', mentor:'Priya', country:'Canada', course:'MS Data Science', intake:'Sep 2027', fly:'Aug 2027',
+    { id:'LD-482913', src:'Web', bucket:'Hot', name:'Riya Sharma', slot:'6:00 PM', mins:128, done:false, sku:'Prime', studentIn:true, app:'Android app, active 2h ago', mentor:'Priya', country:'Canada', course:'MS Data Science', intake:'Sep 2027', fly:'Aug 2027',
       one:'MS Data Science in Canada for Sep 2027, ₹25–30 lakh on a loan. Wants colleges within budget; asked if Ireland is cheaper.',
       f:{ career:'Data scientist in Canada', priority:'Under budget', budget:'₹25–30 lakh', funding:'Education loan', parents:'Yes', qual:"Bachelor's", bachelors:'B.Tech Computer Science', score:'8.1 CGPA', gap:'No', gapMonths:'', workEx:'1', salary:'₹6 LPA', email:'riya.sharma@outlook.com', city:'Jaipur', questions:'Is Ireland cheaper than Canada for data science?' },
       c:{ who:'Ananya R.', story:'B.Tech CS, 1 year as an analyst, loan-funded. Joined an MS in Data Science in Canada for Sep 2025 and works part-time on campus.', why:['Same course','Same country','Loan-funded'], sim:[['Karthik V.','B.Tech CS, 2 years','MS Data Science, Canada'],['Pooja M.','B.Tech IT, 1 year','MS Analytics, Ireland'],['Sahil D.','B.Sc Stats, 1 year','MS Data Science, Canada']] },
       later:[['Applications','Jan–Mar 2027','Apply with SOP and LORs'],['Offers and funding','Apr–May 2027','Offers and loan sanction'],['Visa and fly','Jun–Aug 2027','Study permit, then fly']] },
-    { id:'LD-482650', name:'Sneha Iyer', slot:'12:00 PM', mins:-150, done:true, sku:'Premium', studentIn:true, app:'iOS app, active 8d ago', mentor:'Priya', country:'Germany', course:'MS Mechanical Engineering', intake:'Sep 2027', fly:'Aug 2027',
+    { id:'LD-482650', src:'App', bucket:'Hot', name:'Sneha Iyer', slot:'12:00 PM', mins:-150, done:true, sku:'Premium', studentIn:true, app:'iOS app, active 8d ago', mentor:'Priya', country:'Germany', course:'MS Mechanical Engineering', intake:'Sep 2027', fly:'Aug 2027',
       one:'MS Mechanical Engineering in Germany for Sep 2027, public universities, ₹10–15 lakh on a loan. No work experience yet.',
       f:{ career:'Automotive R&D in Germany', priority:'Public universities', budget:'₹10–15 lakh', funding:'Education loan', parents:'Yes', qual:"Bachelor's", bachelors:'B.E. Mechanical', score:'7.6 CGPA', gap:'Yes', gapMonths:'6', workEx:'0', salary:'', email:'sneha.iyer@gmail.com', city:'Chennai', questions:'' },
       c:{ who:'Vignesh S.', story:'B.E. Mechanical, no work experience, low-tuition budget. Joined a public university in Germany for Sep 2025.', why:['Same course','Same country','Fresher'], sim:[['Harish N.','B.E. Mech, fresher','MS Automotive, Germany'],['Divya K.','B.Tech Mech, 1 year','MS Mechatronics, Germany'],['Arvind P.','B.E. Production, fresher','MS Manufacturing, Germany']] },
       later:[['Applications','Jan–Mar 2027','Apply via uni-assist'],['Offers and funding','Apr–Jun 2027','Admits and blocked account'],['Visa and fly','Jul–Aug 2027','Visa, then fly']] },
-    { id:'LD-483210', name:'Karan Malhotra', day:1, resched:{ n:1, was:'Today, 2:00 PM' }, slot:'11:00 AM', mins:1148, done:false, sku:'Prime', studentIn:false, app:null, mentor:'Priya', country:'USA', course:'MS Computer Science', intake:'Fall 2027', fly:'Aug 2027',
+    { id:'LD-483210', src:'Web', bucket:'Hot', name:'Karan Malhotra', day:1, resched:{ n:1, was:'Today, 2:00 PM' }, slot:'11:00 AM', mins:1148, done:false, sku:'Prime', studentIn:false, app:null, mentor:'Priya', country:'USA', course:'MS Computer Science', intake:'Fall 2027', fly:'Aug 2027',
       one:'MS Computer Science in the USA for Fall 2027, ₹40–45 lakh on a loan, 2 years as a developer. GRE planned for Dec; wants top-50 colleges.',
       f:{ career:'Software engineer in the US', priority:'Highly ranked colleges', budget:'₹40–45 lakh', funding:'Education loan', parents:'Yes', qual:"Bachelor's", bachelors:'B.Tech Computer Science', score:'8.4 CGPA', gap:'No', gapMonths:'', workEx:'2', salary:'₹14 LPA', email:'karan.m@gmail.com', city:'Gurugram', questions:'Should I take the GRE before applying?' },
       c:{ who:'Varun T.', story:'B.Tech CS, 2 years as a backend developer, loan-funded. Joined an MS in CS in the USA for Fall 2025 and interned at a fintech.', why:['Same course','Same country','2 years of work','Loan-funded'], sim:[['Ishaan R.','B.Tech IT, 2 years','MS CS, USA, Fall 2025'],['Nikita J.','B.E. CS, 3 years','MS CS, USA, Fall 2026'],['Rohit B.','B.Tech ECE, 1 year','MS CE, USA, Fall 2025']] },
       later:[['Applications','Nov 2026–Jan 2027','Apply to 6–8 universities, with SOP and LORs'],['Offers and funding','Mar–Apr 2027','Offers, I-20 and loan sanction'],['Visa and fly','May–Aug 2027','F-1 visa interview, then fly']] },
-    { id:'LD-483355', name:'Meera Nair', day:2, slot:'3:20 PM', mins:2848, done:false, manual:true, sku:'Premium', studentIn:true, app:'iOS app, active 1d ago', mentor:'Priya', country:'Ireland', course:'MSc Finance', intake:'Sep 2027', fly:'Aug 2027',
+    { id:'LD-483355', src:'App', bucket:'Hot', name:'Meera Nair', day:2, slot:'3:20 PM', mins:2848, done:false, manual:true, sku:'Premium', studentIn:true, app:'iOS app, active 1d ago', mentor:'Priya', country:'Ireland', course:'MSc Finance', intake:'Sep 2027', fly:'Aug 2027',
       one:'MSc Finance in Ireland for Sep 2027, ₹25 lakh, part loan and part family. B.Com fresher; wants a one-year course with good placements.',
       f:{ career:'Investment analyst in Dublin', priority:'Good placements', budget:'₹25 lakh', funding:'Part loan, part family', parents:'Yes', qual:"Bachelor's", bachelors:'B.Com', score:'78%', gap:'No', gapMonths:'', workEx:'0', salary:'', email:'meera.nair@yahoo.com', city:'Kochi', questions:'' },
       c:{ who:'Tanvi S.', story:'B.Com fresher, part-loan funded. Joined a one-year MSc Finance in Dublin for Sep 2025 and now works as an analyst there.', why:['Same course','Same country','Fresher'], sim:[['Aman K.','B.Com, fresher','MSc Finance, Ireland'],['Riddhi P.','BBA, fresher','MSc Accounting, Ireland'],['Kabir S.','B.Com, 1 year','MSc Finance, UK']] },
       later:[['Applications','Dec 2026–Feb 2027','Apply with SOP and LORs'],['Offers and funding','Mar–May 2027','Offers and deposit'],['Visa and fly','Jun–Aug 2027','Study visa, then fly']] },
-    { id:'LD-483402', name:'Rahul Verma', day:5, slot:'12:40 PM', mins:7008, done:false, sku:'Explorer', studentIn:false, app:'Android app, active 3h ago', mentor:'Priya', country:'Canada', course:'PG Diploma Business', intake:'Jan 2028', fly:'Dec 2027',
+    { id:'LD-483402', src:'Web', bucket:'Cold', name:'Rahul Verma', day:5, slot:'12:40 PM', mins:7008, done:false, sku:'Explorer', studentIn:false, app:'Android app, active 3h ago', mentor:'Priya', country:'Canada', course:'PG Diploma Business', intake:'Jan 2028', fly:'Dec 2027',
       one:'PG Diploma in Business in Canada for Jan 2028, ₹15–20 lakh, family-funded. Exploring options; parents not consulted yet.',
       f:{ career:'Not sure yet', priority:'Under budget', budget:'₹15–20 lakh', funding:'Family', parents:'No', qual:"Bachelor's", bachelors:'BBA', score:'64%', gap:'Yes', gapMonths:'12', workEx:'1', salary:'₹3.6 LPA', email:'rahul.v@gmail.com', city:'Lucknow', questions:'Can I work while studying?' },
       c:{ who:'Sameer A.', story:'BBA, 1 year in sales, family-funded. Joined a PG Diploma in Toronto for Jan 2026 and works part-time in retail.', why:['Same country','Similar budget','Family-funded'], sim:[['Neel D.','BBA, fresher','PG Diploma, Canada'],['Sana M.','B.Com, 1 year','PG Diploma, Canada'],['Arya V.','BBA, 2 years','MBA, Canada']] },
       later:[['Applications','Apr–Jun 2027','Apply to 3–4 colleges'],['Offers and funding','Jul–Sep 2027','Offers and GIC'],['Visa and fly','Oct–Dec 2027','Study permit, then fly']] },
-    { id:'LD-483467', name:'Ananya Gupta', day:6, slot:'5:00 PM', mins:8828, done:false, sku:'Premium', studentIn:false, app:null, mentor:'Priya', country:'Australia', course:'Master of Data Science', intake:'Feb 2028', fly:'Jan 2028',
+    { id:'LD-483467', src:'App', bucket:'Hot', name:'Ananya Gupta', day:6, slot:'5:00 PM', mins:8828, done:false, sku:'Premium', studentIn:false, app:null, mentor:'Priya', country:'Australia', course:'Master of Data Science', intake:'Feb 2028', fly:'Jan 2028',
       one:'Master of Data Science in Australia for Feb 2028, ₹35 lakh on a loan, 1 year as an analyst. Wants Group of Eight universities.',
       f:{ career:'Data analytics in Australia', priority:'Highly ranked colleges', budget:'₹35 lakh', funding:'Education loan', parents:'Yes', qual:"Bachelor's", bachelors:'B.Sc Mathematics', score:'81%', gap:'No', gapMonths:'', workEx:'1', salary:'₹5 LPA', email:'ananya.g@gmail.com', city:'Indore', questions:'' },
       c:{ who:'Pranav M.', story:'B.Sc Maths, 1 year as a data analyst, loan-funded. Joined a Master of Data Science in Melbourne for Feb 2026.', why:['Same course','Same country','Loan-funded'], sim:[['Diya R.','B.Tech CS, 1 year','MDS, Australia'],['Yash K.','B.Sc Stats, fresher','MDS, Australia'],['Leela N.','BCA, 2 years','MIT, Australia']] },
@@ -69,10 +70,10 @@
   ];
 
   const S = {
-    on:false, laterOpen:false, dlg:null, isl:null, summary:null, dispo:null, profile:null, leadTab:'Student Profile', backToLeads:false, notes:{},
+    on:false, laterOpen:false, dlg:null, isl:null, profile:null, leadTab:'Student Profile', backToLeads:false, notes:{},
     joined:{ 'LD-483077':false }, remind:{}, lgcAgain:{}, phase:{}, type:{},
     sent:{ 'case:LD-482913':'4:05 PM', 'timeline:LD-482913':'4:09 PM', 'case:LD-482650':'11:20 AM', 'timeline:LD-482650':'11:24 AM' },
-    ielts:{ 'LD-482913':'Preparing' }, ieltsScore:{}, service:{}, outcome:{}, timer:null,
+    ielts:{ 'LD-482913':'Preparing' }, ieltsScore:{}, service:{}, outcome:{ 'LD-482650':{ k:'Completed', at:'12:41 PM' } }, timer:null,
   };
 
   // ── helpers ──
@@ -85,11 +86,11 @@
   const fmtIn = m => m < 60 ? m + ' min' : Math.floor(m / 60) + ' h ' + (m % 60) + ' min';
   const nowStr = () => new Date().toLocaleTimeString('en-US', { hour:'numeric', minute:'2-digit' });
   const first = l => l.name.split(' ')[0];
+  // App bookings are paid; web bookings aren't, so they get a different lead tag
+  const leadTag = l => l.src === 'App' ? 'Product led paid' : 'Product led';
   const youIn = l => S.joined[l.id] !== false;
   const stuIn = l => youIn(l) && l.studentIn;
   const ready = l => stuIn(l) && S.sent['case:' + l.id] && S.sent['timeline:' + l.id];
-  const marked = l => !!S.ielts[l.id] && !!S.service[l.id];
-  const needsOutcome = l => l.done && !S.outcome[l.id];
   const reach = l => l.app ? 'an app notification and a WhatsApp DM' : 'a WhatsApp DM and SMS. No app notification, as the app isn’t installed';
   const serviceLabel = v => (SERVICE_OPTIONS.find(o => o.value === v) || {}).label || '';
   const toast = (m, t) => (typeof showToast === 'function' ? showToast(m, t || 'success') : null);
@@ -143,6 +144,7 @@
 .d2c .tag{font-size:12px;font-weight:700;border-radius:999px;padding:3px 10px}
 .d2c .tag.sku{background:var(--indigo-bg);color:var(--indigo-dk)}
 .d2c .tag.hot{background:#FDE7E1;color:#B42318}
+.d2c .tag.cold{background:#E0F2FE;color:#075985}
 .d2c .tag.rs{background:#FFF4E0;color:#8A4F00;border:1px solid #F1C886}
 .d2c .tag.plp{background:#E8F7F0;color:#0E6B4A;border:1px solid #A9DCC5}
 .d2c .status{display:flex;flex-direction:column;gap:6px;align-items:flex-end}
@@ -162,10 +164,6 @@
 .d2c .sb.done svg{color:var(--green-dk)}
 .d2c .flash{font-size:12.5px;font-weight:700;color:var(--green-dk)}
 /* mark during the call: IELTS + Service type + outcome */
-.d2c .oc{display:flex;flex-wrap:wrap;gap:6px;margin-left:auto}
-.d2c .ocb{min-height:36px;padding:0 12px;border-radius:8px;border:1px solid #CDD1E1;background:#fff;color:var(--ink);font-size:13px;font-weight:700}
-.d2c .ocb.pri{background:var(--indigo);border-color:var(--indigo);color:#fff}
-.d2c .ocb:disabled{background:#E6E8F1;border-color:#E6E8F1;color:#8189A6}
 /* next call panel */
 .d2c .nextp{background:var(--ink);color:#fff;border-radius:16px;padding:20px 22px;display:grid;grid-template-columns:minmax(220px,1fr) minmax(0,1.5fr);gap:22px;align-items:center}
 .d2c .nx-l{display:flex;flex-direction:column;gap:4px}
@@ -260,23 +258,9 @@
 .d2c .sb.pri{border-color:#C9CCF4;background:var(--indigo-bg);color:var(--indigo-dk)}
 .d2c .sb.pri svg{color:var(--indigo)}
 .d2c .r2 .sep{width:1px;height:22px;background:var(--line);margin:0 4px}
-.d2c .r3{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;padding:10px 12px;border-radius:10px}
-.d2c .r3.req{background:#FFF8EC;border:1.5px solid #E8A33D}
-.d2c .r3.okd{background:var(--green-bg);border:1px solid #A9DCC5}
-.d2c .r3l{font-size:12.5px;font-weight:700;color:var(--muted);display:inline-flex;align-items:center;gap:6px}
-.d2c .r3.okd .r3l{color:var(--green-dk)}
-.d2c .r3.req .r3l{color:#8A4F00}
-.d2c .dsp-note{margin:0;display:flex;gap:10px;align-items:flex-start;font-size:13.5px;line-height:1.45;color:#6B3D00;background:var(--amber-bg);border:1.5px solid #E8A33D;border-radius:10px;padding:10px 12px}
-.d2c .dsp-f{display:flex;flex-direction:column;gap:6px;font-size:13.5px;font-weight:700;color:var(--ink)}
-.d2c .dsp-f .req{color:#BF3333}
-.d2c .dsp-f select,.d2c .dsp-f input{height:42px;border:1px solid #CDD1E1;border-radius:8px;background:#fff;padding:0 12px;font:inherit;font-size:14px;font-weight:500;color:var(--ink)}
-.d2c .dsp-f input{width:140px}
-.d2c .ocb{min-height:32px}
-.d2c .ocres{flex-basis:100%;font-size:13px;line-height:1.5;color:var(--ink)}
 /* ISL Discussion summary + profile summary modals (production Course Finder style) */
 .d2c.isl-ov{position:fixed;inset:0;z-index:140;background:rgba(0,0,0,.45);display:flex;justify-content:center;align-items:center;padding:24px 16px}
 .d2c .isl{background:#fff;width:100%;max-width:800px;height:min(520px,calc(100vh - 48px));display:flex;flex-direction:column;padding:20px 19px 0;box-shadow:0 20px 50px rgba(0,0,0,.3)}
-.d2c .isl.sum{max-width:960px;height:min(720px,calc(100vh - 48px))}
 .d2c .isl-h{display:flex;align-items:center;gap:8px;padding-bottom:14px;border-bottom:1px solid #E0E0E0}
 .d2c .isl-h h2{margin:0;font-family:Helvetica,Arial,sans-serif;font-size:19px;font-weight:700;color:#1A1B5F}
 .d2c .isl-link{border:0;background:none;padding:0;color:#3C36FF;text-decoration:underline;font-family:Helvetica,Arial,sans-serif;font-size:13px}
@@ -299,19 +283,6 @@
 .d2c .qa-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 24px}
 .d2c .qa-grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:0 24px}
 .d2c .qa-note{margin:14px 0 0;display:flex;gap:8px;align-items:center;font-size:13px;font-weight:600;color:#8A4F00;background:#FFF8EC;border:1px solid #F1C886;border-radius:8px;padding:8px 10px}
-.d2c .sum-label{margin:14px 0 8px;font-size:12px;font-weight:700;color:#636872}
-.d2c .md{flex:1;overflow-y:auto;margin-bottom:20px;border:1px solid #D8DADE;border-radius:16px;background:#FCFBFF;padding:8px 28px 20px;font-family:Helvetica,Arial,sans-serif;color:#181A25;font-size:14.5px;line-height:1.6}
-.d2c .md h1{margin:16px 0 18px;font-size:28px;font-weight:700;color:#141414;letter-spacing:-.3px}
-.d2c .md h2{margin:28px 0 10px;font-size:20px;font-weight:700;color:#141414}
-.d2c .md h3{margin:20px 0 6px;font-size:16px;font-weight:700;color:#141414}
-.d2c .md blockquote{margin:10px 0;padding:2px 0 2px 16px;border-left:3px solid #E0DEFA;color:#626771}
-.d2c .md blockquote strong{color:#141414}
-.d2c .md hr{border:0;border-top:1px solid #E6E4F2;margin:22px 0}
-.d2c .md ul{margin:4px 0;padding-left:22px;list-style:disc}
-.d2c .md ul ul{list-style:circle}
-.d2c .md li{margin:4px 0}
-.d2c .md li::marker{color:#9B9A9F}
-.d2c .md p{margin:8px 0}
 /* Lead page (View Complete Details) — same layout as the RM CRM / production lead page */
 .d2c.lpage{position:fixed;top:56px;left:0;right:0;bottom:0;z-index:130;background:#F1F5F9;display:flex;flex-direction:column;font-family:'Figtree',system-ui,sans-serif}
 .d2c .lp-bar{display:flex;align-items:center;gap:12px;padding:12px 24px;flex-shrink:0}
@@ -370,11 +341,11 @@
 .d2c .lp-badge.dl{background:#E6F3E1;color:#3C5B31;border-color:#A9E4BE;font-size:13px;height:28px}
 .d2c .lp-badge.nd{background:#FEF2F2;color:#DC2626;border-color:#FCA5A5;font-size:13px;height:28px}
 .d2c .lp-badge.sku{background:var(--indigo-bg);color:var(--indigo-dk);border-color:#C9CCF4;font-size:11px}
+.d2c .lp-badge.cold{background:#E0F2FE;color:#075985;border-color:#BAE6FD;font-size:11px}
 .d2c .lp-badge.hot{background:#FDE7E1;color:#B42318;border-color:#F8C4B4;font-size:11px}
 .d2c .lp-badge.plp{background:#E8F7F0;color:#0E6B4A;border-color:#A9DCC5;font-size:11px}
 .d2c .lp-wa-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:14px;padding:12px;border:1px solid #E2E8F0;border-radius:8px;background:#F8F8F8;font-size:13px}
 .d2c .lp-wa-row .lp-badge{margin-top:6px}
-.d2c .md.inline{overflow:visible;margin:14px 0 0}
 .d2c .lp-empty{color:#656E7F;font-size:14px;text-align:center;padding:40px 20px}
 .d2c .lp-appt{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-top:14px;font-size:14px}
 .d2c .lp-appt span{color:#656E7F}
@@ -384,8 +355,7 @@
 .d2c .lp-log i{width:10px;height:10px;border-radius:50%;background:#443EFF;margin-top:5px;flex:none}
 .d2c .lp-log b{display:block;font-size:14px}
 .d2c .lp-log span{font-size:12.5px;color:#656E7F}
-@media (max-width:820px){.d2c .qa-grid,.d2c .qa-grid3{grid-template-columns:1fr}.d2c .lp-side{display:none}.d2c .lp-otabs{display:none}.d2c .lp-content{padding:16px}.d2c .r1{grid-template-columns:72px 1fr}.d2c .status{grid-column:1/-1;flex-direction:row;flex-wrap:wrap;align-items:center}.d2c .nextp{grid-template-columns:1fr}.d2c .oc{margin-left:0}}
-`;
+@media (max-width:820px){.d2c .qa-grid,.d2c .qa-grid3{grid-template-columns:1fr}.d2c .lp-side{display:none}.d2c .lp-otabs{display:none}.d2c .lp-content{padding:16px}.d2c .r1{grid-template-columns:72px 1fr}.d2c .status{grid-column:1/-1;flex-direction:row;flex-wrap:wrap;align-items:center}.d2c .nextp{grid-template-columns:1fr}`;
 
   function ensureAssets() {
     if (!document.getElementById('d2cStyles')) {
@@ -398,40 +368,18 @@
     }
   }
 
-  // ── header: plain count of upcoming 2nd calls on the "View assigned leads" button ──
+  // ── header: plain count of today's 2nd-call meetings on the "View assigned leads" button.
+  // The count is a morning snapshot: taken once when the day starts (here, on login) and not
+  // updated during the day. The page itself lists all meetings. ──
+  let todayCount = 0;
   function renderHeader() {
     const btn = document.getElementById('hdrViewAssignedBtn');
-    if (btn) btn.textContent = `View assigned leads (${LEADS.filter(l => !l.done).length})`;
+    if (!btn) return;
+    btn.textContent = `View assigned leads (${todayCount})`;
+    btn.title = "Today's 2nd-call meetings, updated every morning";
   }
 
   // ── lead card ──
-  // Only for finished calls: mark the outcome. IELTS Status and Service Type are asked in the
-  // second-call disposition that "Completed" opens, not on the card.
-  function outcomeBlock(l) {
-    if (!l.done) return '';
-    const oc = S.outcome[l.id];
-    if (oc) return `<div class="r3 okd"><span class="r3l">${I.check} ${oc.k} at ${oc.at}</span>
-      <div class="ocres">${oc.tasks ? `<b>Tasks created:</b> ${oc.tasks.join(' · ')}` : oc.note}</div></div>`;
-    return `<div class="r3 req"><span class="r3l">Call over. Mark the outcome.</span><div class="oc">
-        <button class="ocb pri" data-d2c-dispo="${l.id}">Completed</button>
-        <button class="ocb" data-d2c-oc="Student no-show:${l.id}">No-show</button>
-        <button class="ocb" data-d2c-oc="Rescheduled:${l.id}">Rescheduled</button>
-        <button class="ocb" data-d2c-oc="Cancelled:${l.id}">Cancelled</button></div></div>`;
-  }
-
-  // Second-call disposition: opened by "Completed"; IELTS Status and Service Type are required here
-  function dispoDialog(l) {
-    const iv = S.ielts[l.id] || '', sv = S.service[l.id] || '';
-    const body = `<p class="dsp-note">${I.warn}<span>Not in the product intake, and with no 1st call nobody has captured them yet. The CRM creates ${first(l)}'s tasks from these two fields.</span></p>
-      <label class="dsp-f"><span>IELTS Status <b class="req">*</b></span>
-        <select data-d2c-ielts="${l.id}"><option value="">Select status</option>${IELTS_OPTIONS.map(o => `<option ${o === iv ? 'selected' : ''}>${o}</option>`).join('')}</select></label>
-      ${iv === 'Given (score)' ? `<label class="dsp-f">Overall band<input data-d2c-score="${l.id}" inputmode="decimal" placeholder="e.g. 7.0" value="${S.ieltsScore[l.id] || ''}"></label>` : ''}
-      <label class="dsp-f"><span>Service Type <b class="req">*</b></span>
-        <select data-d2c-service="${l.id}"><option value="">Select service type</option>${SERVICE_OPTIONS.map(o => `<option value="${o.value}" ${o.value === sv ? 'selected' : ''}>${o.label}</option>`).join('')}</select></label>`;
-    return frame(`Complete 2nd call: ${l.name}`, 'Second-call disposition. Mark these from what the student told you in the call.', body,
-      `<div class="d-actions"><button class="bt bt-secondary" data-d2c-close>Cancel</button><button class="bt bt-primary" data-d2c-oc="Completed:${l.id}" ${marked(l) ? '' : 'disabled'}>Mark Completed</button></div>`);
-  }
-
   function card(l) {
     const yi = youIn(l), si = stuIn(l);
     const slotNote = l.done ? 'Done' : dayOf(l) === 0 ? 'in ' + fmtIn(l.mins) : dayLabel(dayOf(l));
@@ -440,17 +388,16 @@
     const app = l.app ? `<span class="st ok"><i></i>${l.app}</span>` : `<span class="st no"><i></i>App not installed</span>`;
     const cs = S.sent['case:' + l.id], ts = S.sent['timeline:' + l.id];
     const again = S.lgcAgain[l.id];
-    const amber = l.done ? needsOutcome(l) : !ready(l);
+    const amber = !l.done && !ready(l);
     return `<li class="card ${l.done ? 'done' : ''} ${amber ? 'blocked' : ''}">
       <div class="r1">
         <span class="time"><strong>${l.slot}</strong><span class="${!l.done && l.mins < 60 ? 'soon' : ''}">${slotNote}</span></span>
-        <div class="who"><span class="nm">${l.name}<span class="tag sku">${l.sku}</span><span class="tag hot">Hot</span><span class="tag plp">Product led paid</span>${l.resched ? `<span class="tag rs">Rescheduled${l.resched.n > 1 ? ' ' + l.resched.n + '×' : ''} · was ${l.resched.was}</span>` : ''}</span>
-          <span class="meta">${l.course} · ${l.country} · ${l.intake}<span class="id">${l.id}</span></span></div>
-        <div class="status">${lgc}${app}</div>
+        <div class="who"><span class="nm">${l.name}<span class="tag sku">${l.sku}</span><span class="tag ${l.bucket === 'Hot' ? 'hot' : 'cold'}">${l.bucket}</span><span class="tag plp">${leadTag(l)}</span>${l.resched ? `<span class="tag rs">Rescheduled${l.resched.n > 1 ? ' ' + l.resched.n + '×' : ''} · was ${l.resched.was}</span>` : ''}</span>
+          <span class="meta">${l.course} · ${l.country} · ${l.intake} · Booked via ${l.src}<span class="id">${l.id}</span></span></div>
+        <div class="status">${l.done && S.outcome[l.id] ? `<span class="st ok"><i></i>${S.outcome[l.id].k} · auto-captured</span>` : ''}${lgc}${app}</div>
       </div>
       <div class="r2">
         <button class="sb pri" data-d2c-isl="${l.id}">${I.user}View Profile</button>
-        <button class="sb" data-d2c-summary="${l.id}">${I.doc}View Summary</button>
         <span class="sep"></span>
         <button class="sb ${cs ? 'done' : ''}" data-d2c-dlg="case:${l.id}" title="Generate case study and similar profiles">${cs ? I.check : I.search}Case study</button>
         <button class="sb ${ts ? 'done' : ''}" data-d2c-dlg="timeline:${l.id}" title="Generate timeline">${ts ? I.check : I.cal}Timeline</button>
@@ -458,7 +405,7 @@
         <button class="sb" data-d2c-again="${l.id}" ${!yi ? 'disabled title="Join the LGC first"' : 'title="Send LGC link again"'}>${I.link}LGC link</button>
         ${again ? `<span class="flash">${si ? 'LGC link sent at ' + again : 'Sent by personal DM at ' + again}</span>` : ''}
       </div>
-      ${outcomeBlock(l)}</li>`;
+      </li>`;
   }
 
   // ── dialogs (case study, timeline) ──
@@ -567,101 +514,6 @@
       <div class="isl-body">${t.html}</div></div></div>`;
   }
 
-  // ── View Summary: markdown summary of the student, generated from the intake ──
-  const nf = v => (v === '' || v === undefined || v === null) ? '**Not provided**' : v;
-  function summaryMd(l) {
-    const f = l.f, st = S.ielts[l.id];
-    return `# Student Study Abroad Profile
-
-> **Profile status:** Based on the student's product intake form and token payment. There was no 1st call, so nothing comes from a transcript yet.
-
-> Information not present in the sources is marked as **Not provided** or **Needs confirmation**.
-
----
-
-## 1. Student Profile
-
-### Academic Journey
-
-- Student name: ${l.name}.
-- Current location context: ${f.city ? 'Lives in ' + f.city + '.' : nf('')}
-- Highest confirmed education: ${nf(f.qual)}.
-- Undergraduate degree/course: ${nf(f.bachelors)}.
-- Undergraduate grading scheme and score: ${f.score ? gradingOf(f.score) + ', ' + f.score.replace(/\s*CGPA/i, '') : nf('')}.
-- Undergraduate institution: **Not provided**.
-- Backlogs: **Not provided** — not asked in the intake; **needs confirmation** in the 2nd call.
-- Academic/career gap: ${f.gap === 'Yes' ? 'Yes, ' + (f.gapMonths || '?') + ' months. Reason **needs confirmation**.' : 'No gap indicated.'}
-- Class 12 and Class 10:
-  - Board, passing year and score: **Not provided**.
-
-### Work Experience
-
-- Total experience: ${f.workEx === '0' ? 'Fresher, no work experience.' : nf(f.workEx) + ' years.'}
-- Current salary: ${nf(f.salary)}.
-- Sector / role: **Needs confirmation**.
-
-## 2. Study Plan
-
-- Target country: ${l.country}.
-- Target course: ${l.course} (${degreeOf(l)}).
-- Target intake: ${l.intake}.
-- Career preference after studying: ${nf(f.career)}.
-- How they will choose a college: ${nf(f.priority)}.
-
-## 3. Budget and Funding
-
-- Tuition fee budget: ${nf(f.budget)}.
-- Method of funding: ${nf(f.funding)}.
-- Discussed with parents: ${f.parents === 'No' ? '**No** — parents not consulted yet.' : nf(f.parents)}.
-
-## 4. English Test
-
-- IELTS status: ${st ? st + (S.ieltsScore[l.id] ? ', band ' + S.ieltsScore[l.id] : '') + ' (marked by counsellor in the 2nd call).' : '**Needs confirmation** — mark it in the 2nd call.'}
-- Service type: ${S.service[l.id] ? serviceLabel(S.service[l.id]) + '.' : '**Needs confirmation** — mark it in the 2nd call.'}
-
-## 5. Student's Questions
-
-- ${f.questions ? f.questions : 'No questions entered in the intake.'}
-
-## 6. To Confirm in the 2nd Call
-
-- Backlogs, Class 12 / Class 10 details and undergraduate institution.
-- ${st ? 'IELTS status is marked.' : 'IELTS status.'}
-- ${S.service[l.id] ? 'Service type is marked.' : 'Service type.'}
-${f.parents === 'No' ? '- Whether parents are on board with the plan and budget.\n' : ''}`;
-  }
-  // Small markdown renderer: headings, blockquotes, --- rules, nested "- " lists, **bold**
-  function mdToHtml(md) {
-    const esc = t => t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-    const inline = t => esc(t).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-    const out = []; let depth = 0;
-    const closeLists = to => { while (depth > to) { out.push('</li></ul>'); depth--; } };
-    md.split('\n').forEach(line => {
-      const li = line.match(/^(\s*)- (.*)$/);
-      if (li) {
-        const d = Math.floor(li[1].length / 2) + 1;
-        if (d > depth) { while (depth < d) { out.push('<ul>'); depth++; } out.push('<li>' + inline(li[2])); }
-        else { closeLists(d); out.push('</li><li>' + inline(li[2])); }
-        return;
-      }
-      closeLists(0);
-      if (/^### /.test(line)) out.push('<h3>' + inline(line.slice(4)) + '</h3>');
-      else if (/^## /.test(line)) out.push('<h2>' + inline(line.slice(3)) + '</h2>');
-      else if (/^# /.test(line)) out.push('<h1>' + inline(line.slice(2)) + '</h1>');
-      else if (/^> /.test(line)) out.push('<blockquote>' + inline(line.slice(2)) + '</blockquote>');
-      else if (/^---\s*$/.test(line)) out.push('<hr>');
-      else if (line.trim()) out.push('<p>' + inline(line) + '</p>');
-    });
-    closeLists(0);
-    return out.join('');
-  }
-  function summaryDialog(l) {
-    return `<div class="d2c isl-ov" data-d2c-bg><div class="isl sum" role="dialog" aria-modal="true" aria-labelledby="d2cSum">
-      <div class="isl-h"><h2 id="d2cSum">${first(l)}'s profile summary</h2><button class="xbtn" data-d2c-close aria-label="Close">${I.x}</button></div>
-      <p class="sum-label">Profile summary from the intake</p>
-      <div class="md">${mdToHtml(summaryMd(l))}</div></div></div>`;
-  }
-
   // ── View Complete Details: the lead page (same layout as the RM CRM / production lead page) ──
   const LEAD_TABS = ['Student Profile', 'Appointments', 'Shortlist', 'Applications', 'Tasks', 'Call Logs', 'Activity Logs', 'Visa Status'];
   const ic = {
@@ -694,7 +546,7 @@ ${f.parents === 'No' ? '- Whether parents are on board with the plan and budget.
     return `<div class="lp-side-box">
         <div class="lp-tile"><div class="lp-row"><span class="lp-prem">★ Premium Plan</span><button class="lp-plus" data-d2c-toast="Premium plan setup coming soon.">+</button></div>
           <p class="lp-muted">No plan assigned yet. Click + to set up a premium plan for this student.</p></div>
-        <div class="lp-tags">${badge(l.sku, 'sku')}${badge('Hot', 'hot')}${badge('Product led paid', 'plp')}</div>
+        <div class="lp-tags">${badge(l.sku, 'sku')}${badge(l.bucket, l.bucket === 'Hot' ? 'hot' : 'cold')}${badge(leadTag(l), 'plp')}</div>
         <div class="lp-line">${ic.id}<span>${l.id}</span></div>
         <div class="lp-line">${ic.mail}<button class="lp-out" data-d2c-reveal="${l.f.email}">View Email</button></div>
         <div class="lp-line">${ic.phone}<button class="lp-out" data-d2c-reveal="+91 98${l.id.replace(/\D/g, '').padEnd(8, '0').slice(0, 8)}">View Phone Number</button><span class="lp-wa">${ic.wa}</span></div>
@@ -737,8 +589,7 @@ ${f.parents === 'No' ? '- Whether parents are on board with the plan and budget.
       ${fieldCard(ic.star, 'Preference', q('What are the [[most important parameters]] based on which the student will choose the college?', true, f.priority) + `<div class="qa-grid">${q('Any location preference', false, [], true)}${q('Any University preference', false, [], true)}</div>`)}
       ${fieldCard(ic.mail, 'Contact and questions', `<div class="qa-grid">${q('Email', false, f.email)}${q('City', false, f.city)}</div>${q('Any [[questions]] for counsellors', false, f.questions)}`)}
       ${fieldCard(ic.chat, 'WhatsApp Group Link', `<div class="lp-wa-row"><div><b>Leap Scholar | ${l.name} | ${l.id}</b><br>${badge(youIn(l) ? (l.studentIn ? 'STUDENT JOINED' : 'STUDENT NOT JOINED') : 'COUNSELLOR NOT JOINED', youIn(l) && l.studentIn ? 'dl' : 'nd')}</div>
-        <span class="lp-sp"></span><button class="lp-out2" data-d2c-toast="Group link copied.">Copy Link</button><button class="lp-out2" data-d2c-toast="Invite resent to ${first(l)}.">Resend Invite</button></div>`)}
-      <div class="lp-card"><div class="lp-card-h"><span class="lp-ic">${ic.spark}</span><span class="lp-card-t">Profile summary from the intake</span></div><div class="md inline">${mdToHtml(summaryMd(l))}</div></div>`;
+        <span class="lp-sp"></span><button class="lp-out2" data-d2c-toast="Group link copied.">Copy Link</button><button class="lp-out2" data-d2c-toast="Invite resent to ${first(l)}.">Resend Invite</button></div>`)}`;
   }
   function leadTabBody(l, tab) {
     if (tab === 'Student Profile') return profileTab(l);
@@ -746,16 +597,17 @@ ${f.parents === 'No' ? '- Whether parents are on board with the plan and budget.
     if (tab === 'Appointments') return `<div class="lp-card"><div class="lp-card-h"><span class="lp-card-t">Counsellor</span></div>
       <div class="lp-appt"><b>2nd call (Direct 2nd Call)</b><span>${dayLabel(dayOf(l))}, ${l.slot} · 40 min · with ${l.mentor}</span>${badge(S.outcome[l.id] ? S.outcome[l.id].k : (l.done ? 'Outcome pending' : 'Booked'), S.outcome[l.id] ? 'dl' : 'sku')}</div>
       <p class="lp-muted" style="margin:10px 0 0">No 1st call: the student booked this slot after filling the intake and paying the token.</p></div>`;
-    if (tab === 'Tasks') return S.outcome[l.id] && S.outcome[l.id].tasks
-      ? `<div class="lp-card">${S.outcome[l.id].tasks.map(t => `<div class="lp-task">${I.check}<span>${t}</span></div>`).join('')}</div>`
-      : empty('No tasks yet. Tasks are created when the 2nd call is marked Completed, from the IELTS Status and Service Type you mark in the call.');
+    if (tab === 'Tasks') return empty('No tasks yet. Tasks are created from the IELTS Status and Service Type marked in the second-call disposition.');
     if (tab === 'Activity Logs') {
-      const log = [['Intake submitted in the product', '19 fields'], ['Token payment received', 'Product led paid lead'], ['ISL discussion stage marked done', 'Intake complete, token paid and slot booked'], ['2nd call booked', `${dayLabel(dayOf(l))}, ${l.slot} with ${l.mentor}`], ['LGC created', 'Counsellor + Leap admin']];
+      const log = [['Intake submitted ' + (l.src === 'App' ? 'in the app' : 'on the web'), '19 fields'], ['2nd call slot booked by the student', `${dayLabel(dayOf(l))}, ${l.slot} with ${l.mentor}`]];
+      if (l.src === 'App') log.push(['Token payment received', 'Product led paid lead']);
+      log.push(['ISL discussion stage marked done', l.src === 'App' ? 'Intake complete, slot booked and token paid' : 'Intake complete and slot booked']);
+      log.push(['LGC created', 'Counsellor + Leap admin']);
       if (l.resched) log.push([`Rescheduled by the student (${l.resched.n} of 2)`, `Was ${l.resched.was}; now ${dayLabel(dayOf(l))}, ${l.slot}`]);
       if (youIn(l)) log.push(['Counsellor joined the LGC', 'Group link sent to the student']);
       if (S.sent['case:' + l.id]) log.push(['Case study sent', S.sent['case:' + l.id]]);
       if (S.sent['timeline:' + l.id]) log.push(['Timeline sent', S.sent['timeline:' + l.id]]);
-      if (S.outcome[l.id]) log.push(['Call outcome: ' + S.outcome[l.id].k, S.outcome[l.id].at]);
+      if (S.outcome[l.id]) log.push(['Call outcome captured by the system: ' + S.outcome[l.id].k, S.outcome[l.id].at]);
       return `<div class="lp-card">${log.map(([a, b]) => `<div class="lp-log"><i></i><div><b>${a}</b><span>${b}</span></div></div>`).join('')}</div>`;
     }
     return empty(`No ${tab.toLowerCase()} yet for ${first(l)}. This student skipped the 1st call; this fills in after the 2nd call.`);
@@ -773,7 +625,6 @@ ${f.parents === 'No' ? '- Whether parents are on board with the plan and budget.
   // ── page ──
   function pageHtml() {
     const tabLeads = leadsForTab();
-    const today = tabLeads.filter(l => dayOf(l) === 0), todayLeft = today.filter(l => !l.done);
     const sorted = [...tabLeads].sort(byNextMeeting);
     const next = [...tabLeads].filter(l => !l.done).sort((a, b) => a.mins - b.mins)[0];
     const groups = [0, 1, 2].map(d => ({ d, items: sorted.filter(l => dayOf(l) === d) }));
@@ -784,10 +635,10 @@ ${f.parents === 'No' ? '- Whether parents are on board with the plan and budget.
       : groups.map(g => `<section class="day" aria-label="${dayLabel(g.d)}">${dayHead(dayLabel(g.d), g.d < 2 ? fmtDay(g.d) : '', g.items.length)}${g.items.length ? `<ol class="q">${g.items.map(card).join('')}</ol>` : `<p class="day-empty">No 2nd calls booked.</p>`}</section>`).join('')
         + (later.length ? `<section class="day"><button class="later-btn" data-d2c-later aria-expanded="${S.laterOpen}"><span class="chev ${S.laterOpen ? 'open' : ''}">›</span><span class="day-t">Later</span><span class="day-s">after ${fmtDay(2)}</span><span class="day-n">${later.length} ${later.length === 1 ? 'call' : 'calls'}</span><span class="later-hint">${S.laterOpen ? 'Hide' : 'Show'}</span></button>${S.laterOpen ? later.map(l => `<div class="later-day">${fmtDay(dayOf(l))}</div><ol class="q">${card(l)}</ol>`).join('') : ''}</section>` : '');
     return `<main class="d2c main">
-      <div class="pilotbar"><span><b>Direct 2nd Call pilot</b> · Product led paid leads only</span><span>10X: <b>On break</b> (locked by ops)</span><span>100ms: <b>Online</b></span>
+      <div class="pilotbar"><span><b>Direct 2nd Call pilot</b> · Product led leads only (web and app)</span><span>10X: <b>On break</b> (locked by ops)</span><span>100ms: <b>Online</b></span>
         <span class="cap">Today <b>${bookedToday} of ${DAILY_MAX}</b> calls · min ${DAILY_MIN}<span class="capbar" title="Min ${DAILY_MIN}, max ${DAILY_MAX} Direct 2nd Calls a day"><span style="width:${Math.min(100, bookedToday / DAILY_MAX * 100)}%"></span><em style="left:${DAILY_MIN / DAILY_MAX * 100}%"></em></span></span></div>
       ${next ? `<section class="nextp" aria-live="polite">
-        <div class="nx-l"><span class="nx-k">Next 2nd call</span><span class="nx-t">in ${fmtIn(next.mins)}</span><span class="nx-w">${next.name}, ${next.slot}. ${next.course}, ${next.country}</span><span class="nx-c">${today.length} calls today, ${todayLeft.length} left</span></div>
+        <div class="nx-l"><span class="nx-k">Next 2nd call</span><span class="nx-t">in ${fmtIn(next.mins)}</span><span class="nx-w">${next.name}, ${next.slot}. ${next.course}, ${next.country}</span></div>
         <ul class="nx-r">
           <li class="ok"><i>${I.check}</i><span><b>LGC created</b>Group set up when the booking was confirmed</span></li>
           ${youIn(next) ? `<li class="ok"><i>${I.check}</i><span><b>You joined the LGC</b>${first(next)} got the group link</span></li>`
@@ -796,7 +647,7 @@ ${f.parents === 'No' ? '- Whether parents are on board with the plan and budget.
             : `<li class="wait"><i>!</i><span><b>${first(next)} hasn't joined the LGC</b>${S.remind[next.id] ? 'Reminder sent to their personal WhatsApp at ' + S.remind[next.id] : 'Your reminder goes to their personal WhatsApp, with the group link and call time'}</span>${youIn(next) ? `<button class="bt bt-secondary bt-sm" data-d2c-remind="${next.id}">${S.remind[next.id] ? 'Send again' : 'Send reminder by DM'}</button>` : ''}</li>`}
         </ul></section>` : ''}
       ${list}
-      <p style="margin:0;font-size:14px;color:var(--muted)">Your existing 1st-call leads stay in the CRM as usual. While you're in the pilot you only get new Product led paid leads.</p>
+      <p style="margin:0;font-size:14px;color:var(--muted)">Your existing 1st-call leads stay in the CRM as usual. While you're in the pilot you only get new Product led leads.</p>
     </main>`;
   }
 
@@ -809,8 +660,7 @@ ${f.parents === 'No' ? '- Whether parents are on board with the plan and budget.
     let ov = document.getElementById('d2cOverlay');
     const modal = S.dlg ? (() => { const [k, id] = S.dlg.split(':'); return k === 'case' ? caseDialog(lead(id)) : timelineDialog(lead(id)); })()
       : S.isl ? islDialog(lead(S.isl.id), S.isl.tab)
-      : S.summary ? summaryDialog(lead(S.summary))
-      : S.dispo ? dispoDialog(lead(S.dispo)) : '';
+      : '';
     const ap = pageEl();
     if (S.profile && ap && !ap.classList.contains('hidden')) { ap.classList.add('hidden'); S.backToLeads = true; }
     const ovHtml = (S.profile ? leadPage(lead(S.profile), S.leadTab) : '') + modal;
@@ -820,21 +670,9 @@ ${f.parents === 'No' ? '- Whether parents are on board with the plan and budget.
     } else if (ov) ov.remove();
   }
 
-  function buildTasks(l) {
-    const iv = S.ielts[l.id], sv = S.service[l.id];
-    const t = [];
-    if (iv === 'Not started' || iv === 'Preparing') t.push('Book/Update IELTS Exam: get ' + first(l) + ' a test date');
-    else if (iv === 'Exam booked') t.push('Track IELTS exam and collect the scorecard');
-    else if (iv === 'Given (score)') t.push('Upload IELTS scorecard' + (S.ieltsScore[l.id] ? ' (band ' + S.ieltsScore[l.id] + ')' : ''));
-    else t.push('Confirm the English test waiver with shortlisted universities');
-    if (sv === 'partner') t.push('Share shortlist and start partner applications');
-    else t.push('Share payment link for ' + serviceLabel(sv).replace('Paid service · ', '') + ' and collect the fee');
-    return t;
-  }
-
   // Close the top-most layer: a modal first, then the View Student page
   function closeTop() {
-    if (S.dlg || S.isl || S.summary || S.dispo) { S.dlg = null; S.isl = null; S.summary = null; S.dispo = null; }
+    if (S.dlg || S.isl) { S.dlg = null; S.isl = null; }
     else if (S.profile) {
       S.profile = null;
       if (S.backToLeads) { S.backToLeads = false; openAssignedLeadsPage(); }
@@ -842,7 +680,7 @@ ${f.parents === 'No' ? '- Whether parents are on board with the plan and budget.
   }
 
   function onClick(e) {
-    const t = e.target.closest('[data-d2c],[data-d2c-join],[data-d2c-again],[data-d2c-dlg],[data-d2c-type],[data-d2c-retype],[data-d2c-send],[data-d2c-close],[data-d2c-remind],[data-d2c-later],[data-d2c-tab],[data-d2c-profile],[data-d2c-isl],[data-d2c-isltab],[data-d2c-summary],[data-d2c-full],[data-d2c-leadtab],[data-d2c-toast],[data-d2c-edit],[data-d2c-reveal],[data-d2c-note],[data-d2c-shortlist],[data-d2c-oc],[data-d2c-dispo],[data-d2c-bg]');
+    const t = e.target.closest('[data-d2c],[data-d2c-join],[data-d2c-again],[data-d2c-dlg],[data-d2c-type],[data-d2c-retype],[data-d2c-send],[data-d2c-close],[data-d2c-remind],[data-d2c-later],[data-d2c-tab],[data-d2c-profile],[data-d2c-isl],[data-d2c-isltab],[data-d2c-full],[data-d2c-leadtab],[data-d2c-toast],[data-d2c-edit],[data-d2c-reveal],[data-d2c-note],[data-d2c-shortlist],[data-d2c-bg]');
     if (!t || t.disabled) return;
     const d = t.dataset;
     if ('d2cBg' in d) { if (e.target !== t) return; closeTop(); }
@@ -862,7 +700,6 @@ ${f.parents === 'No' ? '- Whether parents are on board with the plan and budget.
     else if (d.d2cProfile) S.profile = d.d2cProfile;
     else if (d.d2cIsl) S.isl = { id: d.d2cIsl, tab: 'Academics' };
     else if (d.d2cIsltab) S.isl.tab = d.d2cIsltab;
-    else if (d.d2cSummary) S.summary = d.d2cSummary;
     else if (d.d2cFull) { S.profile = d.d2cFull; S.leadTab = 'Student Profile'; S.isl = null; }
     else if (d.d2cLeadtab) S.leadTab = d.d2cLeadtab;
     else if ('d2cToast' in d) { toast(d.d2cToast, 'info'); return; }
@@ -875,31 +712,12 @@ ${f.parents === 'No' ? '- Whether parents are on board with the plan and budget.
       toast('Note saved.');
     }
     else if (d.d2cShortlist) { const l = LEADS.find(x => x.id === d.d2cShortlist); toast(`Course Finder opened for ${l.name}: ${l.country}, ${l.course}, ${l.intake}, ${l.f.budget}, ${l.f.priority}.`, 'info'); return; }
-    else if (d.d2cDispo) S.dispo = d.d2cDispo;
-    else if (d.d2cOc) {
-      const [k, id] = d.d2cOc.split(':'); const l = LEADS.find(x => x.id === id);
-      if (k === 'Completed') { if (!marked(l)) return; S.dispo = null; S.outcome[id] = { k, at: nowStr(), tasks: buildTasks(l) }; toast(`Call marked Completed. ${S.outcome[id].tasks.length} tasks created for ${l.name}.`); }
-      else {
-        const note = k === 'Student no-show' ? `Reschedule link sent to ${first(l)}. A second no-show goes to ops.`
-          : k === 'Rescheduled' ? `Reschedule link sent to ${first(l)} (${(l.resched ? l.resched.n : 0) + 1} of 2 reschedules). The card moves to the new slot once they pick one; the old meeting is removed.`
-          : 'Booking cancelled; the slot is freed for another student.';
-        S.outcome[id] = { k, at: nowStr(), note };
-        toast(note, 'info');
-      }
-    }
     else return;
     render();
   }
 
-  function onChange(e) {
-    const el = e.target;
-    if (el.dataset.d2cIelts) { S.ielts[el.dataset.d2cIelts] = el.value; if (el.value !== 'Given (score)') delete S.ieltsScore[el.dataset.d2cIelts]; render(); }
-    else if (el.dataset.d2cService) { S.service[el.dataset.d2cService] = el.value; render(); }
-    else if (el.dataset.d2cScore) { S.ieltsScore[el.dataset.d2cScore] = el.value.trim(); }
-  }
-
   function onKey(e) {
-    if (e.key === 'Escape' && (S.dlg || S.isl || S.summary || S.dispo || S.profile)) { closeTop(); render(); }
+    if (e.key === 'Escape' && (S.dlg || S.isl || S.profile)) { closeTop(); render(); }
   }
 
   let wired = false;
@@ -907,16 +725,16 @@ ${f.parents === 'No' ? '- Whether parents are on board with the plan and budget.
 
   window.initDirect2nd = function (on) {
     S.on = !!on;
+    todayCount = LEADS.filter(l => dayOf(l) === 0).length;
     const hb = document.getElementById('hdrViewAssignedBtn');
-    if (hb) hb.textContent = 'View assigned leads';
+    if (hb) { hb.textContent = 'View assigned leads'; hb.title = ''; }
     document.getElementById('d2cOverlay')?.remove();
     S.backToLeads = false;
-    if (!S.on) { S.dlg = null; S.isl = null; S.summary = null; S.dispo = null; S.profile = null; return; }
+    if (!S.on) { S.dlg = null; S.isl = null; S.profile = null; return; }
     ensureAssets();
     if (!wired) {
       wired = true;
       document.addEventListener('click', onClick);
-      document.addEventListener('change', onChange);
       document.addEventListener('keydown', onKey);
     }
     render();

@@ -7983,8 +7983,9 @@ function computeExtraFilterMultiplier(filters) {
   if (filters.bucket === 'hot')       m *= 0.4;
   else if (filters.bucket === 'cold') m *= 0.6;
   if (filters.country) m *= 0.6;
-  // Product led paid leads (Direct 2nd Call pilot) are a small slice of total volume
-  if (filters.leadType === 'product-led-paid') m *= 0.08;
+  // Product led leads (Direct 2nd Call pilot: app = paid, web = not paid) are a small slice of total volume
+  if (filters.leadType === 'product-led-paid') m *= 0.05;
+  else if (filters.leadType === 'product-led') m *= 0.04;
   else if (filters.leadType === 'regular')     m *= 0.92;
   if (filters.servicingType === 'partner')          m *= 0.55;
   else if (filters.servicingType === 'non-partner') m *= 0.45;
